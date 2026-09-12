@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:openlogtool/l10n/l10n.dart';
+import 'package:openlogtool/models/live_draft.dart';
 import 'package:openlogtool/models/log_entry.dart' as model;
 import 'package:openlogtool/providers/collaboration_provider.dart';
 import 'package:openlogtool/providers/dictionary_provider.dart';
@@ -192,6 +193,93 @@ void main() {
     expect(find.text('BG5TEST'), findsOneWidget);
     expect(find.text('当前第 2 位'), findsOneWidget);
   });
+
+  testWidgets(
+      'workbench ordinal prefers saved records over a stale live-draft snapshot',
+      (tester) async {
+    tester.view.physicalSize = const Size(1000, 1400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final sessions = _SwitchingSessionProvider();
+    final logs = LogProvider(
+      sessionListLoader: () async => [
+        _SwitchingSessionProvider.revokedSession,
+      ],
+      sessionLogPageLoader: (_, __, ___) async => [
+        _bridgeLog('row-1', 'BG5AAA'),
+        _bridgeLog('row-2', 'BG5BBB'),
+        _bridgeLog('row-3', 'BG5CCC'),
+      ],
+    );
+    final collaboration = _StaleOrdinalCollaborationProvider();
+    addTearDown(sessions.dispose);
+    addTearDown(logs.dispose);
+    addTearDown(collaboration.dispose);
+    await logs.reloadForSession(
+      _SwitchingSessionProvider.revokedSession.sessionId,
+    );
+
+    await tester.pumpWidget(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider<SessionProvider>.value(value: sessions),
+          ChangeNotifierProvider<LogProvider>.value(value: logs),
+          ChangeNotifierProvider<CollaborationProvider>.value(
+            value: collaboration,
+          ),
+          ChangeNotifierProvider(
+            create: (_) => DictionaryProvider(autoload: false),
+          ),
+          ChangeNotifierProvider(create: (_) => SettingsProvider()),
+        ],
+        child: const MaterialApp(
+          locale: Locale('zh', 'CN'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(body: AddRecordPage()),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('当前第 4 位'), findsOneWidget);
+    expect(find.text('当前第 1 位'), findsNothing);
+  });
+}
+
+bridge_log.LogEntry _bridgeLog(String syncId, String callsign) =>
+    bridge_log.LogEntry(
+      syncId: syncId,
+      sessionId: 'revoked-session',
+      time: '2026-07-26T09:20:46.808Z',
+      controller: 'BG5CTRL',
+      callsign: callsign,
+      rstSent: '59',
+      rstRcvd: '59',
+      createdAt: '2026-07-26T09:20:46.808Z',
+      updatedAt: '2026-07-26T09:20:46.808Z',
+    );
+
+class _StaleOrdinalCollaborationProvider extends CollaborationProvider {
+  @override
+  LiveDraftSnapshotDto get liveDraftSnapshot => LiveDraftSnapshotDto(
+        draft: LiveDraftDto(
+          draftId: 'draft-1',
+          sessionId: 'revoked-session',
+          version: 1,
+          fields: LiveDraftFieldsDto(const {}),
+          fieldRevisions: const {},
+          lastUpdatedBy: null,
+          createdAt: DateTime.utc(2026, 7, 13),
+          lastUpdatedAt: DateTime.utc(2026, 7, 13),
+        ),
+        locks: const [],
+        currentOrdinal: 1,
+        totalRecords: 0,
+        previousRecord: null,
+      );
 }
 
 final class _SwitchingSessionProvider extends SessionProvider {

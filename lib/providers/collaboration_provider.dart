@@ -544,17 +544,24 @@ LiveDraftSnapshotDto selectLiveDraftSnapshotAfterRefresh({
   required LiveDraftSnapshotDto current,
   required LiveDraftSnapshotDto incoming,
 }) {
-  if (current.draft.draftId != incoming.draft.draftId ||
-      current.draft.version <= incoming.draft.version) {
+  if (current.draft.draftId == incoming.draft.draftId) {
+    if (current.draft.version <= incoming.draft.version) {
+      return incoming;
+    }
+    return LiveDraftSnapshotDto(
+      draft: current.draft,
+      locks: incoming.locks,
+      currentOrdinal: current.currentOrdinal,
+      totalRecords: current.totalRecords,
+      previousRecord: current.previousRecord,
+    );
+  }
+  if (incoming.currentOrdinal > current.currentOrdinal ||
+      incoming.totalRecords > current.totalRecords ||
+      incoming.draft.createdAt.isAfter(current.draft.createdAt)) {
     return incoming;
   }
-  return LiveDraftSnapshotDto(
-    draft: current.draft,
-    locks: incoming.locks,
-    currentOrdinal: current.currentOrdinal,
-    totalRecords: current.totalRecords,
-    previousRecord: current.previousRecord,
-  );
+  return current;
 }
 
 /// Complete in-memory projection produced by one member-only live-draft

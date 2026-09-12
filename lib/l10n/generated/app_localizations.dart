@@ -289,8 +289,26 @@ abstract class AppLocalizations {
   /// No description provided for @noCurrentSessionHint.
   ///
   /// In zh, this message translates to:
-  /// **'创建一个点名会话后即可开始记录。'**
+  /// **'创建一个点名会话，或加入协作后即可开始记录。'**
   String get noCurrentSessionHint;
+
+  /// No description provided for @workbenchNoSessionHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'请先到会话页新建会话，或加入协作后再开始记录。'**
+  String get workbenchNoSessionHint;
+
+  /// No description provided for @createOrJoinSessionFirst.
+  ///
+  /// In zh, this message translates to:
+  /// **'请先新建会话或加入协作'**
+  String get createOrJoinSessionFirst;
+
+  /// No description provided for @goCreateSession.
+  ///
+  /// In zh, this message translates to:
+  /// **'去新建会话'**
+  String get goCreateSession;
 
   /// No description provided for @sessionActive.
   ///

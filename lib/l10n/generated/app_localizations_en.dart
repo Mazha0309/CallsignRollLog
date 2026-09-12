@@ -117,7 +117,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noCurrentSession => 'No current net session';
 
   @override
-  String get noCurrentSessionHint => 'Create a net session to start logging.';
+  String get noCurrentSessionHint =>
+      'Create a net session, or join a collaboration, to start logging.';
+
+  @override
+  String get workbenchNoSessionHint =>
+      'Create a session on the Sessions page, or join a collaboration, before logging.';
+
+  @override
+  String get createOrJoinSessionFirst =>
+      'Create a session or join a collaboration first';
+
+  @override
+  String get goCreateSession => 'Create a session';
 
   @override
   String get sessionActive => 'Active';
@@ -3475,7 +3487,18 @@ class AppLocalizationsEnUs extends AppLocalizationsEn {
 
   @override
   String get noCurrentSessionHint =>
-      'Create a session from the Net Desk to start logging.';
+      'Create a net session, or join a collaboration, to start logging.';
+
+  @override
+  String get workbenchNoSessionHint =>
+      'Create a session on the Sessions page, or join a collaboration, before logging.';
+
+  @override
+  String get createOrJoinSessionFirst =>
+      'Create a session or join a collaboration first';
+
+  @override
+  String get goCreateSession => 'Create a session';
 
   @override
   String get sessionActive => 'Active';

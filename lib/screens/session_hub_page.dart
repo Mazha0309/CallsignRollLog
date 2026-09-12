@@ -5,6 +5,7 @@ import 'package:openlogtool/l10n/l10n.dart';
 import 'package:openlogtool/models/controller_display.dart';
 import 'package:openlogtool/providers/collaboration_provider.dart';
 import 'package:openlogtool/providers/log_provider.dart';
+import 'package:openlogtool/providers/server_provider.dart';
 import 'package:openlogtool/providers/session_provider.dart';
 import 'package:openlogtool/providers/settings_provider.dart';
 import 'package:openlogtool/screens/collaboration_screen.dart';
@@ -250,6 +251,17 @@ class SessionHubPage extends StatelessWidget {
             ),
           ),
         ],
+        OutlinedButton.icon(
+          key: const Key('join-collaboration'),
+          onPressed: collaboration.isBusy
+              ? null
+              : () => _joinCollaboration(
+                    context,
+                    onSessionOpened,
+                  ),
+          icon: const Icon(Icons.group_add),
+          label: Text(context.l10n.joinCollaborationTitle),
+        ),
         FilledButton.tonalIcon(
           key: const Key('create-session'),
           onPressed: () => _createSession(
@@ -434,6 +446,14 @@ class SessionHubPage extends StatelessWidget {
         draft['fields'] = draftFields.toJson();
         snapshotJson['draft'] = draft;
       }
+      snapshotJson['currentOrdinal'] = resolveVisibleRecordOrdinal(
+        snapshotOrdinal: snapshot.currentOrdinal,
+        savedCount: logs.logCount,
+      );
+      snapshotJson['totalRecords'] = resolveVisibleRecordCount(
+        snapshotTotalRecords: snapshot.totalRecords,
+        savedCount: logs.logCount,
+      );
       return ControllerDisplayDto.fromLiveDraftJson(
         snapshotJson,
         sessionTitle: sessionTitle,
@@ -442,8 +462,8 @@ class SessionHubPage extends StatelessWidget {
     }
     return ControllerDisplayDto(
       sessionTitle: sessionTitle,
-      currentOrdinal: logs.logCount + 1,
-      totalRecords: logs.logCount,
+      currentOrdinal: resolveVisibleRecordOrdinal(savedCount: logs.logCount),
+      totalRecords: resolveVisibleRecordCount(savedCount: logs.logCount),
       current: ControllerRecordDisplay(
         controller: previous?.controller ?? '',
         rstSent: '59',
@@ -464,6 +484,90 @@ class SessionHubPage extends StatelessWidget {
           builder: (_) => const _LiveControllerDisplayRoute(),
         ),
       );
+
+  static Future<void> _joinCollaboration(
+    BuildContext context,
+    VoidCallback? onSessionOpened,
+  ) async {
+    final server = context.read<ServerProvider>();
+    if (!server.isLoggedIn) {
+      ScaffoldMessenger.of(context).showLoggedSnackBar(
+        SnackBar(content: Text(context.l10n.collaborationServerLoginHint)),
+      );
+      return;
+    }
+    var draftCode = '';
+    final code = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          key: const Key('join-collaboration-dialog'),
+          title: Text(dialogContext.l10n.joinCollaborationTitle),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(dialogContext.l10n.joinCollaborationHint),
+              const SizedBox(height: 12),
+              TextFormField(
+                key: const Key('join-collaboration-code'),
+                autofocus: true,
+                textCapitalization: TextCapitalization.characters,
+                decoration: InputDecoration(
+                  labelText: dialogContext.l10n.inviteCodeLabel,
+                  hintText: 'ABCDE-12345',
+                  border: const OutlineInputBorder(),
+                ),
+                textInputAction: TextInputAction.done,
+                onChanged: (value) => setDialogState(() => draftCode = value),
+                onFieldSubmitted: (value) {
+                  final normalized = value.trim();
+                  if (normalized.isNotEmpty) {
+                    Navigator.pop(dialogContext, normalized);
+                  }
+                },
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: Text(dialogContext.l10n.cancel),
+            ),
+            FilledButton.icon(
+              key: const Key('confirm-join-collaboration'),
+              onPressed: draftCode.trim().isEmpty
+                  ? null
+                  : () => Navigator.pop(
+                        dialogContext,
+                        draftCode.trim(),
+                      ),
+              icon: const Icon(Icons.group_add),
+              label: Text(dialogContext.l10n.join),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (code == null || !context.mounted) return;
+    final collaboration = context.read<CollaborationProvider>();
+    try {
+      await collaboration.joinWithCode(code);
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showLoggedSnackBar(
+        SnackBar(content: Text(context.l10n.joinCollaborationSucceeded)),
+      );
+      onSessionOpened?.call();
+    } catch (error) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showLoggedSnackBar(
+        SnackBar(
+          content: Text(context.l10n.operationFailed('$error')),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
+      );
+    }
+  }
 
   static Future<void> _createSession(
     BuildContext context,

@@ -116,7 +116,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String get noCurrentSession => '当前没有点名会话';
 
   @override
-  String get noCurrentSessionHint => '创建一个点名会话后即可开始记录。';
+  String get noCurrentSessionHint => '创建一个点名会话，或加入协作后即可开始记录。';
+
+  @override
+  String get workbenchNoSessionHint => '请先到会话页新建会话，或加入协作后再开始记录。';
+
+  @override
+  String get createOrJoinSessionFirst => '请先新建会话或加入协作';
+
+  @override
+  String get goCreateSession => '去新建会话';
 
   @override
   String get sessionActive => '进行中';
@@ -3305,7 +3314,16 @@ class AppLocalizationsZhCn extends AppLocalizationsZh {
   String get noCurrentSession => '当前没有点名会话';
 
   @override
-  String get noCurrentSessionHint => '返回点名台创建会话后即可开始记录。';
+  String get noCurrentSessionHint => '创建一个点名会话，或加入协作后即可开始记录。';
+
+  @override
+  String get workbenchNoSessionHint => '请先到会话页新建会话，或加入协作后再开始记录。';
+
+  @override
+  String get createOrJoinSessionFirst => '请先新建会话或加入协作';
+
+  @override
+  String get goCreateSession => '去新建会话';
 
   @override
   String get sessionActive => '进行中';

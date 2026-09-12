@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:openlogtool/l10n/l10n.dart';
+import 'package:openlogtool/models/live_draft.dart';
 import 'package:openlogtool/providers/collaboration_provider.dart';
 import 'package:openlogtool/providers/log_provider.dart';
 import 'package:openlogtool/providers/session_provider.dart';
@@ -8,6 +9,7 @@ import 'package:openlogtool/providers/server_provider.dart';
 import 'package:openlogtool/providers/settings_provider.dart';
 import 'package:openlogtool/screens/collaboration_screen.dart';
 import 'package:openlogtool/screens/session_hub_page.dart';
+import 'package:openlogtool/src/bridge/models/log_entry.dart' as bridge_log;
 import 'package:openlogtool/src/bridge/models/session.dart';
 import 'package:openlogtool/widgets/settings/settings_ui.dart';
 import 'package:provider/provider.dart';
@@ -59,6 +61,7 @@ void main() {
     expect(find.byKey(const Key('session-history-section')), findsOneWidget);
     expect(find.byType(SettingsSectionCard), findsAtLeastNWidgets(2));
     expect(find.byKey(const Key('open-live-share-management')), findsOneWidget);
+    expect(find.byKey(const Key('join-collaboration')), findsOneWidget);
     expect(find.byKey(const Key('create-session')), findsOneWidget);
     expect(find.byKey(const Key('session-history-search')), findsOneWidget);
     expect(find.text('仅在本机关闭会话'), findsOneWidget);
@@ -113,6 +116,103 @@ void main() {
 
     expect(find.text('导入的历史点名'), findsNothing);
     expect(find.text('暂无历史会话'), findsOneWidget);
+  });
+
+  test('controller display prefers saved records over a stale live draft',
+      () async {
+    final logs = LogProvider(
+      sessionListLoader: () async => [
+        _session(
+          id: 'current-session',
+          title: '本周点名',
+          status: 'active',
+        ),
+      ],
+      sessionLogPageLoader: (_, __, ___) async => [
+        _bridgeLog('row-1', 'BG5AAA'),
+        _bridgeLog('row-2', 'BG5BBB'),
+        _bridgeLog('row-3', 'BG5CCC'),
+      ],
+    );
+    await logs.reloadForSession('current-session');
+    final collaboration = _StaleOrdinalCollaborationProvider();
+
+    final display = SessionHubPage.displayDataFor(
+      '本周点名',
+      logs,
+      collaboration,
+    );
+
+    expect(display.currentOrdinal, 4);
+    expect(display.totalRecords, 3);
+  });
+
+  testWidgets(
+      'joining collaboration from the hub does not require a local session',
+      (tester) async {
+    final sessionProvider = _FakeSessionProvider(
+      sessions: [],
+      currentSessionId: null,
+    );
+    final logProvider = LogProvider(
+      sessionListLoader: () async => [],
+      sessionLogPageLoader: (_, __, ___) async => [],
+    );
+    final collaboration = _JoinTrackingCollaborationProvider();
+    addTearDown(collaboration.dispose);
+
+    await tester.pumpWidget(
+      _SessionHubTestApp(
+        sessionProvider: sessionProvider,
+        logProvider: logProvider,
+        collaborationProvider: collaboration,
+        serverProvider: _LoggedInServerProvider(),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('join-collaboration')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('join-collaboration')));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const Key('join-collaboration-code')),
+      'ABCDE-12345',
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('confirm-join-collaboration')));
+    await tester.pumpAndSettle();
+
+    expect(collaboration.joinedCodes, ['ABCDE-12345']);
+    expect(find.byKey(const Key('workbench-after-history')), findsOneWidget);
+  });
+
+  testWidgets('joining collaboration without login shows the server hint',
+      (tester) async {
+    final sessionProvider = _FakeSessionProvider(
+      sessions: [],
+      currentSessionId: null,
+    );
+    final logProvider = LogProvider(
+      sessionListLoader: () async => [],
+      sessionLogPageLoader: (_, __, ___) async => [],
+    );
+
+    await tester.pumpWidget(
+      _SessionHubTestApp(
+        sessionProvider: sessionProvider,
+        logProvider: logProvider,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('join-collaboration')));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('join-collaboration-dialog')), findsNothing);
+    expect(
+      find.textContaining('请先在“设置 → 服务器与账户”中检测服务器并登录'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('creating a session returns directly to the workbench',
@@ -549,10 +649,14 @@ class _SessionHubTestApp extends StatefulWidget {
   const _SessionHubTestApp({
     required this.sessionProvider,
     required this.logProvider,
+    this.collaborationProvider,
+    this.serverProvider,
   });
 
   final SessionProvider sessionProvider;
   final LogProvider logProvider;
+  final CollaborationProvider? collaborationProvider;
+  final ServerProvider? serverProvider;
 
   @override
   State<_SessionHubTestApp> createState() => _SessionHubTestAppState();
@@ -568,10 +672,20 @@ class _SessionHubTestAppState extends State<_SessionHubTestApp> {
             value: widget.sessionProvider,
           ),
           ChangeNotifierProvider<LogProvider>.value(value: widget.logProvider),
-          ChangeNotifierProvider(create: (_) => CollaborationProvider()),
-          ChangeNotifierProvider(
-            create: (_) => ServerProvider(autoLoadSettings: false),
-          ),
+          if (widget.collaborationProvider != null)
+            ChangeNotifierProvider<CollaborationProvider>.value(
+              value: widget.collaborationProvider!,
+            )
+          else
+            ChangeNotifierProvider(create: (_) => CollaborationProvider()),
+          if (widget.serverProvider != null)
+            ChangeNotifierProvider<ServerProvider>.value(
+              value: widget.serverProvider!,
+            )
+          else
+            ChangeNotifierProvider(
+              create: (_) => ServerProvider(autoLoadSettings: false),
+            ),
           ChangeNotifierProvider(create: (_) => SettingsProvider()),
         ],
         child: MaterialApp(
@@ -594,16 +708,73 @@ class _SessionHubTestAppState extends State<_SessionHubTestApp> {
       );
 }
 
+class _StaleOrdinalCollaborationProvider extends CollaborationProvider {
+  @override
+  LiveDraftSnapshotDto get liveDraftSnapshot => LiveDraftSnapshotDto(
+        draft: LiveDraftDto(
+          draftId: 'draft-1',
+          sessionId: 'current-session',
+          version: 1,
+          fields: LiveDraftFieldsDto(const {}),
+          fieldRevisions: const {},
+          lastUpdatedBy: null,
+          createdAt: DateTime.utc(2026, 7, 13),
+          lastUpdatedAt: DateTime.utc(2026, 7, 13),
+        ),
+        locks: const [],
+        currentOrdinal: 1,
+        totalRecords: 0,
+        previousRecord: null,
+      );
+}
+
+bridge_log.LogEntry _bridgeLog(String syncId, String callsign) =>
+    bridge_log.LogEntry(
+      syncId: syncId,
+      sessionId: 'current-session',
+      time: '2026-07-26T09:20:46.808Z',
+      controller: 'BG5CTRL',
+      callsign: callsign,
+      rstSent: '59',
+      rstRcvd: '59',
+      createdAt: '2026-07-26T09:20:46.808Z',
+      updatedAt: '2026-07-26T09:20:46.808Z',
+    );
+
+class _JoinTrackingCollaborationProvider extends CollaborationProvider {
+  final List<String> joinedCodes = [];
+
+  @override
+  Future<void> joinWithCode(String code) async {
+    joinedCodes.add(code);
+  }
+}
+
+class _LoggedInServerProvider extends ServerProvider {
+  _LoggedInServerProvider() : super(autoLoadSettings: false);
+
+  @override
+  bool get isLoggedIn => true;
+
+  @override
+  String get serverUrl => 'http://127.0.0.1:3000';
+
+  @override
+  String? get accountId => 'user-1';
+}
+
 class _FakeSessionProvider extends SessionProvider {
   _FakeSessionProvider({
     required List<Session> sessions,
-    required String currentSessionId,
+    required String? currentSessionId,
     Set<String> collaborationSessionIds = const {},
   })  : _sessions = sessions,
         _collaborationSessionIds = collaborationSessionIds,
-        _currentSession = sessions.firstWhere(
-          (session) => session.sessionId == currentSessionId,
-        );
+        _currentSession = currentSessionId == null
+            ? null
+            : sessions.firstWhere(
+                (session) => session.sessionId == currentSessionId,
+              );
 
   final List<Session> _sessions;
   final Set<String> _collaborationSessionIds;

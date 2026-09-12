@@ -700,6 +700,8 @@ void main() {
       final newer = _snapshot(draft: _draft(version: 5));
       final nextGeneration = _snapshot(
         draft: _draft(draftId: 'draft-2', version: 1),
+        currentOrdinal: 9,
+        totalRecords: 8,
       );
 
       expect(
@@ -716,6 +718,55 @@ void main() {
         ),
         same(nextGeneration),
       );
+    });
+
+    test('refresh does not replace a newer generation with a stale GET', () {
+      final current = _snapshot(
+        draft: _draft(draftId: 'draft-2', version: 1),
+        currentOrdinal: 9,
+        totalRecords: 8,
+      );
+      final stalePrevious = _snapshot(
+        draft: _draft(draftId: 'draft-1', version: 4),
+        locks: [_lock('qth', 'stale-lock')],
+        currentOrdinal: 8,
+        totalRecords: 7,
+      );
+
+      final selected = selectLiveDraftSnapshotAfterRefresh(
+        current: current,
+        incoming: stalePrevious,
+      );
+
+      expect(selected.draft, same(current.draft));
+      expect(selected.currentOrdinal, 9);
+      expect(selected.totalRecords, 8);
+      expect(selected.locks, isEmpty);
+    });
+
+    test('refresh keeps a discarded generation when ordinal is unchanged', () {
+      final current = _snapshot(
+        draft: _draft(
+          draftId: 'draft-2',
+          version: 1,
+          createdAt: DateTime.utc(2026, 7, 13, 12, 1),
+        ),
+      );
+      final stalePrevious = _snapshot(
+        draft: _draft(
+          draftId: 'draft-1',
+          version: 6,
+          createdAt: DateTime.utc(2026, 7, 13, 12),
+        ),
+      );
+
+      final selected = selectLiveDraftSnapshotAfterRefresh(
+        current: current,
+        incoming: stalePrevious,
+      );
+
+      expect(selected.draft, same(current.draft));
+      expect(selected.currentOrdinal, current.currentOrdinal);
     });
 
     test('lock acquisition rebases only the acquired dirty field', () {
@@ -1978,19 +2029,22 @@ LiveDraftDto _draft({
   required int version,
   Map<String, String> values = const {},
   Map<String, int> revisions = const {},
-}) =>
-    LiveDraftDto(
-      draftId: draftId,
-      sessionId: sessionId,
-      version: version,
-      fields: _fields(values),
-      fieldRevisions: {
-        for (final field in liveDraftFieldNames) field: revisions[field] ?? 0,
-      },
-      lastUpdatedBy: null,
-      createdAt: DateTime.utc(2026, 7, 13),
-      lastUpdatedAt: DateTime.utc(2026, 7, 13),
-    );
+  DateTime? createdAt,
+}) {
+  final timestamp = createdAt ?? DateTime.utc(2026, 7, 13);
+  return LiveDraftDto(
+    draftId: draftId,
+    sessionId: sessionId,
+    version: version,
+    fields: _fields(values),
+    fieldRevisions: {
+      for (final field in liveDraftFieldNames) field: revisions[field] ?? 0,
+    },
+    lastUpdatedBy: null,
+    createdAt: timestamp,
+    lastUpdatedAt: timestamp,
+  );
+}
 
 LiveDraftSnapshotDto _snapshot({
   required LiveDraftDto draft,

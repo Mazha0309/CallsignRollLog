@@ -34,6 +34,9 @@ void main() {
     expect(find.byType(LogTable), findsNothing);
     expect(find.byKey(const Key('current-ordinal-badge')), findsNothing);
     expect(find.text('当前没有点名会话'), findsOneWidget);
+    expect(find.text('请先到会话页新建会话，或加入协作后再开始记录。'), findsOneWidget);
+    expect(find.byKey(const Key('open-sessions-from-empty-workbench')),
+        findsNothing);
     expect(find.byKey(const Key('start-new-record')), findsNothing);
     expect(
       find.byKey(const Key('open-workbench-session-history')),
@@ -57,6 +60,7 @@ void main() {
     expect(find.byType(AlertDialog), findsNothing);
     expect(find.byKey(const Key('current-session-section')), findsOneWidget);
     expect(find.byKey(const Key('create-session')), findsOneWidget);
+    expect(find.text('创建一个点名会话，或加入协作后即可开始记录。'), findsOneWidget);
     expect(find.byKey(const Key('session-history-section')), findsOneWidget);
     expect(
       tester
@@ -69,6 +73,18 @@ void main() {
     expect(find.byKey(const Key('workbench-status-bar')), findsNothing);
     expect(find.byIcon(Icons.cloud_off_outlined), findsNothing);
     expect(find.text('单机记录'), findsNothing);
+
+    await tester.tap(find.text('点名台'));
+    await tester.pumpAndSettle();
+
+    expect(
+      tester
+          .widget<NavigationBar>(find.byKey(const Key('mobile-navigation')))
+          .selectedIndex,
+      1,
+    );
+    expect(find.text('请先新建会话或加入协作'), findsOneWidget);
+    expect(find.byKey(const Key('create-session')), findsOneWidget);
   });
 
   testWidgets('active workbench keeps the new hierarchy on a phone',

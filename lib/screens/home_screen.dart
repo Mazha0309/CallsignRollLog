@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:provider/provider.dart';
 import 'package:openlogtool/l10n/l10n.dart';
+import 'package:openlogtool/models/controller_display.dart';
 import 'package:openlogtool/providers/collaboration_provider.dart';
 import 'package:openlogtool/providers/log_provider.dart';
 import 'package:openlogtool/providers/session_provider.dart';
@@ -150,8 +151,14 @@ class _HomeScreenState extends State<HomeScreen> {
   void _onItemTapped(int index) {
     FocusManager.instance.primaryFocus?.unfocus();
     final sessionProvider = context.read<SessionProvider>();
-    final destination =
-        index == 0 && sessionProvider.currentSessionId == null ? 1 : index;
+    final blockedWorkbench =
+        index == 0 && sessionProvider.currentSessionId == null;
+    final destination = blockedWorkbench ? 1 : index;
+    if (blockedWorkbench) {
+      ScaffoldMessenger.of(context).showLoggedSnackBar(
+        SnackBar(content: Text(context.l10n.createOrJoinSessionFirst)),
+      );
+    }
     if (destination == _selectedIndex) return;
     setState(() => _selectedIndex = destination);
     UrlSync.push(
@@ -715,7 +722,7 @@ class AddRecordPage extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    context.l10n.noCurrentSessionHint,
+                    context.l10n.workbenchNoSessionHint,
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: colors.onSurfaceVariant,
@@ -728,7 +735,7 @@ class AddRecordPage extends StatelessWidget {
                       key: const Key('open-sessions-from-empty-workbench'),
                       onPressed: onOpenSessions,
                       icon: const Icon(Icons.groups_outlined),
-                      label: Text(context.l10n.navSessions),
+                      label: Text(context.l10n.goCreateSession),
                     ),
                   ],
                 ],
@@ -868,11 +875,13 @@ class AddRecordPage extends StatelessWidget {
 
   Widget _currentOrdinalBadge(BuildContext context, int savedCount) {
     final colors = Theme.of(context).colorScheme;
-    final ordinal = context
-            .watch<CollaborationProvider>()
-            .liveDraftSnapshot
-            ?.currentOrdinal ??
-        savedCount + 1;
+    final ordinal = resolveVisibleRecordOrdinal(
+      snapshotOrdinal: context
+          .watch<CollaborationProvider>()
+          .liveDraftSnapshot
+          ?.currentOrdinal,
+      savedCount: savedCount,
+    );
     return Container(
       key: const Key('current-ordinal-badge'),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
