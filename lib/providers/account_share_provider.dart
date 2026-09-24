@@ -84,6 +84,20 @@ class AccountShareProvider with ChangeNotifier {
     );
   }
 
+  Future<void> joinOwnedSession({
+    required String sessionId,
+    required String passphrase,
+  }) async {
+    final server = _server;
+    if (server == null) return;
+    await server.api.joinWithShare(
+      sessionId: sessionId,
+      passphrase: passphrase,
+      idempotencyKey: 'share-join-${DateTime.now().microsecondsSinceEpoch}',
+    );
+    await refresh();
+  }
+
   List<SessionListEntry> sharedHistoryEntries() {
     return [
       for (final item in _sharedSessions)

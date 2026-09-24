@@ -276,6 +276,45 @@ class _SessionHistoryPanelState extends State<SessionHistoryPanel> {
             onPressed: () => Navigator.pop(dialogContext),
             child: Text(dialogContext.l10n.cancel),
           ),
+          if (shared.canJoin)
+            FilledButton(
+              onPressed: () async {
+                final passphrase = await showDialog<String>(
+                  context: dialogContext,
+                  builder: (passContext) {
+                    final controller = TextEditingController();
+                    return AlertDialog(
+                      title: Text(passContext.l10n.joinSharedSession),
+                      content: TextField(
+                        controller: controller,
+                        obscureText: true,
+                        decoration: InputDecoration(
+                          labelText: passContext.l10n.joinSharedSession,
+                        ),
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(passContext),
+                          child: Text(passContext.l10n.cancel),
+                        ),
+                        FilledButton(
+                          onPressed: () =>
+                              Navigator.pop(passContext, controller.text),
+                          child: Text(passContext.l10n.join),
+                        ),
+                      ],
+                    );
+                  },
+                );
+                if (passphrase == null || passphrase.trim().isEmpty) return;
+                await sharing.joinOwnedSession(
+                  sessionId: shared.sessionId,
+                  passphrase: passphrase.trim(),
+                );
+                if (dialogContext.mounted) Navigator.pop(dialogContext);
+              },
+              child: Text(dialogContext.l10n.joinSharedSession),
+            ),
         ],
       ),
     );
