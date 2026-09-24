@@ -12,6 +12,7 @@ import 'package:openlogtool/providers/settings_provider.dart';
 import 'package:openlogtool/providers/app_info_provider.dart';
 import 'package:openlogtool/providers/session_provider.dart';
 import 'package:openlogtool/providers/server_provider.dart';
+import 'package:openlogtool/providers/account_share_provider.dart';
 import 'package:openlogtool/providers/collaboration_provider.dart';
 import 'package:openlogtool/l10n/l10n.dart';
 import 'package:openlogtool/screens/home_screen.dart';
@@ -160,6 +161,11 @@ Future<void> _bootstrap(List<String> args) async {
           ),
         ),
         ChangeNotifierProvider(create: (_) => ServerProvider()),
+        ChangeNotifierProxyProvider<ServerProvider, AccountShareProvider>(
+          create: (_) => AccountShareProvider(),
+          update: (_, server, previous) =>
+              (previous ?? AccountShareProvider())..updateServer(server),
+        ),
         ChangeNotifierProvider(create: (_) => DictionaryProvider()),
         ChangeNotifierProvider(create: (_) => LogProvider()),
         ChangeNotifierProxyProvider3<ServerProvider, SessionProvider,

@@ -646,6 +646,32 @@ class AppLocalizationsZh extends AppLocalizations {
       '远端已经提交；客户端只会恢复本地确认，不会重复创建新修改。';
 
   @override
+  String get accountSharing => '跨账号共享';
+
+  @override
+  String get accountSharingHint => '先申请再接受。共享会话只读，加入协作仍需口令。';
+
+  @override
+  String get sharedSessionBadge => '共享';
+
+  @override
+  String sharedSessionFrom(String username) {
+    return '来自 $username 的共享';
+  }
+
+  @override
+  String get acceptShare => '接受';
+
+  @override
+  String get pendingInboundShares => '待处理申请';
+
+  @override
+  String get browseSharedSession => '浏览共享会话';
+
+  @override
+  String get joinSharedSession => '口令加入';
+
+  @override
   String get joinCollaborationTitle => '加入协作';
 
   @override
@@ -3673,6 +3699,32 @@ class AppLocalizationsZhCn extends AppLocalizationsZh {
 
   @override
   String get moreLocalCollaborationActions => '更多本机操作';
+
+  @override
+  String get accountSharing => '跨账号共享';
+
+  @override
+  String get accountSharingHint => '先申请再接受。共享会话只读，加入协作仍需口令。';
+
+  @override
+  String get sharedSessionBadge => '共享';
+
+  @override
+  String sharedSessionFrom(String username) {
+    return '来自 $username 的共享';
+  }
+
+  @override
+  String get acceptShare => '接受';
+
+  @override
+  String get pendingInboundShares => '待处理申请';
+
+  @override
+  String get browseSharedSession => '浏览共享会话';
+
+  @override
+  String get joinSharedSession => '口令加入';
 
   @override
   String get confirm => '确认';

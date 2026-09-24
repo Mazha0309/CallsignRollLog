@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:openlogtool/l10n/l10n.dart';
 import 'package:openlogtool/models/live_draft.dart';
+import 'package:openlogtool/providers/account_share_provider.dart';
 import 'package:openlogtool/providers/collaboration_provider.dart';
 import 'package:openlogtool/providers/log_provider.dart';
 import 'package:openlogtool/providers/session_provider.dart';
@@ -686,6 +687,7 @@ class _SessionHubTestAppState extends State<_SessionHubTestApp> {
             ChangeNotifierProvider(
               create: (_) => ServerProvider(autoLoadSettings: false),
             ),
+          ChangeNotifierProvider(create: (_) => AccountShareProvider()),
           ChangeNotifierProvider(create: (_) => SettingsProvider()),
         ],
         child: MaterialApp(

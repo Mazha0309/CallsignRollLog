@@ -34,10 +34,14 @@ class SessionListEntry {
   const SessionListEntry({
     required this.session,
     required this.hasCollaborationBinding,
+    this.isShared = false,
+    this.sharedGrantorUsername,
   });
 
   final Session session;
   final bool hasCollaborationBinding;
+  final bool isShared;
+  final String? sharedGrantorUsername;
 }
 
 class SessionProvider with ChangeNotifier {

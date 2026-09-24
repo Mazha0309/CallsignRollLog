@@ -670,6 +670,33 @@ class AppLocalizationsEn extends AppLocalizations {
       'The remote commit succeeded. The client will restore only the local acknowledgement and will not create another mutation.';
 
   @override
+  String get accountSharing => 'Account sharing';
+
+  @override
+  String get accountSharingHint =>
+      'Request then accept. Shared sessions are read-only until you join with the passphrase.';
+
+  @override
+  String get sharedSessionBadge => 'Shared';
+
+  @override
+  String sharedSessionFrom(String username) {
+    return 'Shared from $username';
+  }
+
+  @override
+  String get acceptShare => 'Accept';
+
+  @override
+  String get pendingInboundShares => 'Pending requests';
+
+  @override
+  String get browseSharedSession => 'Browse shared session';
+
+  @override
+  String get joinSharedSession => 'Join with passphrase';
+
+  @override
   String get joinCollaborationTitle => 'Join collaboration';
 
   @override
@@ -3858,6 +3885,33 @@ class AppLocalizationsEnUs extends AppLocalizationsEn {
 
   @override
   String get moreLocalCollaborationActions => 'More local actions';
+
+  @override
+  String get accountSharing => 'Account sharing';
+
+  @override
+  String get accountSharingHint =>
+      'Request then accept. Shared sessions are read-only until you join with the passphrase.';
+
+  @override
+  String get sharedSessionBadge => 'Shared';
+
+  @override
+  String sharedSessionFrom(String username) {
+    return 'Shared from $username';
+  }
+
+  @override
+  String get acceptShare => 'Accept';
+
+  @override
+  String get pendingInboundShares => 'Pending requests';
+
+  @override
+  String get browseSharedSession => 'Browse shared session';
+
+  @override
+  String get joinSharedSession => 'Join with passphrase';
 
   @override
   String get confirm => 'Confirm';

@@ -1222,6 +1222,54 @@ abstract class AppLocalizations {
   /// **'远端已经提交；客户端只会恢复本地确认，不会重复创建新修改。'**
   String get remoteCommitPendingLocalApplyHint;
 
+  /// No description provided for @accountSharing.
+  ///
+  /// In zh, this message translates to:
+  /// **'跨账号共享'**
+  String get accountSharing;
+
+  /// No description provided for @accountSharingHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'先申请再接受。共享会话只读，加入协作仍需口令。'**
+  String get accountSharingHint;
+
+  /// No description provided for @sharedSessionBadge.
+  ///
+  /// In zh, this message translates to:
+  /// **'共享'**
+  String get sharedSessionBadge;
+
+  /// No description provided for @sharedSessionFrom.
+  ///
+  /// In zh, this message translates to:
+  /// **'来自 {username} 的共享'**
+  String sharedSessionFrom(String username);
+
+  /// No description provided for @acceptShare.
+  ///
+  /// In zh, this message translates to:
+  /// **'接受'**
+  String get acceptShare;
+
+  /// No description provided for @pendingInboundShares.
+  ///
+  /// In zh, this message translates to:
+  /// **'待处理申请'**
+  String get pendingInboundShares;
+
+  /// No description provided for @browseSharedSession.
+  ///
+  /// In zh, this message translates to:
+  /// **'浏览共享会话'**
+  String get browseSharedSession;
+
+  /// No description provided for @joinSharedSession.
+  ///
+  /// In zh, this message translates to:
+  /// **'口令加入'**
+  String get joinSharedSession;
+
   /// No description provided for @joinCollaborationTitle.
   ///
   /// In zh, this message translates to:

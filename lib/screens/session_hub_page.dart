@@ -3,6 +3,7 @@ import 'package:openlogtool/utils/app_snack_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:openlogtool/l10n/l10n.dart';
 import 'package:openlogtool/models/controller_display.dart';
+import 'package:openlogtool/providers/account_share_provider.dart';
 import 'package:openlogtool/providers/collaboration_provider.dart';
 import 'package:openlogtool/providers/log_provider.dart';
 import 'package:openlogtool/providers/server_provider.dart';
@@ -251,6 +252,20 @@ class SessionHubPage extends StatelessWidget {
             ),
           ),
         ],
+        if (context.watch<AccountShareProvider>().isSupported)
+          OutlinedButton.icon(
+            key: const Key('open-account-sharing'),
+            onPressed: () => _openAccountSharing(context),
+            icon: Badge(
+              isLabelVisible:
+                  context.watch<AccountShareProvider>().pendingInboundCount > 0,
+              label: Text(
+                '${context.watch<AccountShareProvider>().pendingInboundCount}',
+              ),
+              child: const Icon(Icons.share_outlined),
+            ),
+            label: Text(context.l10n.accountSharing),
+          ),
         OutlinedButton.icon(
           key: const Key('join-collaboration'),
           onPressed: collaboration.isBusy
@@ -484,6 +499,74 @@ class SessionHubPage extends StatelessWidget {
           builder: (_) => const _LiveControllerDisplayRoute(),
         ),
       );
+
+  static Future<void> _openAccountSharing(BuildContext context) async {
+    final sharing = context.read<AccountShareProvider>();
+    await sharing.refresh();
+    if (!context.mounted) return;
+    final username = TextEditingController();
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        final current = dialogContext.watch<AccountShareProvider>();
+        return AlertDialog(
+          title: Text(dialogContext.l10n.accountSharing),
+          content: SizedBox(
+            width: 420,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(dialogContext.l10n.accountSharingHint),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: username,
+                  decoration: InputDecoration(
+                    labelText: dialogContext.l10n.usernameLabel,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(dialogContext.l10n.pendingInboundShares),
+                const SizedBox(height: 8),
+                if (current.inbox.isEmpty)
+                  Text(dialogContext.l10n.historySessionsEmpty)
+                else
+                  ...current.inbox.map(
+                    (grant) => ListTile(
+                      key: Key('share-inbox-${grant.id}'),
+                      dense: true,
+                      title: Text(grant.grantorUserId),
+                      trailing: TextButton(
+                        onPressed: () async {
+                          await current.acceptRequest(grant.id);
+                        },
+                        child: Text(dialogContext.l10n.acceptShare),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: Text(dialogContext.l10n.cancel),
+            ),
+            FilledButton(
+              onPressed: () async {
+                final value = username.text.trim();
+                if (value.isEmpty) return;
+                await current.createRequest(value);
+                if (dialogContext.mounted) Navigator.pop(dialogContext);
+              },
+              child: Text(dialogContext.l10n.accountSharing),
+            ),
+          ],
+        );
+      },
+    );
+    username.dispose();
+  }
 
   static Future<void> _joinCollaboration(
     BuildContext context,

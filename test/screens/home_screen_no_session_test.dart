@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:openlogtool/l10n/l10n.dart';
 import 'package:openlogtool/providers/app_info_provider.dart';
 import 'package:openlogtool/providers/ai_recognition_settings_provider.dart';
+import 'package:openlogtool/providers/account_share_provider.dart';
 import 'package:openlogtool/providers/collaboration_provider.dart';
 import 'package:openlogtool/providers/dictionary_provider.dart';
 import 'package:openlogtool/providers/log_provider.dart';
@@ -237,6 +238,7 @@ class _TestProviders extends StatelessWidget {
         ),
       ),
       ChangeNotifierProvider(create: (_) => CollaborationProvider()),
+      ChangeNotifierProvider(create: (_) => AccountShareProvider()),
       ChangeNotifierProvider(
         create: (_) => PersonalCloudProvider(
           exporter: () async => '{"version":1,"sessions":[],"logs":[]}',

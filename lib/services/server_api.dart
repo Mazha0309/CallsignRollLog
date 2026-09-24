@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 import 'package:openlogtool/models/account_dto.dart';
+import 'package:openlogtool/models/account_share_dto.dart';
 import 'package:openlogtool/models/collaboration_dto.dart';
 import 'package:openlogtool/models/live_draft.dart';
 import 'package:openlogtool/models/personal_cloud_dto.dart';
@@ -329,6 +330,102 @@ final class ServerApi {
       final values = _jsonArray(json, 'sessions');
       return List.unmodifiable(values.map(CollaborationSessionDto.fromJson));
     });
+  }
+
+  Future<List<SharedSessionDto>> listSharedSessions() async {
+    final response =
+        await _authorizedRequest('GET', '/account/shared-sessions');
+    return _parseResponse(response, (json) {
+      final object = _jsonObject(json, 'sharedSessions');
+      final values = _jsonArray(object['items'], 'items');
+      return List.unmodifiable(values.map(SharedSessionDto.fromJson));
+    });
+  }
+
+  Future<List<AccountShareGrantDto>> listSessionShares(String box) async {
+    final response = await _authorizedRequest(
+      'GET',
+      '/account/session-shares',
+      queryParameters: {'box': box},
+    );
+    return _parseResponse(response, (json) {
+      final object = _jsonObject(json, 'sessionShares');
+      final values = _jsonArray(object['items'], 'items');
+      return List.unmodifiable(values.map(AccountShareGrantDto.fromJson));
+    });
+  }
+
+  Future<AccountShareGrantDto> createSessionShare({
+    required String granteeUsername,
+    required String idempotencyKey,
+  }) async {
+    final response = await _authorizedRequest(
+      'POST',
+      '/account/session-shares',
+      body: {
+        'granteeUsername': granteeUsername,
+        'includePersonal': true,
+        'includeOwned': true,
+        'includeEditor': true,
+        'canJoinAs': 'editor',
+      },
+      headers: _idempotencyHeaders(idempotencyKey),
+    );
+    return _parseResponse(
+      response,
+      (json) => AccountShareGrantDto.fromJson(
+        _jsonObject(json, 'createSessionShare')['share'] ?? json,
+      ),
+    );
+  }
+
+  Future<AccountShareGrantDto> acceptSessionShare({
+    required String shareId,
+    required String idempotencyKey,
+  }) async {
+    final response = await _authorizedRequest(
+      'POST',
+      '/account/session-shares/${_segment(shareId)}/accept',
+      body: const <String, Object?>{},
+      headers: _idempotencyHeaders(idempotencyKey),
+    );
+    return _parseResponse(
+      response,
+      (json) => AccountShareGrantDto.fromJson(
+        _jsonObject(json, 'acceptSessionShare')['share'] ?? json,
+      ),
+    );
+  }
+
+  Future<List<Map<String, Object?>>> listSharedSessionLogs({
+    required String source,
+    required String sessionId,
+  }) async {
+    final response = await _authorizedRequest(
+      'GET',
+      '/account/shared-sessions/${_segment(source)}/${_segment(sessionId)}/logs',
+    );
+    return _parseResponse(response, (json) {
+      final object = _jsonObject(json, 'sharedSessionLogs');
+      final values = _jsonArray(object['items'], 'items');
+      return [
+        for (final value in values) Map<String, Object?>.from(value as Map),
+      ];
+    });
+  }
+
+  Future<void> joinWithShare({
+    required String sessionId,
+    required String passphrase,
+    required String idempotencyKey,
+  }) async {
+    final response = await _authorizedRequest(
+      'POST',
+      '/sessions/${_segment(sessionId)}/join-with-share',
+      body: {'passphrase': passphrase},
+      headers: _idempotencyHeaders(idempotencyKey),
+    );
+    _throwForError(response);
   }
 
   Future<CollaborationSessionDto> putSession({
