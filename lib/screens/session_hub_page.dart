@@ -505,67 +505,78 @@ class SessionHubPage extends StatelessWidget {
     await sharing.refresh();
     if (!context.mounted) return;
     final username = TextEditingController();
-    await showDialog<void>(
-      context: context,
-      builder: (dialogContext) {
-        final current = dialogContext.watch<AccountShareProvider>();
-        return AlertDialog(
-          title: Text(dialogContext.l10n.accountSharing),
-          content: SizedBox(
-            width: 420,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(dialogContext.l10n.accountSharingHint),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: username,
-                  decoration: InputDecoration(
-                    labelText: dialogContext.l10n.usernameLabel,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Text(dialogContext.l10n.pendingInboundShares),
-                const SizedBox(height: 8),
-                if (current.inbox.isEmpty)
-                  Text(dialogContext.l10n.historySessionsEmpty)
-                else
-                  ...current.inbox.map(
-                    (grant) => ListTile(
-                      key: Key('share-inbox-${grant.id}'),
-                      dense: true,
-                      title: Text(grant.grantorUserId),
-                      trailing: TextButton(
-                        onPressed: () async {
-                          await current.acceptRequest(grant.id);
-                        },
-                        child: Text(dialogContext.l10n.acceptShare),
-                      ),
+    try {
+      await showDialog<void>(
+        context: context,
+        builder: (dialogContext) {
+          final current = dialogContext.watch<AccountShareProvider>();
+          return AlertDialog(
+            title: Text(dialogContext.l10n.accountSharing),
+            content: SizedBox(
+              width: 420,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(dialogContext.l10n.accountSharingHint),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: username,
+                    decoration: InputDecoration(
+                      labelText: dialogContext.l10n.usernameLabel,
                     ),
                   ),
-              ],
+                  const SizedBox(height: 16),
+                  Text(dialogContext.l10n.pendingInboundShares),
+                  const SizedBox(height: 8),
+                  if (current.inbox.isEmpty)
+                    Text(dialogContext.l10n.historySessionsEmpty)
+                  else
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(maxHeight: 240),
+                      child: ListView.builder(
+                        shrinkWrap: true,
+                        itemCount: current.inbox.length,
+                        itemBuilder: (context, index) {
+                          final grant = current.inbox[index];
+                          return ListTile(
+                            key: Key('share-inbox-${grant.id}'),
+                            dense: true,
+                            title: Text(grant.grantorUserId),
+                            trailing: TextButton(
+                              onPressed: () async {
+                                await current.acceptRequest(grant.id);
+                              },
+                              child: Text(dialogContext.l10n.acceptShare),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                ],
+              ),
             ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: Text(dialogContext.l10n.cancel),
-            ),
-            FilledButton(
-              onPressed: () async {
-                final value = username.text.trim();
-                if (value.isEmpty) return;
-                await current.createRequest(value);
-                if (dialogContext.mounted) Navigator.pop(dialogContext);
-              },
-              child: Text(dialogContext.l10n.accountSharing),
-            ),
-          ],
-        );
-      },
-    );
-    username.dispose();
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext),
+                child: Text(dialogContext.l10n.cancel),
+              ),
+              FilledButton(
+                onPressed: () async {
+                  final value = username.text.trim();
+                  if (value.isEmpty) return;
+                  await current.createRequest(value);
+                  if (dialogContext.mounted) Navigator.pop(dialogContext);
+                },
+                child: Text(dialogContext.l10n.accountSharing),
+              ),
+            ],
+          );
+        },
+      );
+    } finally {
+      username.dispose();
+    }
   }
 
   static Future<void> _joinCollaboration(
