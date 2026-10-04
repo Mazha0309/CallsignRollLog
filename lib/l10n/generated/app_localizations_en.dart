@@ -9,6 +9,255 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
+  String get collaborationTechnicalDetails => 'Connection & diagnostics';
+
+  @override
+  String get collaborationOverviewOnline =>
+      'Connected. Record updates are being shared with participants.';
+
+  @override
+  String get collaborationOverviewOffline =>
+      'The connection is unavailable. Existing records are still on this device.';
+
+  @override
+  String get collaborationOverviewAttention =>
+      'Some records or sync issues need attention. Open Sync to review them.';
+
+  @override
+  String collaborationOverviewPending(int count) {
+    return 'Saved on this device. $count changes are waiting to sync.';
+  }
+
+  @override
+  String get historySessionCollaborationCloseRequired =>
+      'This is a collaborative session. Use Collaboration & members to end shared recording or leave; it cannot be ended as a local session.';
+
+  @override
+  String get collaborationLifecycleHint =>
+      'Switching pages or temporarily going offline does not leave the collaboration. The owner can end shared recording; participants can leave. Existing records are kept.';
+
+  @override
+  String get hubLocalStart =>
+      'Create a session to start recording. No server or account is required; records are saved on this device and can be viewed or exported.';
+
+  @override
+  String get hubLocalHint =>
+      'Local recording works on its own. Sync and collaboration are optional.';
+
+  @override
+  String get hubOptionalOnline => 'Sync and collaboration (optional)';
+
+  @override
+  String get hubOptionalOnlineHint =>
+      'Connect a server when you want multi-device sync or to record with others.';
+
+  @override
+  String get hubConfigureServer => 'Set up an optional server';
+
+  @override
+  String get hubOnlineConnected =>
+      'Friends and collaboration use your connected server. Local recording remains independent.';
+
+  @override
+  String get hubEnableCollaboration => 'Record with a friend';
+
+  @override
+  String get hubConfirmUpload => 'Upload this session and enable collaboration';
+
+  @override
+  String get hubUploadExplanation =>
+      'This uploads the current session and its existing records to the server below and starts collaboration sync. Other local sessions are not uploaded by this action. The session stays private; choose friends to invite afterwards. No public page is created.';
+
+  @override
+  String get hubContextChanged =>
+      'The server, account or current session changed. Close this dialog and try again.';
+
+  @override
+  String get hubAlreadyMember =>
+      'This person has already joined. You can find them in participant management.';
+
+  @override
+  String get hubInvitationHint =>
+      'They can view this session\'s records after accepting. Your other sessions are not shared.';
+
+  @override
+  String get hubContinueRecording => 'Continue recording';
+
+  @override
+  String get hubViewRecords => 'View records';
+
+  @override
+  String get hubSessionDetails => 'Session details';
+
+  @override
+  String get hubHistoryHint =>
+      'Browse existing records on this device. Ended sessions are a status filter, not public archives.';
+
+  @override
+  String get hubAllRecords => 'All';
+
+  @override
+  String get hubMyRecords => 'My records';
+
+  @override
+  String get hubTogetherRecords => 'Shared records';
+
+  @override
+  String get hubEndedRecords => 'Ended';
+
+  @override
+  String get socialTitle => 'Friends & invitations';
+
+  @override
+  String get socialAddFriend => 'Add friend';
+
+  @override
+  String get socialFriends => 'Friends';
+
+  @override
+  String get socialMessages => 'Messages';
+
+  @override
+  String get socialSessions => 'Sessions';
+
+  @override
+  String get socialIntro =>
+      'Add your partners as friends, then invite them to a session. Personal records remain private.';
+
+  @override
+  String get socialUsername => 'Username (callsign used at registration)';
+
+  @override
+  String get socialSend => 'Send request';
+
+  @override
+  String get socialInvite => 'Invite';
+
+  @override
+  String get socialApply => 'Request to join';
+
+  @override
+  String get socialAccept => 'Accept';
+
+  @override
+  String get socialReject => 'Decline';
+
+  @override
+  String get socialPending => 'Awaiting response';
+
+  @override
+  String get socialAccepted => 'Accepted';
+
+  @override
+  String get socialView => 'View only';
+
+  @override
+  String get socialEdit => 'Record together';
+
+  @override
+  String get socialOpen => 'Open session';
+
+  @override
+  String get socialPrivate => 'Invite only';
+
+  @override
+  String get socialDiscoverable => 'Friends can discover and request to join';
+
+  @override
+  String get socialVisibilityHint =>
+      'Friends see the session title. Records are available only after approval.';
+
+  @override
+  String get socialNoFriends =>
+      'No friends yet. Send a request using your partner\'s username.';
+
+  @override
+  String get socialNoMessages => 'No invitations or requests';
+
+  @override
+  String get socialNoSessions =>
+      'No sessions available. You can also enable collaboration for your current session.';
+
+  @override
+  String get socialPublish => 'Enable collaboration for current session';
+
+  @override
+  String get socialRemove => 'Remove friend';
+
+  @override
+  String get socialRemoveHint =>
+      'Pending requests between you will be cancelled. Existing session memberships are managed separately by the session owner.';
+
+  @override
+  String get socialBlock => 'Block';
+
+  @override
+  String get socialUnblock => 'Unblock';
+
+  @override
+  String get socialBlocked => 'Blocked';
+
+  @override
+  String get socialDone => 'Done';
+
+  @override
+  String get socialFriendRequest => 'Friend request';
+
+  @override
+  String get socialInvitation => 'Session invitation';
+
+  @override
+  String get socialApplication => 'Join request';
+
+  @override
+  String get socialSent => 'Sent by me';
+
+  @override
+  String get socialReceived => 'Received';
+
+  @override
+  String get socialManage => 'Manage participants';
+
+  @override
+  String get socialConnect => 'Connect to a server and sign in to add friends.';
+
+  @override
+  String get socialUpgrade => 'Update this server to enable friends.';
+
+  @override
+  String get socialLoadFailed => 'Could not refresh. Please retry.';
+
+  @override
+  String get socialChooseFriend => 'Choose a friend';
+
+  @override
+  String get socialErrorUser =>
+      'Username not found. Check that your partner registered on the same server.';
+
+  @override
+  String get socialErrorFriends => 'Please add each other as friends first.';
+
+  @override
+  String get socialErrorClosed =>
+      'This request is closed or expired. Please refresh.';
+
+  @override
+  String get socialErrorSelf => 'You cannot add yourself.';
+
+  @override
+  String get socialErrorBlocked => 'Requests to this user are unavailable.';
+
+  @override
+  String get socialServerLink => 'Copy server connection';
+
+  @override
+  String get socialServerLinkHint =>
+      'Paste a server address or a server portal link, then sign in.';
+
+  @override
+  String get socialLegacy => 'Legacy sharing';
+
+  @override
   String get navWorkbench => 'Net Desk';
 
   @override
@@ -135,7 +384,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sessionActive => 'Active';
 
   @override
-  String get sessionClosed => 'Closed';
+  String get sessionClosed => 'Ended';
 
   @override
   String savedPositions(int count) {
@@ -205,19 +454,20 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get historySessionCloseTitle => 'Close only on this device';
+  String get historySessionCloseTitle => 'End recording';
 
   @override
   String historySessionCloseConfirmation(String title) {
-    return 'Close “$title” only on this device? It will remain as read-only local history. If it is a collaboration replica, this device stops synchronizing and discards pending synchronization, conflicts, offline review records, and the local copy of any unsubmitted draft. The shared server session, members, and other devices are not affected.';
+    return 'End recording in “$title”? Existing records will be kept. You can view them or resume recording later. No data will be deleted.';
   }
 
   @override
-  String get historySessionClosed => 'Session closed on this device';
+  String get historySessionClosed =>
+      'Recording ended. Existing records were kept.';
 
   @override
   String historySessionCloseFailed(String error) {
-    return 'Could not close session on this device: $error';
+    return 'Failed to end recording: $error';
   }
 
   @override
@@ -236,7 +486,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String historySessionReopenConfirmation(String title) {
-    return 'Reactivate “$title” and switch to it? Any other active local session will be closed automatically; collaboration sessions are not affected. Reopen a collaboration target from Collaboration & members.';
+    return 'Resume recording in “$title” and switch to it? Other sessions stay unchanged. Collaborative sessions must be resumed by their owner in Collaboration & members.';
   }
 
   @override
@@ -572,49 +822,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get callsignRequired => 'Enter a callsign';
 
   @override
-  String get leaveSession => 'Leave server collaboration';
+  String get leaveSession => 'Leave collaboration';
 
   @override
   String get leaveSessionConfirmation =>
-      'This sends a membership-leave request to the server. After it succeeds, the local replica remains read-only and a new invitation is required to participate again. If the server is unreachable, use a local-device action instead.';
+      'You will stop receiving updates for this session. Records already on this device will remain read-only, and other members can continue. To join again, you will need a new invitation or approved application. A server connection is required. You do not need to leave just to close this page.';
 
   @override
-  String get convertCollaborationToLocal =>
-      'Stop collaboration on this device and convert to a local session';
+  String get moreLocalCollaborationActions => 'More actions';
 
   @override
-  String get convertCollaborationToLocalTitle =>
-      'Stop collaboration on this device?';
+  String get createEditableLocalCopy => 'Save independent copy';
 
   @override
-  String convertCollaborationToLocalConfirmation(String title) {
-    return 'This stops collaboration synchronization for “$title” on this device and replaces it with an editable local session. Only records already saved in the table are copied. An unsubmitted shared live draft stays on the server and is not added to the local session. The shared server session, its members, and other devices are not affected. This cannot be undone.';
-  }
-
-  @override
-  String convertCollaborationToLocalUnsyncedConfirmation(String title) {
-    return 'This stops synchronization for “$title” on this device and keeps records already saved in the table. Pending synchronization, conflicts, offline review records, and an unsubmitted live draft are permanently discarded from this device. The shared server session, members, and other devices are not affected. This cannot be undone.';
-  }
-
-  @override
-  String get convertCollaborationToLocalSucceeded =>
-      'Stopped collaboration on this device and converted to a local session';
-
-  @override
-  String get closeCollaborationLocally => 'Close only on this device';
-
-  @override
-  String get moreLocalCollaborationActions => 'More local actions';
-
-  @override
-  String get createEditableLocalCopy => 'Stop syncing and create local copy';
-
-  @override
-  String get createEditableLocalCopyTitle => 'Stop syncing on this device?';
+  String get createEditableLocalCopyTitle => 'Save an independent session?';
 
   @override
   String createEditableLocalCopyConfirmation(String title) {
-    return 'This creates an independent copy of “$title” on this device, copies every saved record currently shown in the table, and switches to it immediately. The new copy can be edited offline and will no longer synchronize. The shared server session and its original local replica will not be closed or deleted. Collaboration queues, conflicts, and an unsubmitted live draft stay with the original replica and are not copied.';
+    return 'Copy the saved table records from “$title” into a new session and switch to it for independent recording, without a server. Your original collaborative session and membership stay unchanged; you can switch back later. Pending sync operations, conflicts, offline records awaiting review and unsubmitted drafts stay in the original session. They are neither copied nor deleted.';
   }
 
   @override
@@ -624,7 +849,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get editableLocalCopySucceeded =>
-      'Switched to the editable local copy';
+      'Switched to the independent copy. The original collaboration was kept.';
 
   @override
   String get collaborationScreenTitle => 'Collaboration and members';
@@ -786,7 +1011,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get readOnlyClosePending =>
-      'The close request is saved locally and awaits confirmation; the session remains locked if it conflicts.';
+      'The end request is awaiting sync confirmation. Records are temporarily read-only.';
 
   @override
   String get readOnlyReopenPending =>
@@ -794,18 +1019,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get readOnlySessionClosed =>
-      'The collaboration session is closed. The local cache is read-only.';
+      'Shared recording has ended. Existing records remain available to view.';
 
   @override
   String get readOnlyViewer => 'This account is a read-only member.';
 
   @override
   String get readOnlyResyncing =>
-      'The event cursor requires a canonical snapshot reinstall; pending changes are preserved.';
+      'Restoring synchronization. Saved changes will be kept.';
 
   @override
   String get readOnlyCheckingAccess =>
-      'Access and the event cursor are being checked. The session is temporarily read-only.';
+      'Checking your participation permissions. Viewing only for now.';
 
   @override
   String get logNotOwnedReadOnlyHint =>
@@ -834,41 +1059,41 @@ class AppLocalizationsEn extends AppLocalizations {
       'Title saved locally and awaiting synchronization';
 
   @override
-  String get closeCollaborationSessionTitle => 'Close shared server session';
+  String get closeCollaborationSessionTitle => 'End shared recording';
 
   @override
   String get closeCollaborationSessionMessage =>
-      'This sends a request to close the shared session on the server. After the server confirms it, no member can add or change records. The owner can reopen it later.';
+      'All members will stop adding or editing records. Existing records and membership will be kept, and you can resume recording later. This change must sync to the server. You do not need to end recording just to leave this page.';
 
   @override
-  String get closeSharedSession => 'Close shared server session';
+  String get closeSharedSession => 'End shared recording';
 
   @override
   String get closeCollaborationDraftNotEmpty =>
-      'The current live draft still contains data. Submit the complete record, or explicitly discard the draft before closing.';
+      'The current check-in draft has content. Submit the complete record or explicitly discard the draft before ending recording.';
 
   @override
   String get closeCollaborationDraftIncomplete =>
-      'The draft is missing its time, controller callsign, or logged callsign, so it cannot be submitted. You can still discard it and close.';
+      'The draft is missing the time, controller callsign or check-in callsign. It cannot be submitted, but can be explicitly discarded before ending recording.';
 
   @override
   String closeCollaborationDraftLocked(int count) {
-    return 'Another member or device is editing $count draft fields. Wait for those edits to finish, then refresh before closing.';
+    return 'Other members or devices are editing $count draft fields. Wait for them to finish and refresh before ending recording.';
   }
 
   @override
-  String get closeCollaborationDiscardAndClose => 'Discard draft and close';
+  String get closeCollaborationDiscardAndClose => 'Discard draft and end';
 
   @override
-  String get closeCollaborationSubmitAndClose => 'Submit and close';
+  String get closeCollaborationSubmitAndClose => 'Submit and end';
 
   @override
   String get closeCollaborationQueuedOffline =>
-      'The record was saved only to the offline queue and has not reached the server. The session was not closed. Reconnect and resolve the record before retrying.';
+      'The record is only saved in the offline queue and has not reached the server. Shared recording has not ended. Reconnect and resolve the record before trying again.';
 
   @override
   String get closeSessionQueued =>
-      'Shared-session close requested; awaiting server synchronization';
+      'The request to end shared recording was saved and is awaiting sync confirmation.';
 
   @override
   String get reopenCollaborationSessionTitle => 'Reopen collaboration session';
@@ -3405,6 +3630,255 @@ class AppLocalizationsEnUs extends AppLocalizationsEn {
   AppLocalizationsEnUs() : super('en_US');
 
   @override
+  String get collaborationTechnicalDetails => 'Connection & diagnostics';
+
+  @override
+  String get collaborationOverviewOnline =>
+      'Connected. Record updates are being shared with participants.';
+
+  @override
+  String get collaborationOverviewOffline =>
+      'The connection is unavailable. Existing records are still on this device.';
+
+  @override
+  String get collaborationOverviewAttention =>
+      'Some records or sync issues need attention. Open Sync to review them.';
+
+  @override
+  String collaborationOverviewPending(int count) {
+    return 'Saved on this device. $count changes are waiting to sync.';
+  }
+
+  @override
+  String get historySessionCollaborationCloseRequired =>
+      'This is a collaborative session. Use Collaboration & members to end shared recording or leave; it cannot be ended as a local session.';
+
+  @override
+  String get collaborationLifecycleHint =>
+      'Switching pages or temporarily going offline does not leave the collaboration. The owner can end shared recording; participants can leave. Existing records are kept.';
+
+  @override
+  String get hubLocalStart =>
+      'Create a session to start recording. No server or account is required; records are saved on this device and can be viewed or exported.';
+
+  @override
+  String get hubLocalHint =>
+      'Local recording works on its own. Sync and collaboration are optional.';
+
+  @override
+  String get hubOptionalOnline => 'Sync and collaboration (optional)';
+
+  @override
+  String get hubOptionalOnlineHint =>
+      'Connect a server when you want multi-device sync or to record with others.';
+
+  @override
+  String get hubConfigureServer => 'Set up an optional server';
+
+  @override
+  String get hubOnlineConnected =>
+      'Friends and collaboration use your connected server. Local recording remains independent.';
+
+  @override
+  String get hubEnableCollaboration => 'Record with a friend';
+
+  @override
+  String get hubConfirmUpload => 'Upload this session and enable collaboration';
+
+  @override
+  String get hubUploadExplanation =>
+      'This uploads the current session and its existing records to the server below and starts collaboration sync. Other local sessions are not uploaded by this action. The session stays private; choose friends to invite afterwards. No public page is created.';
+
+  @override
+  String get hubContextChanged =>
+      'The server, account or current session changed. Close this dialog and try again.';
+
+  @override
+  String get hubAlreadyMember =>
+      'This person has already joined. You can find them in participant management.';
+
+  @override
+  String get hubInvitationHint =>
+      'They can view this session\'s records after accepting. Your other sessions are not shared.';
+
+  @override
+  String get hubContinueRecording => 'Continue recording';
+
+  @override
+  String get hubViewRecords => 'View records';
+
+  @override
+  String get hubSessionDetails => 'Session details';
+
+  @override
+  String get hubHistoryHint =>
+      'Browse existing records on this device. Ended sessions are a status filter, not public archives.';
+
+  @override
+  String get hubAllRecords => 'All';
+
+  @override
+  String get hubMyRecords => 'My records';
+
+  @override
+  String get hubTogetherRecords => 'Shared records';
+
+  @override
+  String get hubEndedRecords => 'Ended';
+
+  @override
+  String get socialTitle => 'Friends & invitations';
+
+  @override
+  String get socialAddFriend => 'Add friend';
+
+  @override
+  String get socialFriends => 'Friends';
+
+  @override
+  String get socialMessages => 'Messages';
+
+  @override
+  String get socialSessions => 'Sessions';
+
+  @override
+  String get socialIntro =>
+      'Add your partners as friends, then invite them to a session. Personal records remain private.';
+
+  @override
+  String get socialUsername => 'Username (callsign used at registration)';
+
+  @override
+  String get socialSend => 'Send request';
+
+  @override
+  String get socialInvite => 'Invite';
+
+  @override
+  String get socialApply => 'Request to join';
+
+  @override
+  String get socialAccept => 'Accept';
+
+  @override
+  String get socialReject => 'Decline';
+
+  @override
+  String get socialPending => 'Awaiting response';
+
+  @override
+  String get socialAccepted => 'Accepted';
+
+  @override
+  String get socialView => 'View only';
+
+  @override
+  String get socialEdit => 'Record together';
+
+  @override
+  String get socialOpen => 'Open session';
+
+  @override
+  String get socialPrivate => 'Invite only';
+
+  @override
+  String get socialDiscoverable => 'Friends can discover and request to join';
+
+  @override
+  String get socialVisibilityHint =>
+      'Friends see the session title. Records are available only after approval.';
+
+  @override
+  String get socialNoFriends =>
+      'No friends yet. Send a request using your partner\'s username.';
+
+  @override
+  String get socialNoMessages => 'No invitations or requests';
+
+  @override
+  String get socialNoSessions =>
+      'No sessions available. You can also enable collaboration for your current session.';
+
+  @override
+  String get socialPublish => 'Enable collaboration for current session';
+
+  @override
+  String get socialRemove => 'Remove friend';
+
+  @override
+  String get socialRemoveHint =>
+      'Pending requests between you will be cancelled. Existing session memberships are managed separately by the session owner.';
+
+  @override
+  String get socialBlock => 'Block';
+
+  @override
+  String get socialUnblock => 'Unblock';
+
+  @override
+  String get socialBlocked => 'Blocked';
+
+  @override
+  String get socialDone => 'Done';
+
+  @override
+  String get socialFriendRequest => 'Friend request';
+
+  @override
+  String get socialInvitation => 'Session invitation';
+
+  @override
+  String get socialApplication => 'Join request';
+
+  @override
+  String get socialSent => 'Sent by me';
+
+  @override
+  String get socialReceived => 'Received';
+
+  @override
+  String get socialManage => 'Manage participants';
+
+  @override
+  String get socialConnect => 'Connect to a server and sign in to add friends.';
+
+  @override
+  String get socialUpgrade => 'Update this server to enable friends.';
+
+  @override
+  String get socialLoadFailed => 'Could not refresh. Please retry.';
+
+  @override
+  String get socialChooseFriend => 'Choose a friend';
+
+  @override
+  String get socialErrorUser =>
+      'Username not found. Check that your partner registered on the same server.';
+
+  @override
+  String get socialErrorFriends => 'Please add each other as friends first.';
+
+  @override
+  String get socialErrorClosed =>
+      'This request is closed or expired. Please refresh.';
+
+  @override
+  String get socialErrorSelf => 'You cannot add yourself.';
+
+  @override
+  String get socialErrorBlocked => 'Requests to this user are unavailable.';
+
+  @override
+  String get socialServerLink => 'Copy server connection';
+
+  @override
+  String get socialServerLinkHint =>
+      'Paste a server address or a server portal link, then sign in.';
+
+  @override
+  String get socialLegacy => 'Legacy sharing';
+
+  @override
   String get navWorkbench => 'Net Desk';
 
   @override
@@ -3531,7 +4005,7 @@ class AppLocalizationsEnUs extends AppLocalizationsEn {
   String get sessionActive => 'Active';
 
   @override
-  String get sessionClosed => 'Closed';
+  String get sessionClosed => 'Ended';
 
   @override
   String savedPositions(int count) {
@@ -3595,19 +4069,20 @@ class AppLocalizationsEnUs extends AppLocalizationsEn {
   }
 
   @override
-  String get historySessionCloseTitle => 'Close only on this device';
+  String get historySessionCloseTitle => 'End recording';
 
   @override
   String historySessionCloseConfirmation(String title) {
-    return 'Close “$title” only on this device? It will remain as read-only local history. If it is a collaboration replica, this device stops synchronizing and discards pending synchronization, conflicts, offline review records, and the local copy of any unsubmitted draft. The shared server session, members, and other devices are not affected.';
+    return 'End recording in “$title”? Existing records will be kept. You can view them or resume recording later. No data will be deleted.';
   }
 
   @override
-  String get historySessionClosed => 'Session closed on this device';
+  String get historySessionClosed =>
+      'Recording ended. Existing records were kept.';
 
   @override
   String historySessionCloseFailed(String error) {
-    return 'Could not close session on this device: $error';
+    return 'Failed to end recording: $error';
   }
 
   @override
@@ -3618,7 +4093,7 @@ class AppLocalizationsEnUs extends AppLocalizationsEn {
 
   @override
   String historySessionReopenConfirmation(String title) {
-    return 'Reactivate “$title” and switch to it? Any other active local session will be closed automatically; collaboration sessions are not affected. Reopen a collaboration target from Collaboration & members.';
+    return 'Resume recording in “$title” and switch to it? Other sessions stay unchanged. Collaborative sessions must be resumed by their owner in Collaboration & members.';
   }
 
   @override
@@ -3852,39 +4327,29 @@ class AppLocalizationsEnUs extends AppLocalizationsEn {
   String get callsignRequired => 'Enter a callsign';
 
   @override
-  String get leaveSession => 'Leave server collaboration';
+  String get leaveSession => 'Leave collaboration';
 
   @override
   String get leaveSessionConfirmation =>
-      'This sends a membership-leave request to the server. After it succeeds, the local replica remains read-only and a new invitation is required to participate again. If the server is unreachable, use a local-device action instead.';
+      'You will stop receiving updates for this session. Records already on this device will remain read-only, and other members can continue. To join again, you will need a new invitation or approved application. A server connection is required. You do not need to leave just to close this page.';
 
   @override
-  String get convertCollaborationToLocal =>
-      'Stop collaboration on this device and convert to a local session';
+  String get moreLocalCollaborationActions => 'More actions';
 
   @override
-  String get convertCollaborationToLocalTitle =>
-      'Stop collaboration on this device?';
+  String get createEditableLocalCopy => 'Save independent copy';
 
   @override
-  String convertCollaborationToLocalConfirmation(String title) {
-    return 'This stops collaboration synchronization for “$title” on this device and replaces it with an editable local session. Only records already saved in the table are copied. An unsubmitted shared live draft stays on the server and is not added to the local session. The shared server session, its members, and other devices are not affected. This cannot be undone.';
+  String get createEditableLocalCopyTitle => 'Save an independent session?';
+
+  @override
+  String createEditableLocalCopyConfirmation(String title) {
+    return 'Copy the saved table records from “$title” into a new session and switch to it for independent recording, without a server. Your original collaborative session and membership stay unchanged; you can switch back later. Pending sync operations, conflicts, offline records awaiting review and unsubmitted drafts stay in the original session. They are neither copied nor deleted.';
   }
 
   @override
-  String convertCollaborationToLocalUnsyncedConfirmation(String title) {
-    return 'This stops synchronization for “$title” on this device and keeps records already saved in the table. Pending synchronization, conflicts, offline review records, and an unsubmitted live draft are permanently discarded from this device. The shared server session, members, and other devices are not affected. This cannot be undone.';
-  }
-
-  @override
-  String get convertCollaborationToLocalSucceeded =>
-      'Stopped collaboration on this device and converted to a local session';
-
-  @override
-  String get closeCollaborationLocally => 'Close only on this device';
-
-  @override
-  String get moreLocalCollaborationActions => 'More local actions';
+  String get editableLocalCopySucceeded =>
+      'Switched to the independent copy. The original collaboration was kept.';
 
   @override
   String get accountSharing => 'Account sharing';
@@ -3912,6 +4377,59 @@ class AppLocalizationsEnUs extends AppLocalizationsEn {
 
   @override
   String get joinSharedSession => 'Join with passphrase';
+
+  @override
+  String get readOnlyClosePending =>
+      'The end request is awaiting sync confirmation. Records are temporarily read-only.';
+
+  @override
+  String get readOnlySessionClosed =>
+      'Shared recording has ended. Existing records remain available to view.';
+
+  @override
+  String get readOnlyResyncing =>
+      'Restoring synchronization. Saved changes will be kept.';
+
+  @override
+  String get readOnlyCheckingAccess =>
+      'Checking your participation permissions. Viewing only for now.';
+
+  @override
+  String get closeCollaborationSessionTitle => 'End shared recording';
+
+  @override
+  String get closeCollaborationSessionMessage =>
+      'All members will stop adding or editing records. Existing records and membership will be kept, and you can resume recording later. This change must sync to the server. You do not need to end recording just to leave this page.';
+
+  @override
+  String get closeSharedSession => 'End shared recording';
+
+  @override
+  String get closeCollaborationDraftNotEmpty =>
+      'The current check-in draft has content. Submit the complete record or explicitly discard the draft before ending recording.';
+
+  @override
+  String get closeCollaborationDraftIncomplete =>
+      'The draft is missing the time, controller callsign or check-in callsign. It cannot be submitted, but can be explicitly discarded before ending recording.';
+
+  @override
+  String closeCollaborationDraftLocked(int count) {
+    return 'Other members or devices are editing $count draft fields. Wait for them to finish and refresh before ending recording.';
+  }
+
+  @override
+  String get closeCollaborationDiscardAndClose => 'Discard draft and end';
+
+  @override
+  String get closeCollaborationSubmitAndClose => 'Submit and end';
+
+  @override
+  String get closeCollaborationQueuedOffline =>
+      'The record is only saved in the offline queue and has not reached the server. Shared recording has not ended. Reconnect and resolve the record before trying again.';
+
+  @override
+  String get closeSessionQueued =>
+      'The request to end shared recording was saved and is awaiting sync confirmation.';
 
   @override
   String get confirm => 'Confirm';

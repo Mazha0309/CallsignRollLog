@@ -2424,6 +2424,64 @@ class CollaborationProvider with ChangeNotifier {
     });
   }
 
+  /// Open a membership already granted through a friend invitation/application.
+  /// Existing replicas retain their outbox; missing replicas install atomically.
+  Future<void> openJoinedSession(String sessionId) async {
+    await _runOperation((context) async {
+      final info = await _ensureServerCapabilities(
+          context, {'sessionSnapshots', 'sessionMembership'});
+      _assertOperationCurrent(context);
+      final membership = await context.api.getMembership(sessionId);
+      _assertOperationCurrent(context);
+      if (membership.sessionId != sessionId ||
+          membership.userId != context.accountId) {
+        throw StateError('JOIN_REMOTE_CONTENT_MISMATCH');
+      }
+      var bindingJson = await RustApi.getCollaborationBinding(
+          serverInstanceId: info.serverInstanceId,
+          accountId: context.accountId,
+          sessionId: sessionId);
+      _assertOperationCurrent(context);
+      if (bindingJson == null) {
+        final snapshot = await context.api
+            .getSessionSnapshot(sessionId, includeDeleted: false);
+        _assertOperationCurrent(context);
+        if (snapshot.session.sessionId != sessionId) {
+          throw StateError('JOIN_REMOTE_CONTENT_MISMATCH');
+        }
+        bindingJson = await RustApi.installCollaborationSnapshot(
+            requestJson: jsonEncode({
+          'mode': 'join',
+          'serverInstanceId': info.serverInstanceId,
+          'serverOrigin': context.serverUrl,
+          'accountId': context.accountId,
+          'membership': membership.toJson(),
+          'snapshot': snapshot.toJson(),
+        }));
+        if (!_isServerIdentityCurrent(context)) {
+          _scheduleRefresh();
+          throw StateError('JOIN_COMMITTED_CONTEXT_CHANGED');
+        }
+      }
+      context.logs.setCollaborationReadOnly(sessionId, true);
+      await context.sessions.switchToSession(sessionId);
+      if (context.sessions.currentSessionId != sessionId) {
+        throw StateError('SESSION_SWITCH_NOT_CONFIRMED');
+      }
+      _adoptOperationSession(context, sessionId);
+      await context.logs.reloadForSession(sessionId, propagateErrors: true);
+      _assertOperationCurrent(context);
+      _binding = LocalCollaborationBinding.fromJson(jsonDecode(bindingJson));
+      _membership = membership;
+      _members = const [];
+      _invites = const [];
+      _lastCreatedInvite = null;
+      _failedOperation = null;
+      _state = CollaborationState.catchingUp;
+      _clearError();
+    });
+  }
+
   Future<void> joinWithCode(String code) async {
     final sessions = _requireSessions();
     final logs = _requireLogs();
@@ -4118,50 +4176,6 @@ class CollaborationProvider with ChangeNotifier {
         quiescence.synchronization,
       ]);
       final local = await sessions.stopCurrentCollaborationSessionLocally();
-      await _finishCommittedLocalReplacement(
-        sessions: sessions,
-        logs: logs,
-        sourceSessionId: sourceSessionId,
-        localSessionId: local.sessionId,
-      );
-    } catch (error) {
-      _setError(_localErrorCode(error), error.toString());
-      rethrow;
-    } finally {
-      _operationInProgress = false;
-      _safeNotify();
-      _scheduleRefresh();
-    }
-  }
-
-  /// Stops synchronization and keeps the materialized replica as a closed,
-  /// read-only local history session. The shared server session is not closed.
-  Future<void> closeCurrentSessionLocally() async {
-    if (_operationInProgress) {
-      throw StateError('COLLABORATION_OPERATION_IN_PROGRESS');
-    }
-    final sessions = _requireSessions();
-    final logs = _requireLogs();
-    final sourceSessionId = sessions.currentSessionId;
-    final sourceBinding = binding;
-    if (sourceSessionId == null ||
-        sourceBinding == null ||
-        sourceBinding.sessionId != sourceSessionId) {
-      throw StateError('LOCAL_COLLABORATION_REQUIRED');
-    }
-
-    _operationInProgress = true;
-    _stateEpoch += 1;
-    _refreshGeneration += 1;
-    _clearError();
-    final quiescence = _suspendForDeviceLocalMutation();
-    _safeNotify();
-    try {
-      await waitForCollaborationLocalQuiescence([
-        quiescence.liveDraft,
-        quiescence.synchronization,
-      ]);
-      final local = await sessions.closeSessionLocally(sourceSessionId);
       await _finishCommittedLocalReplacement(
         sessions: sessions,
         logs: logs,

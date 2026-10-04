@@ -100,6 +100,456 @@ abstract class AppLocalizations {
     Locale('zh')
   ];
 
+  /// No description provided for @collaborationTechnicalDetails.
+  ///
+  /// In zh, this message translates to:
+  /// **'连接与诊断详情'**
+  String get collaborationTechnicalDetails;
+
+  /// No description provided for @collaborationOverviewOnline.
+  ///
+  /// In zh, this message translates to:
+  /// **'已连接，正在与参与者同步记录。'**
+  String get collaborationOverviewOnline;
+
+  /// No description provided for @collaborationOverviewOffline.
+  ///
+  /// In zh, this message translates to:
+  /// **'连接暂时不可用，已有记录仍保留在本机。'**
+  String get collaborationOverviewOffline;
+
+  /// No description provided for @collaborationOverviewAttention.
+  ///
+  /// In zh, this message translates to:
+  /// **'有待处理的记录或同步问题，请打开“同步”查看。'**
+  String get collaborationOverviewAttention;
+
+  /// No description provided for @collaborationOverviewPending.
+  ///
+  /// In zh, this message translates to:
+  /// **'已保存到本机，{count} 项修改等待同步。'**
+  String collaborationOverviewPending(int count);
+
+  /// No description provided for @historySessionCollaborationCloseRequired.
+  ///
+  /// In zh, this message translates to:
+  /// **'这是共同记录，请在“协作与成员”中结束共同记录或离开协作；不能把它作为本地会话结束。'**
+  String get historySessionCollaborationCloseRequired;
+
+  /// No description provided for @collaborationLifecycleHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'切换页面或暂时断网不会退出协作。发起人可以结束共同记录，参与者可以离开协作；已有记录会保留。'**
+  String get collaborationLifecycleHint;
+
+  /// No description provided for @hubLocalStart.
+  ///
+  /// In zh, this message translates to:
+  /// **'新建会话即可开始记录，无需服务器或账号。记录保存在本机，可随时查看和导出。'**
+  String get hubLocalStart;
+
+  /// No description provided for @hubLocalHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'本地记录可独立使用；同步与多人协作按需启用。'**
+  String get hubLocalHint;
+
+  /// No description provided for @hubOptionalOnline.
+  ///
+  /// In zh, this message translates to:
+  /// **'同步与协作（可选）'**
+  String get hubOptionalOnline;
+
+  /// No description provided for @hubOptionalOnlineHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'需要多设备同步或与搭档共同记录时，再连接服务器。'**
+  String get hubOptionalOnlineHint;
+
+  /// No description provided for @hubConfigureServer.
+  ///
+  /// In zh, this message translates to:
+  /// **'设置可选服务器'**
+  String get hubConfigureServer;
+
+  /// No description provided for @hubOnlineConnected.
+  ///
+  /// In zh, this message translates to:
+  /// **'好友与协作使用当前服务器，本地记录仍可独立使用。'**
+  String get hubOnlineConnected;
+
+  /// No description provided for @hubEnableCollaboration.
+  ///
+  /// In zh, this message translates to:
+  /// **'邀请搭档一起记录'**
+  String get hubEnableCollaboration;
+
+  /// No description provided for @hubConfirmUpload.
+  ///
+  /// In zh, this message translates to:
+  /// **'上传此会话并开启协作'**
+  String get hubConfirmUpload;
+
+  /// No description provided for @hubUploadExplanation.
+  ///
+  /// In zh, this message translates to:
+  /// **'这会把当前会话及其中已有的记录上传到下面的服务器，并开始协作同步。此操作只上传当前会话，不改变其他会话的同步设置。会话仍为私有，之后再选择要邀请的好友；此操作不会发布公开页面。'**
+  String get hubUploadExplanation;
+
+  /// No description provided for @hubContextChanged.
+  ///
+  /// In zh, this message translates to:
+  /// **'服务器、账号或当前会话已切换，请关闭后重新操作。'**
+  String get hubContextChanged;
+
+  /// No description provided for @hubAlreadyMember.
+  ///
+  /// In zh, this message translates to:
+  /// **'对方已经加入这个会话，可在参与者管理中查看。'**
+  String get hubAlreadyMember;
+
+  /// No description provided for @hubInvitationHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'对方接受后才能查看此会话的记录，不会开放你的其他会话。'**
+  String get hubInvitationHint;
+
+  /// No description provided for @hubContinueRecording.
+  ///
+  /// In zh, this message translates to:
+  /// **'继续记录'**
+  String get hubContinueRecording;
+
+  /// No description provided for @hubViewRecords.
+  ///
+  /// In zh, this message translates to:
+  /// **'查看记录'**
+  String get hubViewRecords;
+
+  /// No description provided for @hubSessionDetails.
+  ///
+  /// In zh, this message translates to:
+  /// **'会话详细信息'**
+  String get hubSessionDetails;
+
+  /// No description provided for @hubHistoryHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'查看本机已有记录。“已结束”只按会话状态筛选，不代表公开归档。'**
+  String get hubHistoryHint;
+
+  /// No description provided for @hubAllRecords.
+  ///
+  /// In zh, this message translates to:
+  /// **'全部'**
+  String get hubAllRecords;
+
+  /// No description provided for @hubMyRecords.
+  ///
+  /// In zh, this message translates to:
+  /// **'我的记录'**
+  String get hubMyRecords;
+
+  /// No description provided for @hubTogetherRecords.
+  ///
+  /// In zh, this message translates to:
+  /// **'共同记录'**
+  String get hubTogetherRecords;
+
+  /// No description provided for @hubEndedRecords.
+  ///
+  /// In zh, this message translates to:
+  /// **'已结束'**
+  String get hubEndedRecords;
+
+  /// No description provided for @socialTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'好友与邀请'**
+  String get socialTitle;
+
+  /// No description provided for @socialAddFriend.
+  ///
+  /// In zh, this message translates to:
+  /// **'添加好友'**
+  String get socialAddFriend;
+
+  /// No description provided for @socialFriends.
+  ///
+  /// In zh, this message translates to:
+  /// **'好友'**
+  String get socialFriends;
+
+  /// No description provided for @socialMessages.
+  ///
+  /// In zh, this message translates to:
+  /// **'消息'**
+  String get socialMessages;
+
+  /// No description provided for @socialSessions.
+  ///
+  /// In zh, this message translates to:
+  /// **'会话'**
+  String get socialSessions;
+
+  /// No description provided for @socialIntro.
+  ///
+  /// In zh, this message translates to:
+  /// **'添加搭档为好友，再邀请他们一起点名。好友关系不会自动开放个人记录。'**
+  String get socialIntro;
+
+  /// No description provided for @socialUsername.
+  ///
+  /// In zh, this message translates to:
+  /// **'对方的用户名（注册时使用的呼号）'**
+  String get socialUsername;
+
+  /// No description provided for @socialSend.
+  ///
+  /// In zh, this message translates to:
+  /// **'发送申请'**
+  String get socialSend;
+
+  /// No description provided for @socialInvite.
+  ///
+  /// In zh, this message translates to:
+  /// **'邀请参与'**
+  String get socialInvite;
+
+  /// No description provided for @socialApply.
+  ///
+  /// In zh, this message translates to:
+  /// **'申请加入'**
+  String get socialApply;
+
+  /// No description provided for @socialAccept.
+  ///
+  /// In zh, this message translates to:
+  /// **'接受'**
+  String get socialAccept;
+
+  /// No description provided for @socialReject.
+  ///
+  /// In zh, this message translates to:
+  /// **'拒绝'**
+  String get socialReject;
+
+  /// No description provided for @socialPending.
+  ///
+  /// In zh, this message translates to:
+  /// **'等待对方处理'**
+  String get socialPending;
+
+  /// No description provided for @socialAccepted.
+  ///
+  /// In zh, this message translates to:
+  /// **'已接受'**
+  String get socialAccepted;
+
+  /// No description provided for @socialView.
+  ///
+  /// In zh, this message translates to:
+  /// **'只能查看'**
+  String get socialView;
+
+  /// No description provided for @socialEdit.
+  ///
+  /// In zh, this message translates to:
+  /// **'共同记录'**
+  String get socialEdit;
+
+  /// No description provided for @socialOpen.
+  ///
+  /// In zh, this message translates to:
+  /// **'打开会话'**
+  String get socialOpen;
+
+  /// No description provided for @socialPrivate.
+  ///
+  /// In zh, this message translates to:
+  /// **'仅邀请可加入'**
+  String get socialPrivate;
+
+  /// No description provided for @socialDiscoverable.
+  ///
+  /// In zh, this message translates to:
+  /// **'好友可见，可申请加入'**
+  String get socialDiscoverable;
+
+  /// No description provided for @socialVisibilityHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'好友只能看到会话标题，获准加入后才能查看记录。'**
+  String get socialVisibilityHint;
+
+  /// No description provided for @socialNoFriends.
+  ///
+  /// In zh, this message translates to:
+  /// **'还没有好友，输入搭档的用户名发送申请。'**
+  String get socialNoFriends;
+
+  /// No description provided for @socialNoMessages.
+  ///
+  /// In zh, this message translates to:
+  /// **'暂无邀请或申请'**
+  String get socialNoMessages;
+
+  /// No description provided for @socialNoSessions.
+  ///
+  /// In zh, this message translates to:
+  /// **'暂无好友开放的会话。你也可以把当前会话用于协作。'**
+  String get socialNoSessions;
+
+  /// No description provided for @socialPublish.
+  ///
+  /// In zh, this message translates to:
+  /// **'开启当前会话协作'**
+  String get socialPublish;
+
+  /// No description provided for @socialRemove.
+  ///
+  /// In zh, this message translates to:
+  /// **'删除好友'**
+  String get socialRemove;
+
+  /// No description provided for @socialRemoveHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'会取消彼此待处理的邀请和申请。已加入的会话成员由会话负责人单独管理。'**
+  String get socialRemoveHint;
+
+  /// No description provided for @socialBlock.
+  ///
+  /// In zh, this message translates to:
+  /// **'屏蔽'**
+  String get socialBlock;
+
+  /// No description provided for @socialUnblock.
+  ///
+  /// In zh, this message translates to:
+  /// **'取消屏蔽'**
+  String get socialUnblock;
+
+  /// No description provided for @socialBlocked.
+  ///
+  /// In zh, this message translates to:
+  /// **'已屏蔽'**
+  String get socialBlocked;
+
+  /// No description provided for @socialDone.
+  ///
+  /// In zh, this message translates to:
+  /// **'操作已完成'**
+  String get socialDone;
+
+  /// No description provided for @socialFriendRequest.
+  ///
+  /// In zh, this message translates to:
+  /// **'好友申请'**
+  String get socialFriendRequest;
+
+  /// No description provided for @socialInvitation.
+  ///
+  /// In zh, this message translates to:
+  /// **'会话邀请'**
+  String get socialInvitation;
+
+  /// No description provided for @socialApplication.
+  ///
+  /// In zh, this message translates to:
+  /// **'加入申请'**
+  String get socialApplication;
+
+  /// No description provided for @socialSent.
+  ///
+  /// In zh, this message translates to:
+  /// **'我发出的'**
+  String get socialSent;
+
+  /// No description provided for @socialReceived.
+  ///
+  /// In zh, this message translates to:
+  /// **'收到的'**
+  String get socialReceived;
+
+  /// No description provided for @socialManage.
+  ///
+  /// In zh, this message translates to:
+  /// **'管理参与者'**
+  String get socialManage;
+
+  /// No description provided for @socialConnect.
+  ///
+  /// In zh, this message translates to:
+  /// **'连接服务器并登录后，即可添加好友。'**
+  String get socialConnect;
+
+  /// No description provided for @socialUpgrade.
+  ///
+  /// In zh, this message translates to:
+  /// **'此服务器尚不支持好友功能，请更新服务器。'**
+  String get socialUpgrade;
+
+  /// No description provided for @socialLoadFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'暂时无法刷新，请重试。'**
+  String get socialLoadFailed;
+
+  /// No description provided for @socialChooseFriend.
+  ///
+  /// In zh, this message translates to:
+  /// **'选择好友'**
+  String get socialChooseFriend;
+
+  /// No description provided for @socialErrorUser.
+  ///
+  /// In zh, this message translates to:
+  /// **'没有找到这个用户名。请确认对方已在同一服务器注册。'**
+  String get socialErrorUser;
+
+  /// No description provided for @socialErrorFriends.
+  ///
+  /// In zh, this message translates to:
+  /// **'请先添加对方为好友。'**
+  String get socialErrorFriends;
+
+  /// No description provided for @socialErrorClosed.
+  ///
+  /// In zh, this message translates to:
+  /// **'这条申请已处理或已过期，请刷新。'**
+  String get socialErrorClosed;
+
+  /// No description provided for @socialErrorSelf.
+  ///
+  /// In zh, this message translates to:
+  /// **'不能添加自己为好友。'**
+  String get socialErrorSelf;
+
+  /// No description provided for @socialErrorBlocked.
+  ///
+  /// In zh, this message translates to:
+  /// **'目前无法向这个用户发送请求。'**
+  String get socialErrorBlocked;
+
+  /// No description provided for @socialServerLink.
+  ///
+  /// In zh, this message translates to:
+  /// **'复制服务器连接信息'**
+  String get socialServerLink;
+
+  /// No description provided for @socialServerLinkHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'可粘贴服务器地址或服务器网页链接，连接后再登录。'**
+  String get socialServerLinkHint;
+
+  /// No description provided for @socialLegacy.
+  ///
+  /// In zh, this message translates to:
+  /// **'旧版共享'**
+  String get socialLegacy;
+
   /// No description provided for @navWorkbench.
   ///
   /// In zh, this message translates to:
@@ -319,7 +769,7 @@ abstract class AppLocalizations {
   /// No description provided for @sessionClosed.
   ///
   /// In zh, this message translates to:
-  /// **'已关闭'**
+  /// **'已结束'**
   String get sessionClosed;
 
   /// No description provided for @savedPositions.
@@ -439,25 +889,25 @@ abstract class AppLocalizations {
   /// No description provided for @historySessionCloseTitle.
   ///
   /// In zh, this message translates to:
-  /// **'仅在本机关闭会话'**
+  /// **'结束记录'**
   String get historySessionCloseTitle;
 
   /// No description provided for @historySessionCloseConfirmation.
   ///
   /// In zh, this message translates to:
-  /// **'仅在本机关闭“{title}”吗？关闭后会作为只读本地历史保留。如果这是协作副本，本机将停止同步并丢弃未同步队列、冲突、离线待复核记录及未提交草稿的本机副本；服务器共享会话、成员及其他设备不受影响。'**
+  /// **'结束“{title}”的记录吗？已有记录会保留，可随时查看或恢复记录。此操作不会删除数据。'**
   String historySessionCloseConfirmation(String title);
 
   /// No description provided for @historySessionClosed.
   ///
   /// In zh, this message translates to:
-  /// **'已在本机关闭会话'**
+  /// **'记录已结束，已有记录已保留'**
   String get historySessionClosed;
 
   /// No description provided for @historySessionCloseFailed.
   ///
   /// In zh, this message translates to:
-  /// **'在本机关闭会话失败：{error}'**
+  /// **'结束记录失败：{error}'**
   String historySessionCloseFailed(String error);
 
   /// No description provided for @historySessionCollaborationCloseRequiresOpen.
@@ -487,7 +937,7 @@ abstract class AppLocalizations {
   /// No description provided for @historySessionReopenConfirmation.
   ///
   /// In zh, this message translates to:
-  /// **'重新激活“{title}”并切换到该会话吗？当前进行中的其他本地会话将自动关闭，协作会话不受影响。目标如果是协作会话，请在“协作与成员”中重新打开。'**
+  /// **'恢复“{title}”并切换过去继续记录吗？其他会话不受影响。协作会话请由发起人在“协作与成员”中恢复。'**
   String historySessionReopenConfirmation(String title);
 
   /// No description provided for @historySessionReopened.
@@ -1069,73 +1519,37 @@ abstract class AppLocalizations {
   /// No description provided for @leaveSession.
   ///
   /// In zh, this message translates to:
-  /// **'退出服务器协作'**
+  /// **'离开协作'**
   String get leaveSession;
 
   /// No description provided for @leaveSessionConfirmation.
   ///
   /// In zh, this message translates to:
-  /// **'这会向服务器提交退出成员关系的请求。成功后本地副本保持只读；如需再次参与，必须重新获得邀请。服务器不可达时请改用本机数据操作。'**
+  /// **'离开后你将不再收到此会话的更新，本机已有记录保留为只读，其他成员可继续记录。以后需要重新邀请或申请加入。此操作需要连接服务器；只是暂时离开页面，无需退出协作。'**
   String get leaveSessionConfirmation;
-
-  /// No description provided for @convertCollaborationToLocal.
-  ///
-  /// In zh, this message translates to:
-  /// **'停止本机协作并转为本地会话'**
-  String get convertCollaborationToLocal;
-
-  /// No description provided for @convertCollaborationToLocalTitle.
-  ///
-  /// In zh, this message translates to:
-  /// **'停止本机协作并转为本地会话？'**
-  String get convertCollaborationToLocalTitle;
-
-  /// No description provided for @convertCollaborationToLocalConfirmation.
-  ///
-  /// In zh, this message translates to:
-  /// **'将停止本机对“{title}”的协作同步，并替换为可编辑的本地会话。仅复制表格中已经保存的记录；未提交的共享实时草稿仍留在服务器上，不会写入本地会话。服务器共享会话、成员和其他设备不受影响。此操作不可撤销。'**
-  String convertCollaborationToLocalConfirmation(String title);
-
-  /// No description provided for @convertCollaborationToLocalUnsyncedConfirmation.
-  ///
-  /// In zh, this message translates to:
-  /// **'将停止本机对“{title}”的协作同步，并保留当前表格中已保存的记录。未同步队列、冲突、离线待复核记录及未提交实时草稿会从本机永久丢弃。服务器共享会话、成员和其他设备不受影响。此操作不可撤销。'**
-  String convertCollaborationToLocalUnsyncedConfirmation(String title);
-
-  /// No description provided for @convertCollaborationToLocalSucceeded.
-  ///
-  /// In zh, this message translates to:
-  /// **'已停止本机协作并转为本地会话'**
-  String get convertCollaborationToLocalSucceeded;
-
-  /// No description provided for @closeCollaborationLocally.
-  ///
-  /// In zh, this message translates to:
-  /// **'仅在本机关闭'**
-  String get closeCollaborationLocally;
 
   /// No description provided for @moreLocalCollaborationActions.
   ///
   /// In zh, this message translates to:
-  /// **'更多本机操作'**
+  /// **'更多操作'**
   String get moreLocalCollaborationActions;
 
   /// No description provided for @createEditableLocalCopy.
   ///
   /// In zh, this message translates to:
-  /// **'停止协作并创建本地副本'**
+  /// **'另存独立会话'**
   String get createEditableLocalCopy;
 
   /// No description provided for @createEditableLocalCopyTitle.
   ///
   /// In zh, this message translates to:
-  /// **'停止本机协作并创建副本？'**
+  /// **'另存独立会话？'**
   String get createEditableLocalCopyTitle;
 
   /// No description provided for @createEditableLocalCopyConfirmation.
   ///
   /// In zh, this message translates to:
-  /// **'将在本机创建“{title}”的独立副本，复制当前表格中所有已保存记录并立即切换过去。新副本可离线编辑，不再与服务器同步；服务器上的共享会话及原本机协作副本不会被关闭或删除。协作待同步队列、冲突及未提交实时草稿会保留在原协作副本，不会复制到新副本。'**
+  /// **'将“{title}”当前表格中已保存的记录复制到一个新会话，并切换过去独立记录，无需服务器。原协作会话和你的成员身份不变，稍后仍可切回。未同步队列、冲突、离线待复核记录及未提交草稿保留在原会话，不会复制到新会话，也不会删除。'**
   String createEditableLocalCopyConfirmation(String title);
 
   /// No description provided for @editableLocalCopySessionTitle.
@@ -1147,7 +1561,7 @@ abstract class AppLocalizations {
   /// No description provided for @editableLocalCopySucceeded.
   ///
   /// In zh, this message translates to:
-  /// **'已切换到可编辑本地副本'**
+  /// **'已另存并切换到独立会话，原协作会话已保留'**
   String get editableLocalCopySucceeded;
 
   /// No description provided for @collaborationScreenTitle.
@@ -1423,7 +1837,7 @@ abstract class AppLocalizations {
   /// No description provided for @readOnlyClosePending.
   ///
   /// In zh, this message translates to:
-  /// **'关闭请求已保存到本地，等待同步确认；冲突时将保持锁定。'**
+  /// **'结束请求已保存，等待同步确认；确认前暂时只读。'**
   String get readOnlyClosePending;
 
   /// No description provided for @readOnlyReopenPending.
@@ -1435,7 +1849,7 @@ abstract class AppLocalizations {
   /// No description provided for @readOnlySessionClosed.
   ///
   /// In zh, this message translates to:
-  /// **'协作会话已关闭，本地缓存保持只读。'**
+  /// **'共同记录已结束，已有记录可继续查看。'**
   String get readOnlySessionClosed;
 
   /// No description provided for @readOnlyViewer.
@@ -1447,13 +1861,13 @@ abstract class AppLocalizations {
   /// No description provided for @readOnlyResyncing.
   ///
   /// In zh, this message translates to:
-  /// **'事件游标需要重装规范快照；待同步修改仍保留。'**
+  /// **'正在恢复同步，已保存的修改会保留。'**
   String get readOnlyResyncing;
 
   /// No description provided for @readOnlyCheckingAccess.
   ///
   /// In zh, this message translates to:
-  /// **'正在确认权限与事件游标，暂时保持只读。'**
+  /// **'正在确认你的参与权限，暂时只能查看。'**
   String get readOnlyCheckingAccess;
 
   /// No description provided for @logNotOwnedReadOnlyHint.
@@ -1501,61 +1915,61 @@ abstract class AppLocalizations {
   /// No description provided for @closeCollaborationSessionTitle.
   ///
   /// In zh, this message translates to:
-  /// **'关闭服务器共享会话'**
+  /// **'结束共同记录'**
   String get closeCollaborationSessionTitle;
 
   /// No description provided for @closeCollaborationSessionMessage.
   ///
   /// In zh, this message translates to:
-  /// **'这会向服务器提交关闭共享会话的请求。服务器确认后，所有成员都不能继续添加或修改记录；所有者可以稍后重新打开。'**
+  /// **'结束后，所有成员都不能继续添加或修改记录，已有记录和成员关系会保留。你可以稍后恢复记录。此操作需要同步到服务器；只是暂时离开，无需结束。'**
   String get closeCollaborationSessionMessage;
 
   /// No description provided for @closeSharedSession.
   ///
   /// In zh, this message translates to:
-  /// **'关闭服务器共享会话'**
+  /// **'结束共同记录'**
   String get closeSharedSession;
 
   /// No description provided for @closeCollaborationDraftNotEmpty.
   ///
   /// In zh, this message translates to:
-  /// **'当前点名草稿还有内容。你可以提交这条完整记录，或明确丢弃草稿后再关闭会话。'**
+  /// **'当前点名草稿还有内容。请先提交这条完整记录，或明确丢弃草稿后再结束。'**
   String get closeCollaborationDraftNotEmpty;
 
   /// No description provided for @closeCollaborationDraftIncomplete.
   ///
   /// In zh, this message translates to:
-  /// **'当前草稿缺少时间、主控呼号或点名呼号，不能提交；仍可明确丢弃后关闭。'**
+  /// **'当前草稿缺少时间、主控呼号或点名呼号，不能提交；仍可明确丢弃后结束。'**
   String get closeCollaborationDraftIncomplete;
 
   /// No description provided for @closeCollaborationDraftLocked.
   ///
   /// In zh, this message translates to:
-  /// **'其他成员或设备仍在编辑 {count} 个草稿字段。请等待对方结束编辑并刷新后再关闭。'**
+  /// **'其他成员或设备仍在编辑 {count} 个草稿字段。请等待对方完成编辑并刷新后再结束。'**
   String closeCollaborationDraftLocked(int count);
 
   /// No description provided for @closeCollaborationDiscardAndClose.
   ///
   /// In zh, this message translates to:
-  /// **'丢弃草稿并关闭'**
+  /// **'丢弃草稿并结束'**
   String get closeCollaborationDiscardAndClose;
 
   /// No description provided for @closeCollaborationSubmitAndClose.
   ///
   /// In zh, this message translates to:
-  /// **'提交并关闭'**
+  /// **'提交并结束'**
   String get closeCollaborationSubmitAndClose;
 
   /// No description provided for @closeCollaborationQueuedOffline.
   ///
   /// In zh, this message translates to:
-  /// **'记录仅保存到离线队列，尚未提交到服务器；会话没有关闭。请恢复网络并处理该记录后重试。'**
+  /// **'记录仅保存到离线队列，尚未提交到服务器；共同记录尚未结束。请恢复网络并处理该记录后重试。'**
   String get closeCollaborationQueuedOffline;
 
   /// No description provided for @closeSessionQueued.
   ///
   /// In zh, this message translates to:
-  /// **'已提交关闭共享会话请求，等待服务器同步确认'**
+  /// **'结束共同记录的请求已保存，等待同步确认'**
   String get closeSessionQueued;
 
   /// No description provided for @reopenCollaborationSessionTitle.

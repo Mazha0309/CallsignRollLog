@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import 'package:openlogtool/l10n/l10n.dart';
 import 'package:openlogtool/models/controller_display.dart';
 import 'package:openlogtool/providers/collaboration_provider.dart';
+import 'package:openlogtool/providers/account_share_provider.dart';
+import 'package:openlogtool/screens/social_screen.dart';
 import 'package:openlogtool/providers/log_provider.dart';
 import 'package:openlogtool/providers/session_provider.dart';
 import 'package:openlogtool/providers/server_provider.dart';
@@ -223,6 +225,29 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           centerTitle: false,
           actions: [
+            if (context.watch<AccountShareProvider?>()?.supportsFriends == true)
+              IconButton(
+                key: const Key('global-invitations'),
+                tooltip: context.l10n.socialMessages,
+                icon: Badge(
+                  isLabelVisible: context
+                          .watch<AccountShareProvider>()
+                          .pendingInboundCount >
+                      0,
+                  label: Text(
+                      '${context.watch<AccountShareProvider>().pendingInboundCount}'),
+                  child: const Icon(Icons.notifications_outlined),
+                ),
+                onPressed: () => Navigator.push<void>(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => SocialScreen(
+                          initialTab: 1,
+                          onSessionOpened: () {
+                            if (mounted) _onItemTapped(0);
+                          }),
+                    )),
+              ),
             _AppBarSyncStatus(
               onPressed: () => _onItemTapped(1),
             ),

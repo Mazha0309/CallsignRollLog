@@ -4,7 +4,6 @@ import 'package:openlogtool/utils/app_snack_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:openlogtool/l10n/l10n.dart';
 import 'package:openlogtool/providers/account_share_provider.dart';
-import 'package:openlogtool/providers/collaboration_provider.dart';
 import 'package:openlogtool/providers/log_provider.dart';
 import 'package:openlogtool/providers/session_provider.dart';
 import 'package:openlogtool/src/bridge/rust_api.dart';
@@ -18,12 +17,15 @@ typedef SessionCollaborationBindingChecker = Future<bool> Function(
   String sessionId,
 );
 
-enum _SessionStatusFilter { all, active, closed }
+enum _SessionCollection { all, personal, collaboration, closed }
 
-enum _SessionRowAction { closeLocally, deleteLocally }
+enum _SessionRowAction { closeLocally, manageCollaboration, deleteLocally }
 
 String historySessionCloseErrorText(BuildContext context, Object error) {
   final raw = error.toString();
+  if (raw.contains('LOCAL_CLOSE_COLLABORATION_FORBIDDEN')) {
+    return context.l10n.historySessionCollaborationCloseRequired;
+  }
   if (raw.contains('COLLABORATION_OPERATION_IN_PROGRESS')) {
     return context.l10n.localCollaborationOperationBusy;
   }
@@ -37,17 +39,14 @@ String historySessionCloseErrorText(BuildContext context, Object error) {
 
 Future<void> closeSessionFromHistory({
   required Session session,
-  required String? currentSessionId,
   required SessionCollaborationBindingChecker hasCollaborationBinding,
   required SessionHistoryAction closeLocalSession,
-  required Future<void> Function() closeCurrentCollaborationLocally,
 }) async {
   final collaboration = await hasCollaborationBinding(session.sessionId);
-  if (collaboration && session.sessionId == currentSessionId) {
-    await closeCurrentCollaborationLocally();
-  } else {
-    await closeLocalSession(session);
+  if (collaboration) {
+    throw StateError('LOCAL_CLOSE_COLLABORATION_FORBIDDEN');
   }
+  await closeLocalSession(session);
 }
 
 String localSessionReopenErrorText(BuildContext context, Object error) {
@@ -159,12 +158,14 @@ class SessionHistoryPanel extends StatefulWidget {
 class _SessionHistoryPanelState extends State<SessionHistoryPanel> {
   final _searchController = TextEditingController();
   Future<List<SessionListEntry>>? _entries;
-  _SessionStatusFilter _filter = _SessionStatusFilter.all;
+  _SessionCollection _collection = _SessionCollection.all;
   String _query = '';
   String? _busySessionId;
   int _page = 0;
   int? _databaseRevision;
+  int? _dataRevision;
   int? _collaborationCatalogRevision;
+  int? _sharingRevision;
 
   @override
   void didChangeDependencies() {
@@ -172,10 +173,14 @@ class _SessionHistoryPanelState extends State<SessionHistoryPanel> {
     final sessions = context.watch<SessionProvider>();
     final sharing = context.watch<AccountShareProvider>();
     if (_entries == null ||
+        _dataRevision != sessions.dataRevision ||
+        _sharingRevision != sharing.revision ||
         _databaseRevision != sessions.databaseRevision ||
         _collaborationCatalogRevision !=
             sessions.collaborationCatalogRevision) {
       _databaseRevision = sessions.databaseRevision;
+      _dataRevision = sessions.dataRevision;
+      _sharingRevision = sharing.revision;
       _collaborationCatalogRevision = sessions.collaborationCatalogRevision;
       _entries = _loadEntries(sessions, sharing);
       _busySessionId = null;
@@ -216,8 +221,13 @@ class _SessionHistoryPanelState extends State<SessionHistoryPanel> {
     return entries.where((entry) {
       final session = entry.session;
       if (session.sessionId == currentSessionId) return false;
-      if (_filter != _SessionStatusFilter.all &&
-          session.status != _filter.name) {
+      final collaborative = entry.hasCollaborationBinding || entry.isShared;
+      if (!switch (_collection) {
+        _SessionCollection.all => true,
+        _SessionCollection.personal => !collaborative,
+        _SessionCollection.collaboration => collaborative,
+        _SessionCollection.closed => session.status == 'closed',
+      }) {
         return false;
       }
       return query.isEmpty ||
@@ -541,6 +551,41 @@ class _SessionHistoryPanelState extends State<SessionHistoryPanel> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            FutureBuilder<List<SessionListEntry>>(
+              future: _entries,
+              builder: (context, snapshot) {
+                final entries = (snapshot.data ?? const <SessionListEntry>[])
+                    .where(
+                        (entry) => entry.session.sessionId != currentSessionId);
+                final collections = {
+                  _SessionCollection.all: context.l10n.hubAllRecords,
+                  _SessionCollection.personal: context.l10n.hubMyRecords,
+                  if (_collection == _SessionCollection.collaboration ||
+                      entries.any((entry) =>
+                          entry.hasCollaborationBinding || entry.isShared))
+                    _SessionCollection.collaboration:
+                        context.l10n.hubTogetherRecords,
+                  _SessionCollection.closed: context.l10n.hubEndedRecords,
+                };
+                return Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    for (final collection in collections.entries)
+                      ChoiceChip(
+                        key: Key('session-collection-${collection.key.name}'),
+                        label: Text(collection.value),
+                        selected: _collection == collection.key,
+                        onSelected: (_) => setState(() {
+                          _collection = collection.key;
+                          _page = 0;
+                        }),
+                      ),
+                  ],
+                );
+              },
+            ),
+            const SizedBox(height: 12),
             Wrap(
               spacing: 10,
               runSpacing: 10,
@@ -574,39 +619,6 @@ class _SessionHistoryPanelState extends State<SessionHistoryPanel> {
                       _query = value;
                       _page = 0;
                     }),
-                  ),
-                ),
-                SizedBox(
-                  width: compact ? constraints.maxWidth : 220,
-                  child: DropdownButtonFormField<_SessionStatusFilter>(
-                    key: const Key('session-history-status-filter'),
-                    initialValue: _filter,
-                    decoration: const InputDecoration(
-                      prefixIcon: Icon(Icons.filter_list),
-                      border: OutlineInputBorder(),
-                      isDense: true,
-                    ),
-                    items: [
-                      DropdownMenuItem(
-                        value: _SessionStatusFilter.all,
-                        child: Text(context.l10n.allSessionStatuses),
-                      ),
-                      DropdownMenuItem(
-                        value: _SessionStatusFilter.active,
-                        child: Text(context.l10n.sessionActive),
-                      ),
-                      DropdownMenuItem(
-                        value: _SessionStatusFilter.closed,
-                        child: Text(context.l10n.sessionClosed),
-                      ),
-                    ],
-                    onChanged: (value) {
-                      if (value == null) return;
-                      setState(() {
-                        _filter = value;
-                        _page = 0;
-                      });
-                    },
                   ),
                 ),
               ],
@@ -770,10 +782,21 @@ class _SessionHistoryPanelState extends State<SessionHistoryPanel> {
             enabled: !busy,
             onSelected: (action) => switch (action) {
               _SessionRowAction.closeLocally => _close(session),
+              _SessionRowAction.manageCollaboration =>
+                _openCollaborationManagement(session),
               _SessionRowAction.deleteLocally => _delete(session),
             },
             itemBuilder: (context) => [
-              if (session.status == 'active')
+              if (entry.hasCollaborationBinding)
+                PopupMenuItem(
+                  value: _SessionRowAction.manageCollaboration,
+                  child: ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.groups_outlined),
+                    title: Text(context.l10n.manageCollaboration),
+                  ),
+                ),
+              if (session.status == 'active' && !entry.hasCollaborationBinding)
                 PopupMenuItem(
                   value: _SessionRowAction.closeLocally,
                   child: ListTile(
@@ -929,7 +952,7 @@ Future<void> showSessionHistoryDialog(
 }) async {
   final sessionProvider = context.read<SessionProvider>();
   final logProvider = context.read<LogProvider>();
-  final collaborationProvider = context.read<CollaborationProvider>();
+  final collaborationSessionIds = <String>{};
   String? reopenedWithoutLogsSessionId;
   Future<void> loadAndSwitch(Session session) async {
     final previousSessionId = sessionProvider.currentSessionId;
@@ -962,7 +985,17 @@ Future<void> showSessionHistoryDialog(
     builder: (_) => SessionHistoryDialog(
       currentSessionId: sessionProvider.currentSessionId,
       currentSessionIdGetter: () => sessionProvider.currentSessionId,
-      loadSessions: sessionProvider.listAvailableSessions,
+      loadSessions: () async {
+        final entries = await sessionProvider.listAvailableSessionEntries();
+        collaborationSessionIds
+          ..clear()
+          ..addAll(entries
+              .where((entry) => entry.hasCollaborationBinding)
+              .map((entry) => entry.session.sessionId));
+        return entries.map((entry) => entry.session).toList();
+      },
+      isCollaborationSession: (session) =>
+          collaborationSessionIds.contains(session.sessionId),
       openSession: loadAndSwitch,
       reopenSession: (session) async {
         await sessionProvider.reopenLocalSession(session.sessionId);
@@ -989,7 +1022,6 @@ Future<void> showSessionHistoryDialog(
       },
       closeSession: (session) => closeSessionFromHistory(
         session: session,
-        currentSessionId: sessionProvider.currentSessionId,
         hasCollaborationBinding: (sessionId) async =>
             await RustApi.getSessionCollaborationBinding(
               sessionId: sessionId,
@@ -1005,8 +1037,6 @@ Future<void> showSessionHistoryDialog(
             );
           }
         },
-        closeCurrentCollaborationLocally:
-            collaborationProvider.closeCurrentSessionLocally,
       ),
       canCloseCurrentSession: sessionProvider.currentSessionId != null,
       deleteSession: (session) async {
@@ -1046,6 +1076,7 @@ class SessionHistoryDialog extends StatefulWidget {
     required this.deleteSession,
     this.canCloseCurrentSession = false,
     this.currentSessionIdGetter,
+    this.isCollaborationSession,
   });
 
   final String? currentSessionId;
@@ -1056,6 +1087,7 @@ class SessionHistoryDialog extends StatefulWidget {
   final SessionHistoryAction closeSession;
   final SessionHistoryAction deleteSession;
   final bool canCloseCurrentSession;
+  final bool Function(Session session)? isCollaborationSession;
 
   @override
   State<SessionHistoryDialog> createState() => _SessionHistoryDialogState();
@@ -1112,7 +1144,7 @@ class _SessionHistoryDialogState extends State<SessionHistoryDialog> {
           ),
           FilledButton(
             onPressed: () => Navigator.pop(dialogContext, true),
-            child: Text(context.l10n.closeCollaborationLocally),
+            child: Text(context.l10n.historySessionCloseTitle),
           ),
         ],
       ),
@@ -1264,6 +1296,8 @@ class _SessionHistoryDialogState extends State<SessionHistoryDialog> {
     final isCurrent = currentSessionId == session.sessionId;
     final isActive = session.status == 'active';
     final isClosed = session.status == 'closed';
+    final isCollaboration =
+        widget.isCollaborationSession?.call(session) ?? false;
     final busy = _busySessionId == session.sessionId;
     final createdAt = DateTime.tryParse(session.createdAt)?.toLocal();
     final createdLabel = createdAt == null
@@ -1293,10 +1327,12 @@ class _SessionHistoryDialogState extends State<SessionHistoryDialog> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Chip(label: Text(context.l10n.historySessionCurrent)),
-                    if (isActive && widget.canCloseCurrentSession)
+                    if (isActive &&
+                        widget.canCloseCurrentSession &&
+                        !isCollaboration)
                       IconButton(
                         key: Key('close-history-session-${session.sessionId}'),
-                        tooltip: context.l10n.closeCollaborationLocally,
+                        tooltip: context.l10n.historySessionCloseTitle,
                         onPressed: _busySessionId == null
                             ? () => _close(session)
                             : null,
@@ -1305,7 +1341,7 @@ class _SessionHistoryDialogState extends State<SessionHistoryDialog> {
                           color: Theme.of(context).colorScheme.error,
                         ),
                       ),
-                    if (isClosed)
+                    if (isClosed && !isCollaboration)
                       IconButton(
                         key: Key(
                           'reopen-history-session-${session.sessionId}',
@@ -1331,10 +1367,10 @@ class _SessionHistoryDialogState extends State<SessionHistoryDialog> {
                           _busySessionId == null ? () => _open(session) : null,
                       icon: const Icon(Icons.open_in_new),
                     ),
-                    if (isActive)
+                    if (isActive && !isCollaboration)
                       IconButton(
                         key: Key('close-history-session-${session.sessionId}'),
-                        tooltip: context.l10n.closeCollaborationLocally,
+                        tooltip: context.l10n.historySessionCloseTitle,
                         onPressed: _busySessionId == null
                             ? () => _close(session)
                             : null,
@@ -1343,7 +1379,7 @@ class _SessionHistoryDialogState extends State<SessionHistoryDialog> {
                           color: Theme.of(context).colorScheme.error,
                         ),
                       ),
-                    if (isClosed)
+                    if (isClosed && !isCollaboration)
                       IconButton(
                         key: Key(
                           'reopen-history-session-${session.sessionId}',

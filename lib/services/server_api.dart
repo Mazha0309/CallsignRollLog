@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:openlogtool/models/account_dto.dart';
 import 'package:openlogtool/models/account_share_dto.dart';
+import 'package:openlogtool/models/social_dto.dart';
 import 'package:openlogtool/models/collaboration_dto.dart';
 import 'package:openlogtool/models/live_draft.dart';
 import 'package:openlogtool/models/personal_cloud_dto.dart';
@@ -342,6 +343,23 @@ final class ServerApi {
     });
   }
 
+  Future<SocialSnapshot> getSocialSnapshot() async {
+    final response = await _authorizedRequest('GET', '/social');
+    return _parseResponse(response,
+        (json) => SocialSnapshot.fromJson(_jsonObject(json, 'social')));
+  }
+
+  Future<void> socialMutation(
+    String method,
+    String path, {
+    Map<String, Object?> body = const {},
+    required String idempotencyKey,
+  }) async {
+    final response = await _authorizedRequest(method, '/social$path',
+        body: body, headers: _idempotencyHeaders(idempotencyKey));
+    _throwForError(response);
+  }
+
   Future<List<AccountShareGrantDto>> listSessionShares(String box) async {
     final response = await _authorizedRequest(
       'GET',
@@ -553,7 +571,18 @@ final class ServerApi {
     return _parseResponse(response, WebSocketTicketDto.fromJson);
   }
 
-  Uri collaborationWebSocketUri(String ticket) {
+  Future<Uri> socialWebSocketTicketUri() async {
+    final response =
+        await _authorizedRequest('POST', '/social/ws-ticket', body: const {});
+    final ticket = _parseResponse(response,
+        (json) => _jsonObject(json, 'socialTicket')['ticket'] as String);
+    return _webSocketUri(ticket, 'social');
+  }
+
+  Uri collaborationWebSocketUri(String ticket) =>
+      _webSocketUri(ticket, 'collaboration');
+
+  Uri _webSocketUri(String ticket, String channel) {
     final normalized = ticket.trim();
     if (normalized.isEmpty) {
       throw ArgumentError.value(ticket, 'ticket', 'must not be empty');
@@ -565,7 +594,7 @@ final class ServerApi {
         : '';
     return _apiBaseUri.replace(
       scheme: _apiBaseUri.scheme == 'https' ? 'wss' : 'ws',
-      path: '$rootPath/ws/collaboration',
+      path: '$rootPath/ws/$channel',
       queryParameters: {'ticket': normalized},
       fragment: null,
     );

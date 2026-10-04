@@ -47,6 +47,31 @@ void main() {
     expect(find.byType(AlertDialog), findsNothing);
   });
 
+  testWidgets(
+      'workbench exposes live invitation count and opens Messages directly',
+      (tester) async {
+    final sessions = _EmptySessionProvider();
+    await sessions.startNewSession(title: '当前点名');
+    final sharing = _IncomingSharingProvider();
+    await tester
+        .pumpWidget(_HomeScreenTestApp(sessions: sessions, sharing: sharing));
+    await tester.pumpAndSettle();
+    final notification = find.byKey(const Key('global-invitations'));
+    expect(notification, findsOneWidget);
+    expect(find.descendant(of: notification, matching: find.text('2')),
+        findsOneWidget);
+    sharing.incoming = 3;
+    sharing.notifyListeners();
+    await tester.pump();
+    expect(find.descendant(of: notification, matching: find.text('3')),
+        findsOneWidget);
+    await tester.tap(notification);
+    await tester.pumpAndSettle();
+    expect(
+        DefaultTabController.of(tester.element(find.byType(TabBar))).index, 1);
+    expect(find.text('当前点名'), findsNothing);
+  });
+
   testWidgets('first launch opens Sessions without a startup dialog',
       (tester) async {
     tester.view.physicalSize = const Size(390, 844);
@@ -59,9 +84,11 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(AlertDialog), findsNothing);
+    expect(find.byKey(const Key('global-invitations')), findsNothing);
     expect(find.byKey(const Key('current-session-section')), findsOneWidget);
     expect(find.byKey(const Key('create-session')), findsOneWidget);
-    expect(find.text('创建一个点名会话，或加入协作后即可开始记录。'), findsOneWidget);
+    expect(find.textContaining('无需服务器或账号'), findsOneWidget);
+    expect(find.byKey(const Key('join-collaboration')), findsNothing);
     expect(find.byKey(const Key('session-history-section')), findsOneWidget);
     expect(
       tester
@@ -202,14 +229,16 @@ class _AddRecordTestApp extends StatelessWidget {
 }
 
 class _HomeScreenTestApp extends StatelessWidget {
-  const _HomeScreenTestApp({required this.sessions});
+  const _HomeScreenTestApp({required this.sessions, this.sharing});
 
   final _EmptySessionProvider sessions;
+  final AccountShareProvider? sharing;
 
   @override
   Widget build(BuildContext context) => _TestProviders(
         sessions: sessions,
         includeHomeDependencies: true,
+        sharing: sharing,
         child: const HomeScreen(),
       );
 }
@@ -219,11 +248,13 @@ class _TestProviders extends StatelessWidget {
     required this.sessions,
     required this.child,
     this.includeHomeDependencies = false,
+    this.sharing,
   });
 
   final _EmptySessionProvider sessions;
   final Widget child;
   final bool includeHomeDependencies;
+  final AccountShareProvider? sharing;
 
   @override
   Widget build(BuildContext context) {
@@ -238,7 +269,8 @@ class _TestProviders extends StatelessWidget {
         ),
       ),
       ChangeNotifierProvider(create: (_) => CollaborationProvider()),
-      ChangeNotifierProvider(create: (_) => AccountShareProvider()),
+      ChangeNotifierProvider<AccountShareProvider>(
+          create: (_) => sharing ?? AccountShareProvider()),
       ChangeNotifierProvider(
         create: (_) => PersonalCloudProvider(
           exporter: () async => '{"version":1,"sessions":[],"logs":[]}',
@@ -266,6 +298,16 @@ class _TestProviders extends StatelessWidget {
       ),
     );
   }
+}
+
+class _IncomingSharingProvider extends AccountShareProvider {
+  int incoming = 2;
+  @override
+  bool get supportsFriends => true;
+  @override
+  int get pendingInboundCount => incoming;
+  @override
+  Future<void> refresh() async {}
 }
 
 class _EmptySessionProvider extends SessionProvider {

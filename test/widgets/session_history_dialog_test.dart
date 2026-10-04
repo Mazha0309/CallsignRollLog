@@ -13,64 +13,60 @@ void main() {
       status: 'active',
     );
     var localCloseCount = 0;
-    var collaborationCloseCount = 0;
-
     await closeSessionFromHistory(
       session: session,
-      currentSessionId: session.sessionId,
       hasCollaborationBinding: (_) async => false,
       closeLocalSession: (_) async => localCloseCount += 1,
-      closeCurrentCollaborationLocally: () async =>
-          collaborationCloseCount += 1,
     );
-
     expect(localCloseCount, 1);
-    expect(collaborationCloseCount, 0);
   });
 
-  test('history close handles a non-current collaboration replica locally',
+  test('history end rejects collaboration without calling the local action',
       () async {
-    final session = _session(
-      id: 'remote-session',
-      title: 'Remote net',
-      status: 'active',
+    var calls = 0;
+    await expectLater(
+      closeSessionFromHistory(
+        session: _session(id: 'remote', title: 'Shared', status: 'active'),
+        hasCollaborationBinding: (_) async => true,
+        closeLocalSession: (_) async => calls++,
+      ),
+      throwsA(isA<StateError>().having(
+          (e) => e.message, 'message', 'LOCAL_CLOSE_COLLABORATION_FORBIDDEN')),
     );
-
-    var localCloseCount = 0;
-    var currentCloseCount = 0;
-    await closeSessionFromHistory(
-      session: session,
-      currentSessionId: 'other-session',
-      hasCollaborationBinding: (_) async => true,
-      closeLocalSession: (_) async => localCloseCount += 1,
-      closeCurrentCollaborationLocally: () async => currentCloseCount += 1,
-    );
-
-    expect(localCloseCount, 1);
-    expect(currentCloseCount, 0);
+    expect(calls, 0);
   });
 
-  test('history close stops the current collaboration only on this device',
-      () async {
-    final session = _session(
-      id: 'remote-session',
-      title: 'Remote net',
-      status: 'active',
-    );
-    var localCloseCount = 0;
-    var localCollaborationCloseCount = 0;
-
-    await closeSessionFromHistory(
-      session: session,
-      currentSessionId: session.sessionId,
-      hasCollaborationBinding: (_) async => true,
-      closeLocalSession: (_) async => localCloseCount += 1,
-      closeCurrentCollaborationLocally: () async =>
-          localCollaborationCloseCount += 1,
-    );
-
-    expect(localCloseCount, 0);
-    expect(localCollaborationCloseCount, 1);
+  testWidgets('legacy history offers no local lifecycle for collaboration',
+      (tester) async {
+    await tester.pumpWidget(MaterialApp(
+      locale: const Locale('en', 'US'),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      home: Scaffold(
+          body: SessionHistoryDialog(
+        currentSessionId: 'active-shared',
+        canCloseCurrentSession: true,
+        isCollaborationSession: (_) => true,
+        loadSessions: () async => [
+          _session(
+              id: 'active-shared', title: 'Shared active', status: 'active'),
+          _session(
+              id: 'closed-shared', title: 'Shared ended', status: 'closed'),
+        ],
+        openSession: (_) async {},
+        reopenSession: (_) async =>
+            fail('Must not reopen collaboration locally'),
+        closeSession: (_) async => fail('Must not end collaboration locally'),
+        deleteSession: (_) async {},
+      )),
+    ));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('close-history-session-active-shared')),
+        findsNothing);
+    expect(find.byKey(const Key('reopen-history-session-closed-shared')),
+        findsNothing);
+    expect(find.byKey(const Key('open-history-session-closed-shared')),
+        findsOneWidget);
   });
 
   testWidgets('a closed session opens from the whole history row in zh_CN',
@@ -122,7 +118,7 @@ void main() {
     expect(find.text('历史会话'), findsOneWidget);
     expect(find.text('历史记录'), findsNothing);
     expect(find.text('上周点名'), findsOneWidget);
-    expect(find.textContaining('已关闭'), findsOneWidget);
+    expect(find.textContaining('已结束'), findsOneWidget);
 
     await tester.tap(
       find.byKey(const Key('session-history-tile-closed-session')),
@@ -470,7 +466,7 @@ void main() {
 
     expect(find.text('Reactivate local session'), findsOneWidget);
     expect(
-      find.textContaining('Any other active local session'),
+      find.textContaining('Other sessions stay unchanged'),
       findsOneWidget,
     );
 
@@ -495,7 +491,7 @@ void main() {
             currentSessionId: 'current-session',
             loadSessions: () async => [
               _session(
-                id: 'collaboration-session',
+                id: 'local-session',
                 title: '远程点名',
                 status: 'closed',
               ),
@@ -513,7 +509,7 @@ void main() {
 
     await tester.tap(
       find.byKey(
-        const Key('reopen-history-session-collaboration-session'),
+        const Key('reopen-history-session-local-session'),
       ),
     );
     await tester.pumpAndSettle();
@@ -532,7 +528,8 @@ void main() {
     );
   });
 
-  testWidgets('history close explains and completes a device-only close',
+  testWidgets(
+      'history end preserves records without mentioning collaboration conversion',
       (tester) async {
     var closeCount = 0;
     await tester.pumpWidget(
@@ -545,7 +542,7 @@ void main() {
             currentSessionId: 'current-session',
             loadSessions: () async => [
               _session(
-                id: 'collaboration-session',
+                id: 'local-session',
                 title: '远程点名',
                 status: 'active',
               ),
@@ -562,24 +559,24 @@ void main() {
 
     await tester.tap(
       find.byKey(
-        const Key('close-history-session-collaboration-session'),
+        const Key('close-history-session-local-session'),
       ),
     );
     await tester.pumpAndSettle();
-    expect(find.textContaining('服务器共享会话、成员及其他设备不受影响'), findsOneWidget);
-    await tester.tap(find.text('仅在本机关闭').last);
+    expect(find.textContaining('此操作不会删除数据'), findsOneWidget);
+    expect(find.textContaining('丢弃未同步'), findsNothing);
+    await tester.tap(find.text('结束记录').last);
     await tester.pumpAndSettle();
 
     expect(closeCount, 1);
-    expect(find.text('已在本机关闭会话'), findsOneWidget);
+    expect(find.text('记录已结束，已有记录已保留'), findsOneWidget);
   });
 
-  testWidgets('replacement id remains marked current after local close',
-      (tester) async {
-    var currentId = 'collaboration-session';
+  testWidgets('ended local session remains marked current', (tester) async {
+    var currentId = 'local-session';
     var sessions = <Session>[
       _session(
-        id: 'collaboration-session',
+        id: 'local-session',
         title: 'Sunday net',
         status: 'active',
       ),
@@ -598,7 +595,7 @@ void main() {
             openSession: (_) async {},
             reopenSession: (_) async {},
             closeSession: (_) async {
-              currentId = 'closed-local-session';
+              currentId = 'local-session';
               sessions = [
                 _session(
                   id: currentId,
@@ -616,21 +613,21 @@ void main() {
 
     await tester.tap(
       find.byKey(
-        const Key('close-history-session-collaboration-session'),
+        const Key('close-history-session-local-session'),
       ),
     );
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Close only on this device').last);
+    await tester.tap(find.text('End recording').last);
     await tester.pumpAndSettle();
 
     expect(
-      find.byKey(const Key('session-history-tile-closed-local-session')),
+      find.byKey(const Key('session-history-tile-local-session')),
       findsOneWidget,
     );
     expect(find.text('Current session'), findsOneWidget);
     expect(
       find.byKey(
-        const Key('delete-history-session-closed-local-session'),
+        const Key('delete-history-session-local-session'),
       ),
       findsNothing,
     );

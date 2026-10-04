@@ -966,53 +966,62 @@ class _CollaborationScreenState extends State<CollaborationScreen> {
           children: [
             Text(session.title, style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 4),
-            SelectableText(session.sessionId),
             const SizedBox(height: 8),
             if (isLocal)
               Text(context.l10n.localCollaborationSessionHint)
             else ...[
-              Text(
-                context.l10n.collaborationSessionSummary(
-                  collaborationStateLabel(
-                    context.l10n,
-                    collaboration.state.name,
-                  ),
-                  _roleLabel(
-                    collaboration.effectiveRole ?? binding?.role,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                context.l10n.collaborationSyncSummary(
-                  _transportLabel(collaboration.transportPhase),
-                  collaboration.lastAppliedSeq,
-                  collaboration.serverHeadSeq,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                context.l10n.collaborationQueueSummary(
-                  collaboration.pendingCount,
-                  collaboration.conflictCount,
-                  collaboration.rejectedCount,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                collaboration.canEditCurrentSession
-                    ? context.l10n.collaborationReliableQueueHint
-                    : _readOnlyReason(collaboration, sessions),
-              ),
-              if (collaboration.lastSuccessfulSyncAt != null) ...[
+              Text(_roleLabel(collaboration.effectiveRole ?? binding?.role)),
+              const SizedBox(height: 8),
+              Text(_overviewSyncLabel(collaboration)),
+              if (!collaboration.canEditCurrentSession) ...[
                 const SizedBox(height: 4),
-                Text(
-                  context.l10n.collaborationLastSync(
-                    collaboration.lastSuccessfulSyncAt!.toLocal().toString(),
-                  ),
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
+                Text(_readOnlyReason(collaboration, sessions)),
               ],
+              ExpansionTile(
+                key: const PageStorageKey<String>(
+                    'collaboration-technical-details'),
+                tilePadding: EdgeInsets.zero,
+                title: Text(context.l10n.collaborationTechnicalDetails),
+                children: [
+                  Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SelectableText(
+                          session.sessionId,
+                          // Keep its scroll offset separate from the tile's
+                          // boolean expansion state in PageStorage.
+                          key: PageStorageKey<String>(
+                              'collaboration-session-id-${session.sessionId}'),
+                        ),
+                        Text(context.l10n.collaborationSessionSummary(
+                          collaborationStateLabel(
+                              context.l10n, collaboration.state.name),
+                          _roleLabel(
+                              collaboration.effectiveRole ?? binding?.role),
+                        )),
+                        Text(context.l10n.collaborationSyncSummary(
+                          _transportLabel(collaboration.transportPhase),
+                          collaboration.lastAppliedSeq,
+                          collaboration.serverHeadSeq,
+                        )),
+                        Text(context.l10n.collaborationQueueSummary(
+                          collaboration.pendingCount,
+                          collaboration.conflictCount,
+                          collaboration.rejectedCount,
+                        )),
+                        if (collaboration.lastSuccessfulSyncAt != null)
+                          Text(context.l10n.collaborationLastSync(
+                            collaboration.lastSuccessfulSyncAt!
+                                .toLocal()
+                                .toString(),
+                          )),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
               if (collaboration.hasOpenSessionConflict) ...[
                 const SizedBox(height: 8),
                 Text(
@@ -1024,6 +1033,10 @@ class _CollaborationScreenState extends State<CollaborationScreen> {
               ],
             ],
             const SizedBox(height: 12),
+            if (!isLocal) ...[
+              Text(context.l10n.collaborationLifecycleHint),
+              const SizedBox(height: 12),
+            ],
             if (isLocal ||
                 collaboration.state == CollaborationState.publishing ||
                 failedPublish)
@@ -1110,6 +1123,21 @@ class _CollaborationScreenState extends State<CollaborationScreen> {
     );
   }
 
+  String _overviewSyncLabel(CollaborationProvider collaboration) {
+    if (collaboration.conflictCount > 0 ||
+        collaboration.rejectedCount > 0 ||
+        collaboration.offlineRecords.isNotEmpty) {
+      return context.l10n.collaborationOverviewAttention;
+    }
+    if (collaboration.pendingCount > 0) {
+      return context.l10n
+          .collaborationOverviewPending(collaboration.pendingCount);
+    }
+    return collaboration.transportPhase == CollaborationTransportPhase.online
+        ? context.l10n.collaborationOverviewOnline
+        : context.l10n.collaborationOverviewOffline;
+  }
+
   String _transportLabel(CollaborationTransportPhase phase) => switch (phase) {
         CollaborationTransportPhase.stopped => context.l10n.transportStopped,
         CollaborationTransportPhase.connecting =>
@@ -1194,7 +1222,31 @@ class _CollaborationScreenState extends State<CollaborationScreen> {
     }
   }
 
+  Object _sessionActionIdentity(CollaborationProvider collaboration) {
+    final binding = collaboration.binding;
+    return (
+      context.read<SessionProvider>().currentSessionId,
+      binding?.sessionId,
+      binding?.serverInstanceId,
+      binding?.accountId,
+      context.read<ServerProvider>().contextRevision,
+    );
+  }
+
+  bool _sessionActionStillCurrent(
+    CollaborationProvider collaboration,
+    Object identity,
+  ) {
+    if (!mounted) return false;
+    if (_sessionActionIdentity(collaboration) == identity) return true;
+    ScaffoldMessenger.of(context).showLoggedSnackBar(
+      SnackBar(content: Text(context.l10n.hubContextChanged)),
+    );
+    return false;
+  }
+
   Future<void> _leaveSession(CollaborationProvider collaboration) async {
+    final identity = _sessionActionIdentity(collaboration);
     final accepted = await showDialog<bool>(
           context: context,
           builder: (dialogContext) => AlertDialog(
@@ -1213,11 +1265,14 @@ class _CollaborationScreenState extends State<CollaborationScreen> {
           ),
         ) ??
         false;
-    if (!accepted) return;
+    if (!accepted || !_sessionActionStillCurrent(collaboration, identity)) {
+      return;
+    }
     await _run(collaboration.leaveCurrentSession);
   }
 
   Future<void> _closeSession(CollaborationProvider collaboration) async {
+    final identity = _sessionActionIdentity(collaboration);
     try {
       if (collaboration.supportsLiveDraft) {
         await collaboration.refreshLiveDraft();
@@ -1231,6 +1286,7 @@ class _CollaborationScreenState extends State<CollaborationScreen> {
       }
       return;
     }
+    if (!_sessionActionStillCurrent(collaboration, identity)) return;
     final fields = collaboration.liveDraftFields;
     final hasDraft =
         fields != null && _liveDraftHasCloseBlockingContent(fields);
@@ -1317,7 +1373,11 @@ class _CollaborationScreenState extends State<CollaborationScreen> {
         ],
       ),
     );
-    if (action == null || !mounted) return;
+    if (!mounted ||
+        action == null ||
+        !_sessionActionStillCurrent(collaboration, identity)) {
+      return;
+    }
 
     final messenger = ScaffoldMessenger.of(context);
     try {
@@ -1343,6 +1403,7 @@ class _CollaborationScreenState extends State<CollaborationScreen> {
           }
           break;
       }
+      if (!_sessionActionStillCurrent(collaboration, identity)) return;
       await collaboration.closeCurrentSession();
       if (mounted) {
         messenger.showLoggedSnackBar(
@@ -1359,12 +1420,15 @@ class _CollaborationScreenState extends State<CollaborationScreen> {
   }
 
   Future<void> _reopenSession(CollaborationProvider collaboration) async {
+    final identity = _sessionActionIdentity(collaboration);
     final successMessage = context.l10n.reopenSessionQueued;
     final accepted = await _confirm(
       context.l10n.reopenCollaborationSessionTitle,
       context.l10n.reopenCollaborationSessionMessage,
     );
-    if (!accepted) return;
+    if (!accepted || !_sessionActionStillCurrent(collaboration, identity)) {
+      return;
+    }
     await _run(
       collaboration.reopenCurrentSession,
       success: successMessage,

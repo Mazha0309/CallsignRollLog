@@ -394,15 +394,13 @@ class SessionProvider with ChangeNotifier {
 
   /// Reactivates and selects a closed local-only session.
   ///
-  /// Rust atomically closes any other active local-only session and returns
-  /// the new canonical local row, so this provider cannot keep presenting the
-  /// previous session as writable after the operation succeeds.
+  /// Rust reactivates only the target; other sessions retain their status.
   Future<void> reopenLocalSession(String sessionId) async {
     final reopened = await _localSessionReopener(sessionId);
 
     // The database transaction has already committed. Adopt its canonical
     // result before touching preferences so an I/O failure cannot leave the
-    // in-memory provider pointing at a session Rust just closed.
+    // in-memory provider presenting the resumed session with stale status.
     _currentSession = reopened;
     _currentSessionId = reopened.sessionId;
     _markPersonalDataChanged();
@@ -543,11 +541,14 @@ class SessionProvider with ChangeNotifier {
     return local;
   }
 
-  /// Closes one session only on this device. A collaboration replica may be
-  /// replaced by a closed local-only row with a new identifier; the selected
-  /// session pointer follows that replacement when necessary.
+  /// Ends a local-only session, preserving its identity and records.
+  /// Collaboration sessions are rejected, including by the native transaction,
+  /// so ending a session can never silently detach a replica or discard a queue.
   Future<Session> closeSessionLocally(String sessionId) async {
     await ready;
+    if (await _sessionBindingChecker(sessionId)) {
+      throw StateError('LOCAL_CLOSE_COLLABORATION_FORBIDDEN');
+    }
     final wasCurrent = _currentSessionId == sessionId;
     final closed = await _localSessionCloser(sessionId);
     _markPersonalDataChanged();

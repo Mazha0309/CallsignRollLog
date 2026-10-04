@@ -156,9 +156,7 @@ Future<void> _bootstrap(List<String> args) async {
         ChangeNotifierProvider(create: (_) => SettingsProvider()),
         ChangeNotifierProvider(create: (_) => AiRecognitionSettingsProvider()),
         ChangeNotifierProvider(
-          create: (_) => SessionProvider(
-            enableAutomaticInactivityClose: true,
-          ),
+          create: (_) => SessionProvider(),
         ),
         ChangeNotifierProvider(create: (_) => ServerProvider()),
         ChangeNotifierProxyProvider<ServerProvider, AccountShareProvider>(

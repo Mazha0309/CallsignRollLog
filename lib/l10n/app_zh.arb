@@ -1,4 +1,80 @@
 {
+  "collaborationTechnicalDetails": "连接与诊断详情",
+  "collaborationOverviewOnline": "已连接，正在与参与者同步记录。",
+  "collaborationOverviewOffline": "连接暂时不可用，已有记录仍保留在本机。",
+  "collaborationOverviewAttention": "有待处理的记录或同步问题，请打开“同步”查看。",
+  "collaborationOverviewPending": "已保存到本机，{count} 项修改等待同步。",
+  "@collaborationOverviewPending": {"placeholders":{"count":{"type":"int"}}},
+  "historySessionCollaborationCloseRequired": "这是共同记录，请在“协作与成员”中结束共同记录或离开协作；不能把它作为本地会话结束。",
+  "collaborationLifecycleHint": "切换页面或暂时断网不会退出协作。发起人可以结束共同记录，参与者可以离开协作；已有记录会保留。",
+  "hubLocalStart": "新建会话即可开始记录，无需服务器或账号。记录保存在本机，可随时查看和导出。",
+  "hubLocalHint": "本地记录可独立使用；同步与多人协作按需启用。",
+  "hubOptionalOnline": "同步与协作（可选）",
+  "hubOptionalOnlineHint": "需要多设备同步或与搭档共同记录时，再连接服务器。",
+  "hubConfigureServer": "设置可选服务器",
+  "hubOnlineConnected": "好友与协作使用当前服务器，本地记录仍可独立使用。",
+  "hubEnableCollaboration": "邀请搭档一起记录",
+  "hubConfirmUpload": "上传此会话并开启协作",
+  "hubUploadExplanation": "这会把当前会话及其中已有的记录上传到下面的服务器，并开始协作同步。此操作只上传当前会话，不改变其他会话的同步设置。会话仍为私有，之后再选择要邀请的好友；此操作不会发布公开页面。",
+  "hubContextChanged": "服务器、账号或当前会话已切换，请关闭后重新操作。",
+  "hubAlreadyMember": "对方已经加入这个会话，可在参与者管理中查看。",
+  "hubInvitationHint": "对方接受后才能查看此会话的记录，不会开放你的其他会话。",
+  "hubContinueRecording": "继续记录",
+  "hubViewRecords": "查看记录",
+  "hubSessionDetails": "会话详细信息",
+  "hubHistoryHint": "查看本机已有记录。“已结束”只按会话状态筛选，不代表公开归档。",
+  "hubAllRecords": "全部",
+  "hubMyRecords": "我的记录",
+  "hubTogetherRecords": "共同记录",
+  "hubEndedRecords": "已结束",
+  "socialTitle": "好友与邀请",
+  "socialAddFriend": "添加好友",
+  "socialFriends": "好友",
+  "socialMessages": "消息",
+  "socialSessions": "会话",
+  "socialIntro": "添加搭档为好友，再邀请他们一起点名。好友关系不会自动开放个人记录。",
+  "socialUsername": "对方的用户名（注册时使用的呼号）",
+  "socialSend": "发送申请",
+  "socialInvite": "邀请参与",
+  "socialApply": "申请加入",
+  "socialAccept": "接受",
+  "socialReject": "拒绝",
+  "socialPending": "等待对方处理",
+  "socialAccepted": "已接受",
+  "socialView": "只能查看",
+  "socialEdit": "共同记录",
+  "socialOpen": "打开会话",
+  "socialPrivate": "仅邀请可加入",
+  "socialDiscoverable": "好友可见，可申请加入",
+  "socialVisibilityHint": "好友只能看到会话标题，获准加入后才能查看记录。",
+  "socialNoFriends": "还没有好友，输入搭档的用户名发送申请。",
+  "socialNoMessages": "暂无邀请或申请",
+  "socialNoSessions": "暂无好友开放的会话。你也可以把当前会话用于协作。",
+  "socialPublish": "开启当前会话协作",
+  "socialRemove": "删除好友",
+  "socialRemoveHint": "会取消彼此待处理的邀请和申请。已加入的会话成员由会话负责人单独管理。",
+  "socialBlock": "屏蔽",
+  "socialUnblock": "取消屏蔽",
+  "socialBlocked": "已屏蔽",
+  "socialDone": "操作已完成",
+  "socialFriendRequest": "好友申请",
+  "socialInvitation": "会话邀请",
+  "socialApplication": "加入申请",
+  "socialSent": "我发出的",
+  "socialReceived": "收到的",
+  "socialManage": "管理参与者",
+  "socialConnect": "连接服务器并登录后，即可添加好友。",
+  "socialUpgrade": "此服务器尚不支持好友功能，请更新服务器。",
+  "socialLoadFailed": "暂时无法刷新，请重试。",
+  "socialChooseFriend": "选择好友",
+  "socialErrorUser": "没有找到这个用户名。请确认对方已在同一服务器注册。",
+  "socialErrorFriends": "请先添加对方为好友。",
+  "socialErrorClosed": "这条申请已处理或已过期，请刷新。",
+  "socialErrorSelf": "不能添加自己为好友。",
+  "socialErrorBlocked": "目前无法向这个用户发送请求。",
+  "socialServerLink": "复制服务器连接信息",
+  "socialServerLinkHint": "可粘贴服务器地址或服务器网页链接，连接后再登录。",
+  "socialLegacy": "旧版共享",
   "@@locale": "zh",
   "navWorkbench": "点名台",
   "navSessions": "会话",
@@ -16,25 +92,70 @@
   "collaborationRevoked": "权限已撤销",
   "collaborationFailed": "同步失败",
   "collaborationState": "协作 {state}",
-  "@collaborationState": {"placeholders": {"state": {"type": "String"}}},
+  "@collaborationState": {
+    "placeholders": {
+      "state": {
+        "type": "String"
+      }
+    }
+  },
   "pendingSyncCount": "待同步 {count}",
-  "@pendingSyncCount": {"placeholders": {"count": {"type": "int"}}},
+  "@pendingSyncCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "conflictCount": "冲突 {count}",
-  "@conflictCount": {"placeholders": {"count": {"type": "int"}}},
+  "@conflictCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "localSessionTooltip": "当前为本地会话",
   "collaborationStatusTooltip": "协作状态 {state}，待同步 {count}",
-  "@collaborationStatusTooltip": {"placeholders": {"state": {"type": "String"}, "count": {"type": "int"}}},
+  "@collaborationStatusTooltip": {
+    "placeholders": {
+      "state": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "currentRecord": "当前记录",
   "startNewRecord": "开始新记录",
   "newRecordName": "新记录名称",
   "newRecordNameHint": "输入本次记录名称（可留空）",
   "automaticName": "自动命名",
   "newRecordStarted": "已开始新记录：{name}",
-  "@newRecordStarted": {"placeholders": {"name": {"type": "String"}}},
+  "@newRecordStarted": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "createNewRecordFailed": "创建新记录失败：{error}",
-  "@createNewRecordFailed": {"placeholders": {"error": {"type": "String"}}},
+  "@createNewRecordFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "currentOrdinal": "当前第 {ordinal} 位",
-  "@currentOrdinal": {"placeholders": {"ordinal": {"type": "int"}}},
+  "@currentOrdinal": {
+    "placeholders": {
+      "ordinal": {
+        "type": "int"
+      }
+    }
+  },
   "sessionsTitle": "会话",
   "sessionsSubtitle": "管理本次点名、协作书记员和主控显示设备。",
   "noCurrentSession": "当前没有点名会话",
@@ -43,9 +164,15 @@
   "createOrJoinSessionFirst": "请先新建会话或加入协作",
   "goCreateSession": "去新建会话",
   "sessionActive": "进行中",
-  "sessionClosed": "已关闭",
+  "sessionClosed": "已结束",
   "savedPositions": "{count} 位已保存",
-  "@savedPositions": {"placeholders": {"count": {"type": "int"}}},
+  "@savedPositions": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "localSession": "本地会话",
   "manageCollaboration": "协作与成员",
   "openLiveShare": "Live Share 公开页面",
@@ -60,46 +187,124 @@
   "historySessionsHint": "查看和切换过去的点名会话；已关闭会话将以只读方式打开。",
   "historySessionsEmpty": "暂无历史会话",
   "historySessionsLoadFailed": "加载历史会话失败：{error}",
-  "@historySessionsLoadFailed": {"placeholders": {"error": {"type": "String"}}},
+  "@historySessionsLoadFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "historySessionOpen": "打开会话",
   "historySessionCurrent": "当前会话",
   "historySessionSwitched": "已打开会话：{title}",
-  "@historySessionSwitched": {"placeholders": {"title": {"type": "String"}}},
+  "@historySessionSwitched": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "historySessionOpenFailed": "打开会话失败：{error}",
-  "@historySessionOpenFailed": {"placeholders": {"error": {"type": "String"}}},
-  "historySessionCloseTitle": "仅在本机关闭会话",
-  "historySessionCloseConfirmation": "仅在本机关闭“{title}”吗？关闭后会作为只读本地历史保留。如果这是协作副本，本机将停止同步并丢弃未同步队列、冲突、离线待复核记录及未提交草稿的本机副本；服务器共享会话、成员及其他设备不受影响。",
-  "@historySessionCloseConfirmation": {"placeholders": {"title": {"type": "String"}}},
-  "historySessionClosed": "已在本机关闭会话",
-  "historySessionCloseFailed": "在本机关闭会话失败：{error}",
-  "@historySessionCloseFailed": {"placeholders": {"error": {"type": "String"}}},
+  "@historySessionOpenFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "historySessionCloseTitle": "结束记录",
+  "historySessionCloseConfirmation": "结束“{title}”的记录吗？已有记录会保留，可随时查看或恢复记录。此操作不会删除数据。",
+  "@historySessionCloseConfirmation": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "historySessionClosed": "记录已结束，已有记录已保留",
+  "historySessionCloseFailed": "结束记录失败：{error}",
+  "@historySessionCloseFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "historySessionCollaborationCloseRequiresOpen": "这是协作会话。请先打开该会话，再进入“协作与成员”关闭它。",
   "historySessionCollaborationCloseOwnerRequired": "只有已完成同步的会话所有者才能关闭协作会话。请进入“协作与成员”刷新权限后重试。",
   "historySessionReopenAction": "重新激活",
   "historySessionReopenTitle": "重新激活本地会话",
-  "historySessionReopenConfirmation": "重新激活“{title}”并切换到该会话吗？当前进行中的其他本地会话将自动关闭，协作会话不受影响。目标如果是协作会话，请在“协作与成员”中重新打开。",
-  "@historySessionReopenConfirmation": {"placeholders": {"title": {"type": "String"}}},
+  "historySessionReopenConfirmation": "恢复“{title}”并切换过去继续记录吗？其他会话不受影响。协作会话请由发起人在“协作与成员”中恢复。",
+  "@historySessionReopenConfirmation": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "historySessionReopened": "已重新激活并切换到会话：{title}",
-  "@historySessionReopened": {"placeholders": {"title": {"type": "String"}}},
+  "@historySessionReopened": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "historySessionReopenFailed": "重新激活本地会话失败：{error}",
-  "@historySessionReopenFailed": {"placeholders": {"error": {"type": "String"}}},
+  "@historySessionReopenFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "historySessionReopenedLogsUnavailable": "会话“{title}”已重新激活，但日志暂时加载失败。为安全起见当前保持只读，请重试加载。",
-  "@historySessionReopenedLogsUnavailable": {"placeholders": {"title": {"type": "String"}}},
+  "@historySessionReopenedLogsUnavailable": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "historySessionCollaborationReopenRequired": "这是协作会话。请先打开该会话，再到“协作与成员”中重新打开。",
   "historySessionDeleteTitle": "永久删除本机会话",
   "historySessionDeleteWarning": "将永久删除本机“{title}”的所有日志及本地协作副本。此操作不可撤销，但不会删除或关闭服务器上的共享会话。请输入完整会话名以确认：",
-  "@historySessionDeleteWarning": {"placeholders": {"title": {"type": "String"}}},
+  "@historySessionDeleteWarning": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "historySessionDeleteNameLabel": "完整会话名",
   "historySessionDeleteExpectedName": "期望输入：{title}",
-  "@historySessionDeleteExpectedName": {"placeholders": {"title": {"type": "String"}}},
+  "@historySessionDeleteExpectedName": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "historySessionDeleteNameMismatch": "输入的会话名不匹配，请逐字核对。",
   "historySessionDeleteAction": "永久删除本机数据",
   "historySessionDeleted": "已永久删除本机会话",
   "historySessionDeleteFailed": "永久删除本机会话失败：{error}",
-  "@historySessionDeleteFailed": {"placeholders": {"error": {"type": "String"}}},
+  "@historySessionDeleteFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "historySessionReadOnly": "当前为已关闭的历史会话，只能查看已有记录。",
   "controllerWindowOpenFailed": "无法打开主控窗口：{error}",
-  "@controllerWindowOpenFailed": {"placeholders": {"error": {"type": "String"}}},
+  "@controllerWindowOpenFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "controllerDisplaySettingsTitle": "主控显示",
   "enableControllerDeviceEntry": "启用主控设备入口",
   "enableControllerDeviceEntryHint": "开启后可从“会话”进入全屏只读主控屏，适用于安卓平板、手机或独立电脑。",
@@ -110,24 +315,54 @@
   "controllerFloatingWindowTitle": "OpenLogTool 主控悬浮窗",
   "controllerScreenFallbackTitle": "点名主控屏",
   "savedPositionCount": "已保存 {count} 位",
-  "@savedPositionCount": {"placeholders": {"count": {"type": "int"}}},
+  "@savedPositionCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "notReceivedDraftUpdate": "尚未收到草稿更新",
   "updatedAt": "更新 {time}",
-  "@updatedAt": {"placeholders": {"time": {"type": "String"}}},
+  "@updatedAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "editorEditing": "{name} 编辑",
-  "@editorEditing": {"placeholders": {"name": {"type": "String"}}},
+  "@editorEditing": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "connectionConnected": "实时连接",
   "connectionReconnecting": "正在重连",
   "connectionOffline": "连接中断",
   "staleControllerDataWarning": "连接已中断，正在显示最后一次收到的内容，数据可能已过期。",
   "previousSavedRecord": "上一位已保存记录",
   "recordOrdinal": "第 {ordinal} 位",
-  "@recordOrdinal": {"placeholders": {"ordinal": {"type": "int"}}},
+  "@recordOrdinal": {
+    "placeholders": {
+      "ordinal": {
+        "type": "int"
+      }
+    }
+  },
   "noPreviousRecord": "暂无上一位记录",
   "waitingForCallsign": "等待来台呼号…",
   "beingEdited": "正在编辑",
   "configureControllerDisplay": "显示内容（{detail}）",
-  "@configureControllerDisplay": {"placeholders": {"detail": {"type": "String"}}},
+  "@configureControllerDisplay": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
   "exitControllerScreen": "退出主控屏",
   "controllerDisplayConfiguration": "主控屏显示内容",
   "informationDetail": "信息详细程度",
@@ -156,9 +391,21 @@
   "fieldRemarks": "备注",
   "fieldActions": "操作",
   "inputFieldHint": "输入{field}",
-  "@inputFieldHint": {"placeholders": {"field": {"type": "String"}}},
+  "@inputFieldHint": {
+    "placeholders": {
+      "field": {
+        "type": "String"
+      }
+    }
+  },
   "optionalFieldHint": "{field}（可选）",
-  "@optionalFieldHint": {"placeholders": {"field": {"type": "String"}}},
+  "@optionalFieldHint": {
+    "placeholders": {
+      "field": {
+        "type": "String"
+      }
+    }
+  },
   "noSavedRecords": "暂无已保存记录",
   "logTableSearchHint": "搜索呼号 / QTH / 备注…",
   "logTableSearchClear": "清除搜索",
@@ -171,7 +418,13 @@
   "recordDeleted": "记录已删除",
   "savedRecords": "已保存记录",
   "recordCount": "{count} 条",
-  "@recordCount": {"placeholders": {"count": {"type": "int"}}},
+  "@recordCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "restoreLastDeletedRecord": "恢复最近删除",
   "restoreLastDeletedRecordTitle": "恢复最近删除的记录？",
   "restoreLastDeletedRecordConfirmation": "将恢复最近一次删除的点名记录，不会影响其他记录。",
@@ -184,31 +437,41 @@
   "recordQueuedOffline": "网络不可用，记录已保存到本机待复核",
   "sharedDraftReadOnly": "当前协作草稿只读",
   "fieldLockedBy": "{name} 正在编辑",
-  "@fieldLockedBy": {"placeholders": {"name": {"type": "String"}}},
+  "@fieldLockedBy": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "finishEditing": "结束编辑",
   "offlineReviewTitle": "离线记录待复核",
   "resolutionDiscard": "丢弃",
   "resolutionSubmitDuplicate": "作为重复记录提交",
   "resolutionCopyCurrent": "带入当前草稿",
   "callsignRequired": "请输入点名呼号",
-  "leaveSession": "退出服务器协作",
-  "leaveSessionConfirmation": "这会向服务器提交退出成员关系的请求。成功后本地副本保持只读；如需再次参与，必须重新获得邀请。服务器不可达时请改用本机数据操作。",
-  "convertCollaborationToLocal": "停止本机协作并转为本地会话",
-  "convertCollaborationToLocalTitle": "停止本机协作并转为本地会话？",
-  "convertCollaborationToLocalConfirmation": "将停止本机对“{title}”的协作同步，并替换为可编辑的本地会话。仅复制表格中已经保存的记录；未提交的共享实时草稿仍留在服务器上，不会写入本地会话。服务器共享会话、成员和其他设备不受影响。此操作不可撤销。",
-  "@convertCollaborationToLocalConfirmation": {"placeholders": {"title": {"type": "String"}}},
-  "convertCollaborationToLocalUnsyncedConfirmation": "将停止本机对“{title}”的协作同步，并保留当前表格中已保存的记录。未同步队列、冲突、离线待复核记录及未提交实时草稿会从本机永久丢弃。服务器共享会话、成员和其他设备不受影响。此操作不可撤销。",
-  "@convertCollaborationToLocalUnsyncedConfirmation": {"placeholders": {"title": {"type": "String"}}},
-  "convertCollaborationToLocalSucceeded": "已停止本机协作并转为本地会话",
-  "closeCollaborationLocally": "仅在本机关闭",
-  "moreLocalCollaborationActions": "更多本机操作",
-  "createEditableLocalCopy": "停止协作并创建本地副本",
-  "createEditableLocalCopyTitle": "停止本机协作并创建副本？",
-  "createEditableLocalCopyConfirmation": "将在本机创建“{title}”的独立副本，复制当前表格中所有已保存记录并立即切换过去。新副本可离线编辑，不再与服务器同步；服务器上的共享会话及原本机协作副本不会被关闭或删除。协作待同步队列、冲突及未提交实时草稿会保留在原协作副本，不会复制到新副本。",
-  "@createEditableLocalCopyConfirmation": {"placeholders": {"title": {"type": "String"}}},
+  "leaveSession": "离开协作",
+  "leaveSessionConfirmation": "离开后你将不再收到此会话的更新，本机已有记录保留为只读，其他成员可继续记录。以后需要重新邀请或申请加入。此操作需要连接服务器；只是暂时离开页面，无需退出协作。",
+  "moreLocalCollaborationActions": "更多操作",
+  "createEditableLocalCopy": "另存独立会话",
+  "createEditableLocalCopyTitle": "另存独立会话？",
+  "createEditableLocalCopyConfirmation": "将“{title}”当前表格中已保存的记录复制到一个新会话，并切换过去独立记录，无需服务器。原协作会话和你的成员身份不变，稍后仍可切回。未同步队列、冲突、离线待复核记录及未提交草稿保留在原会话，不会复制到新会话，也不会删除。",
+  "@createEditableLocalCopyConfirmation": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "editableLocalCopySessionTitle": "{title}（本地副本）",
-  "@editableLocalCopySessionTitle": {"placeholders": {"title": {"type": "String"}}},
-  "editableLocalCopySucceeded": "已切换到可编辑本地副本",
+  "@editableLocalCopySessionTitle": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "editableLocalCopySucceeded": "已另存并切换到独立会话，原协作会话已保留",
   "collaborationScreenTitle": "协作与成员",
   "collaborationConnectionSection": "连接与会话",
   "collaborationConnectionSectionHint": "查看服务器账号、当前会话和同步入口。",
@@ -219,14 +482,29 @@
   "serverLoggedIn": "已登录",
   "serverNotLoggedIn": "尚未登录服务器",
   "collaborationServerAccount": "{url}\n账号 {id}",
-  "@collaborationServerAccount": {"placeholders": {"url": {"type": "String"}, "id": {"type": "String"}}},
+  "@collaborationServerAccount": {
+    "placeholders": {
+      "url": {
+        "type": "String"
+      },
+      "id": {
+        "type": "String"
+      }
+    }
+  },
   "collaborationServerLoginHint": "请先在“设置 → 服务器与账户”中检测服务器并登录。",
   "remoteCommitPendingLocalApplyHint": "远端已经提交；客户端只会恢复本地确认，不会重复创建新修改。",
   "accountSharing": "跨账号共享",
   "accountSharingHint": "先申请再接受。共享会话只读，加入协作仍需口令。",
   "sharedSessionBadge": "共享",
   "sharedSessionFrom": "来自 {username} 的共享",
-  "@sharedSessionFrom": {"placeholders": {"username": {"type": "String"}}},
+  "@sharedSessionFrom": {
+    "placeholders": {
+      "username": {
+        "type": "String"
+      }
+    }
+  },
   "acceptShare": "接受",
   "pendingInboundShares": "待处理申请",
   "browseSharedSession": "浏览共享会话",
@@ -238,14 +516,53 @@
   "joinCollaborationSucceeded": "已加入协作会话",
   "localCollaborationSessionHint": "本地会话尚未发布。发布时会锁定一致快照并分批上传全部记录。",
   "collaborationSessionSummary": "状态 {state} · 角色 {role}",
-  "@collaborationSessionSummary": {"placeholders": {"state": {"type": "String"}, "role": {"type": "String"}}},
+  "@collaborationSessionSummary": {
+    "placeholders": {
+      "state": {
+        "type": "String"
+      },
+      "role": {
+        "type": "String"
+      }
+    }
+  },
   "collaborationSyncSummary": "同步 {transport} · 游标 {applied}/{head}",
-  "@collaborationSyncSummary": {"placeholders": {"transport": {"type": "String"}, "applied": {"type": "int"}, "head": {"type": "int"}}},
+  "@collaborationSyncSummary": {
+    "placeholders": {
+      "transport": {
+        "type": "String"
+      },
+      "applied": {
+        "type": "int"
+      },
+      "head": {
+        "type": "int"
+      }
+    }
+  },
   "collaborationQueueSummary": "待同步 {pending} · 冲突 {conflicts} · 拒绝 {rejected}",
-  "@collaborationQueueSummary": {"placeholders": {"pending": {"type": "int"}, "conflicts": {"type": "int"}, "rejected": {"type": "int"}}},
+  "@collaborationQueueSummary": {
+    "placeholders": {
+      "pending": {
+        "type": "int"
+      },
+      "conflicts": {
+        "type": "int"
+      },
+      "rejected": {
+        "type": "int"
+      }
+    }
+  },
   "collaborationReliableQueueHint": "本地保存后会进入可靠队列，并由规范事件确认同步。",
   "collaborationLastSync": "最近同步 {time}",
-  "@collaborationLastSync": {"placeholders": {"time": {"type": "String"}}},
+  "@collaborationLastSync": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "collaborationSessionConflictHint": "会话存在未解决冲突。请先在冲突中心处理；重命名、关闭和重新打开暂时不可用。",
   "publishSessionSucceeded": "协作会话发布完成",
   "publishCollaborationSession": "发布为协作会话",
@@ -260,12 +577,12 @@
   "transportAuthRequired": "需要登录",
   "transportIncompatible": "协议异常",
   "readOnlyRevoked": "成员权限已撤销，本地缓存保持只读。",
-  "readOnlyClosePending": "关闭请求已保存到本地，等待同步确认；冲突时将保持锁定。",
+  "readOnlyClosePending": "结束请求已保存，等待同步确认；确认前暂时只读。",
   "readOnlyReopenPending": "重新打开请求已保存到本地，服务器确认前保持只读。",
-  "readOnlySessionClosed": "协作会话已关闭，本地缓存保持只读。",
+  "readOnlySessionClosed": "共同记录已结束，已有记录可继续查看。",
   "readOnlyViewer": "当前账号是只读成员。",
-  "readOnlyResyncing": "事件游标需要重装规范快照；待同步修改仍保留。",
-  "readOnlyCheckingAccess": "正在确认权限与事件游标，暂时保持只读。",
+  "readOnlyResyncing": "正在恢复同步，已保存的修改会保留。",
+  "readOnlyCheckingAccess": "正在确认你的参与权限，暂时只能查看。",
   "logNotOwnedReadOnlyHint": "只能修改或删除自己创建的记录。",
   "logAuthorUnknownReadOnlyHint": "这条历史记录没有作者信息，普通成员只能查看。",
   "logSessionReadOnlyHint": "当前成员角色、会话状态或同步状态不允许修改记录。",
@@ -273,17 +590,23 @@
   "renameCollaborationSession": "重命名协作会话",
   "saveLocally": "保存到本地",
   "sessionTitleQueued": "标题已保存到本地，等待同步确认",
-  "closeCollaborationSessionTitle": "关闭服务器共享会话",
-  "closeCollaborationSessionMessage": "这会向服务器提交关闭共享会话的请求。服务器确认后，所有成员都不能继续添加或修改记录；所有者可以稍后重新打开。",
-  "closeSharedSession": "关闭服务器共享会话",
-  "closeCollaborationDraftNotEmpty": "当前点名草稿还有内容。你可以提交这条完整记录，或明确丢弃草稿后再关闭会话。",
-  "closeCollaborationDraftIncomplete": "当前草稿缺少时间、主控呼号或点名呼号，不能提交；仍可明确丢弃后关闭。",
-  "closeCollaborationDraftLocked": "其他成员或设备仍在编辑 {count} 个草稿字段。请等待对方结束编辑并刷新后再关闭。",
-  "@closeCollaborationDraftLocked": {"placeholders": {"count": {"type": "int"}}},
-  "closeCollaborationDiscardAndClose": "丢弃草稿并关闭",
-  "closeCollaborationSubmitAndClose": "提交并关闭",
-  "closeCollaborationQueuedOffline": "记录仅保存到离线队列，尚未提交到服务器；会话没有关闭。请恢复网络并处理该记录后重试。",
-  "closeSessionQueued": "已提交关闭共享会话请求，等待服务器同步确认",
+  "closeCollaborationSessionTitle": "结束共同记录",
+  "closeCollaborationSessionMessage": "结束后，所有成员都不能继续添加或修改记录，已有记录和成员关系会保留。你可以稍后恢复记录。此操作需要同步到服务器；只是暂时离开，无需结束。",
+  "closeSharedSession": "结束共同记录",
+  "closeCollaborationDraftNotEmpty": "当前点名草稿还有内容。请先提交这条完整记录，或明确丢弃草稿后再结束。",
+  "closeCollaborationDraftIncomplete": "当前草稿缺少时间、主控呼号或点名呼号，不能提交；仍可明确丢弃后结束。",
+  "closeCollaborationDraftLocked": "其他成员或设备仍在编辑 {count} 个草稿字段。请等待对方完成编辑并刷新后再结束。",
+  "@closeCollaborationDraftLocked": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "closeCollaborationDiscardAndClose": "丢弃草稿并结束",
+  "closeCollaborationSubmitAndClose": "提交并结束",
+  "closeCollaborationQueuedOffline": "记录仅保存到离线队列，尚未提交到服务器；共同记录尚未结束。请恢复网络并处理该记录后重试。",
+  "closeSessionQueued": "结束共同记录的请求已保存，等待同步确认",
   "reopenCollaborationSessionTitle": "重新打开协作会话",
   "reopenCollaborationSessionMessage": "重新打开会作为一项同步修改提交；服务器确认前仍保持只读。",
   "reopenSessionQueued": "重新打开请求已保存到本地，等待同步确认",
@@ -304,7 +627,19 @@
   "conflictLog": "日志",
   "conflictNoOverlappingFields": "无重叠字段（版本已变化）",
   "conflictVersionSummary": "字段 {fields} · 基线 v{base} → 远端 v{remote}",
-  "@conflictVersionSummary": {"placeholders": {"fields": {"type": "String"}, "base": {"type": "int"}, "remote": {"type": "int"}}},
+  "@conflictVersionSummary": {
+    "placeholders": {
+      "fields": {
+        "type": "String"
+      },
+      "base": {
+        "type": "int"
+      },
+      "remote": {
+        "type": "int"
+      }
+    }
+  },
   "conflictBase": "基线",
   "conflictLocal": "本地",
   "conflictRemote": "远端",
@@ -320,9 +655,27 @@
   "inviteCodeOneTimeHint": "邀请码只在本次创建响应中显示：",
   "noInvites": "暂无邀请",
   "inviteSummary": "{used}/{max} 次 · {status}",
-  "@inviteSummary": {"placeholders": {"used": {"type": "int"}, "max": {"type": "int"}, "status": {"type": "String"}}},
+  "@inviteSummary": {
+    "placeholders": {
+      "used": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      },
+      "status": {
+        "type": "String"
+      }
+    }
+  },
   "inviteExpiresAt": "有效至 {time}",
-  "@inviteExpiresAt": {"placeholders": {"time": {"type": "String"}}},
+  "@inviteExpiresAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "inviteRevoked": "已撤销",
   "membersTitle": "成员",
   "currentAccount": "当前账号",
@@ -333,13 +686,31 @@
   "transferOwnership": "转移所有权",
   "removeMember": "移除成员",
   "transferOwnershipConfirmation": "转移给 {name} 后，你将变为编辑者。",
-  "@transferOwnershipConfirmation": {"placeholders": {"name": {"type": "String"}}},
+  "@transferOwnershipConfirmation": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "ownershipTransferred": "所有权已转移",
   "removeMemberConfirmation": "确定移除 {name}？权限会立即失效。",
-  "@removeMemberConfirmation": {"placeholders": {"name": {"type": "String"}}},
+  "@removeMemberConfirmation": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "memberRemoved": "成员已移除",
   "operationFailed": "操作失败：{error}",
-  "@operationFailed": {"placeholders": {"error": {"type": "String"}}},
+  "@operationFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "unknown": "未知",
   "confirm": "确认",
   "duplicateCallsignWarningSetting": "重复呼号提醒",
@@ -348,19 +719,61 @@
   "autoAppendPowerWHint": "保存时若功率为纯数字（如 50、50.5）自动补上 W；已带单位或含中文的不动。",
   "duplicateCallsignTitle": "呼号已经记录过",
   "duplicateCallsignMessage": "{callsign} 已在本次点名中记录过，仍要保存吗？",
-  "@duplicateCallsignMessage": {"placeholders": {"callsign": {"type": "String"}}},
+  "@duplicateCallsignMessage": {
+    "placeholders": {
+      "callsign": {
+        "type": "String"
+      }
+    }
+  },
   "saveAnyway": "仍然保存",
   "duplicateUpdateOldRecord": "更新旧记录",
   "duplicateAddNewRecord": "添加新记录",
   "duplicateContinueDialogTitle": "呼号已记录过",
   "duplicateContinueDialogMessage": "{callsign} 已在第 {ordinal} 位记录过，继续添加吗？",
-  "@duplicateContinueDialogMessage": {"placeholders": {"callsign": {"type": "String"}, "ordinal": {"type": "int"}}},
+  "@duplicateContinueDialogMessage": {
+    "placeholders": {
+      "callsign": {
+        "type": "String"
+      },
+      "ordinal": {
+        "type": "int"
+      }
+    }
+  },
   "duplicateContinueAdd": "继续添加",
   "duplicateUpdateDialogTitle": "呼号已记录过",
   "duplicateUpdateDialogMessage": "{callsign} 在本次点名中已有记录，选择处理方式：",
-  "@duplicateUpdateDialogMessage": {"placeholders": {"callsign": {"type": "String"}}},
+  "@duplicateUpdateDialogMessage": {
+    "placeholders": {
+      "callsign": {
+        "type": "String"
+      }
+    }
+  },
   "duplicateOldRecordSummary": "原记录（第 {ordinal} 位）：{time} {callsign} {rstSent}/{rstRcvd} {qth}",
-  "@duplicateOldRecordSummary": {"placeholders": {"ordinal": {"type": "int"}, "time": {"type": "String"}, "callsign": {"type": "String"}, "rstSent": {"type": "String"}, "rstRcvd": {"type": "String"}, "qth": {"type": "String"}}},
+  "@duplicateOldRecordSummary": {
+    "placeholders": {
+      "ordinal": {
+        "type": "int"
+      },
+      "time": {
+        "type": "String"
+      },
+      "callsign": {
+        "type": "String"
+      },
+      "rstSent": {
+        "type": "String"
+      },
+      "rstRcvd": {
+        "type": "String"
+      },
+      "qth": {
+        "type": "String"
+      }
+    }
+  },
   "recordUpdated": "记录已更新",
   "callsignHistoryFillSetting": "呼号历史一键复用",
   "callsignHistoryFillHint": "匹配数据库中的既有呼号记录，并可一键带入设备、天线、QTH 等字段。",
@@ -385,7 +798,13 @@
   "publicShareExpiryCustomHours": "有效期（小时）",
   "publicShareExpiryRangeError": "请输入 1–720 之间的整数小时",
   "publicShareEstimatedExpiry": "预计失效：{time}（本地时间）",
-  "@publicShareEstimatedExpiry": {"placeholders": {"time": {"type": "String"}}},
+  "@publicShareEstimatedExpiry": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "copyPublicShareLink": "复制链接",
   "openPublicShare": "在浏览器打开",
   "revokePublicShare": "撤销",
@@ -396,7 +815,13 @@
   "publicShareUnavailable": "已撤销或已过期",
   "publicShareOpenFailed": "无法打开浏览器；你仍可复制链接后手动打开。",
   "publicShareExpiresAt": "有效期至 {time}",
-  "@publicShareExpiresAt": {"placeholders": {"time": {"type": "String"}}},
+  "@publicShareExpiresAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "refresh": "刷新",
   "reuseDatabaseInformation": "一键复用数据库信息",
   "collapseSidebar": "收起侧边栏",
@@ -404,17 +829,56 @@
   "limitWorkbenchWidthSetting": "限制点名台内容宽度",
   "limitWorkbenchWidthHint": "宽屏时将点名台内容居中并限制在 1520 像素内，避免字段过度拉伸。",
   "serverConnectionFailed": "连接失败：{detail}",
-  "@serverConnectionFailed": {"placeholders": {"detail": {"type": "String"}}},
+  "@serverConnectionFailed": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
   "serverNetworkError": "服务器 {url} 没有响应。请检查地址和端口，并确认服务端或反向代理正在运行。",
-  "@serverNetworkError": {"placeholders": {"url": {"type": "String"}}},
+  "@serverNetworkError": {
+    "placeholders": {
+      "url": {
+        "type": "String"
+      }
+    }
+  },
   "serverWebMixedContentError": "当前 WebClient 使用 HTTPS，浏览器不允许连接 HTTP 服务器 {url}。请为服务器启用 HTTPS。",
-  "@serverWebMixedContentError": {"placeholders": {"url": {"type": "String"}}},
+  "@serverWebMixedContentError": {
+    "placeholders": {
+      "url": {
+        "type": "String"
+      }
+    }
+  },
   "serverWebCrossOriginError": "浏览器无法访问服务器 {url}。请确认服务器在线；若原生客户端能连接，请在服务端 CORS_ORIGINS 中加入 {origin}，或使用同源反向代理。",
-  "@serverWebCrossOriginError": {"placeholders": {"url": {"type": "String"}, "origin": {"type": "String"}}},
+  "@serverWebCrossOriginError": {
+    "placeholders": {
+      "url": {
+        "type": "String"
+      },
+      "origin": {
+        "type": "String"
+      }
+    }
+  },
   "serverNetworkTimeout": "连接 {url} 超时。请检查网络、防火墙和服务端状态。",
-  "@serverNetworkTimeout": {"placeholders": {"url": {"type": "String"}}},
+  "@serverNetworkTimeout": {
+    "placeholders": {
+      "url": {
+        "type": "String"
+      }
+    }
+  },
   "serverInvalidResponse": "已连接 {url}，但它没有返回兼容的 OpenLogTool Server 响应。",
-  "@serverInvalidResponse": {"placeholders": {"url": {"type": "String"}}},
+  "@serverInvalidResponse": {
+    "placeholders": {
+      "url": {
+        "type": "String"
+      }
+    }
+  },
   "serverAddressRequired": "请先填写服务器地址。",
   "serverAddressInvalid": "服务器地址必须是完整的 http(s) URL。",
   "serverSettingsTitle": "服务器与账户",
@@ -422,9 +886,27 @@
   "serverAddressHint": "http://your-server:3000",
   "serverSaveAndCheck": "保存并检测服务器",
   "serverCheckSucceeded": "连接成功 · 协议 v{min}-{max}",
-  "@serverCheckSucceeded": {"placeholders": {"min": {"type": "int"}, "max": {"type": "int"}}},
+  "@serverCheckSucceeded": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
   "serverInstanceDetails": "实例 {instance}\n能力 {features}",
-  "@serverInstanceDetails": {"placeholders": {"instance": {"type": "String"}, "features": {"type": "String"}}},
+  "@serverInstanceDetails": {
+    "placeholders": {
+      "instance": {
+        "type": "String"
+      },
+      "features": {
+        "type": "String"
+      }
+    }
+  },
   "serverConnected": "已连接",
   "serverNotConnected": "未检测",
   "serverSignedOutHint": "登录后可以参与协作，并管理当前账号自己的资料和登录设备。",
@@ -434,23 +916,59 @@
   "serverRegister": "注册",
   "serverLogout": "退出",
   "serverAccountId": "账号 ID：{id}",
-  "@serverAccountId": {"placeholders": {"id": {"type": "String"}}},
+  "@serverAccountId": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
   "serverLoginSucceeded": "已登录服务器",
   "serverRegistrationSucceeded": "注册并登录成功",
   "serverLoginFailed": "登录失败：{error}",
-  "@serverLoginFailed": {"placeholders": {"error": {"type": "String"}}},
+  "@serverLoginFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "serverRegistrationFailed": "注册失败：{error}",
-  "@serverRegistrationFailed": {"placeholders": {"error": {"type": "String"}}},
+  "@serverRegistrationFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "serverLogoutFailed": "退出失败：{error}",
-  "@serverLogoutFailed": {"placeholders": {"error": {"type": "String"}}},
+  "@serverLogoutFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "accountChangeUsername": "修改用户名",
   "accountChangePassword": "修改密码",
   "accountDeviceSessions": "登录设备",
   "accountUsernameUpdated": "用户名已更新",
   "accountPasswordUpdated": "密码已更新，已撤销 {count} 个登录会话，请重新登录。",
-  "@accountPasswordUpdated": {"placeholders": {"count": {"type": "int"}}},
+  "@accountPasswordUpdated": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "accountUpdateFailed": "账户操作失败：{error}",
-  "@accountUpdateFailed": {"placeholders": {"error": {"type": "String"}}},
+  "@accountUpdateFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "usernameLabel": "用户名",
   "usernameLengthHint": "用户名应为 3–64 个字符",
   "passwordLabel": "密码",
@@ -462,9 +980,21 @@
   "passwordMismatch": "两次输入的新密码不一致",
   "passwordChangeRequiredTitle": "必须修改临时密码",
   "passwordChangeRequiredHint": "账号 {username} 使用了临时密码。设置新密码后才能继续。",
-  "@passwordChangeRequiredHint": {"placeholders": {"username": {"type": "String"}}},
+  "@passwordChangeRequiredHint": {
+    "placeholders": {
+      "username": {
+        "type": "String"
+      }
+    }
+  },
   "passwordChangeCredentialExpires": "本次改密凭据将在 {seconds} 秒内过期。",
-  "@passwordChangeCredentialExpires": {"placeholders": {"seconds": {"type": "int"}}},
+  "@passwordChangeCredentialExpires": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
   "completePasswordChange": "设置新密码并登录",
   "cancelLogin": "取消登录",
   "passwordChangeCompleted": "密码已更新并完成登录",
@@ -473,11 +1003,29 @@
   "deviceUnknown": "未命名设备",
   "deviceCurrent": "当前设备",
   "deviceIp": "IP：{ip}",
-  "@deviceIp": {"placeholders": {"ip": {"type": "String"}}},
+  "@deviceIp": {
+    "placeholders": {
+      "ip": {
+        "type": "String"
+      }
+    }
+  },
   "deviceLastUsed": "最近使用：{time}",
-  "@deviceLastUsed": {"placeholders": {"time": {"type": "String"}}},
+  "@deviceLastUsed": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "deviceExpires": "到期：{time}",
-  "@deviceExpires": {"placeholders": {"time": {"type": "String"}}},
+  "@deviceExpires": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "revokeDevice": "撤销设备",
   "revokeCurrentDevice": "退出当前设备",
   "revokeDeviceConfirmation": "撤销后，该设备将不能继续刷新登录状态。",
@@ -509,7 +1057,13 @@
   "renameSessionSaved": "会话名已更新",
   "renameCollaborationSessionSaved": "会话名已保存，正在同步给其他成员",
   "renameSessionFailed": "修改会话名失败：{error}",
-  "@renameSessionFailed": {"placeholders": {"error": {"type": "String"}}},
+  "@renameSessionFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "renameSessionBlockedClosed": "已关闭的会话不能修改名称",
   "renameSessionBlockedBusy": "协作操作进行中，暂时不能修改名称",
   "renameSessionBlockedConflict": "请先解决会话冲突，再修改名称",
@@ -522,51 +1076,162 @@
   "callsignLibrary": "呼号词库",
   "qthLibrary": "QTH 词库",
   "libraryItemCount": "共 {count} 条",
-  "@libraryItemCount": {"placeholders": {"count": {"type": "int"}}},
+  "@libraryItemCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "importLibraryJson": "导入 JSON",
   "expandAll": "展开全部",
   "collapseAll": "折叠全部",
   "addLibraryItem": "添加{name}",
-  "@addLibraryItem": {"placeholders": {"name": {"type": "String"}}},
+  "@addLibraryItem": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "searchLibrary": "搜索{name}",
-  "@searchLibrary": {"placeholders": {"name": {"type": "String"}}},
+  "@searchLibrary": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "libraryEmpty": "词库中还没有内容",
   "noLibrarySearchResults": "没有匹配的词库内容",
   "libraryItemAdded": "已添加：{value}",
-  "@libraryItemAdded": {"placeholders": {"value": {"type": "String"}}},
+  "@libraryItemAdded": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
   "libraryItemAlreadyExists": "词库中已有“{value}”",
-  "@libraryItemAlreadyExists": {"placeholders": {"value": {"type": "String"}}},
+  "@libraryItemAlreadyExists": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
   "libraryItemAddFailed": "添加失败：{error}",
-  "@libraryItemAddFailed": {"placeholders": {"error": {"type": "String"}}},
+  "@libraryItemAddFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "deleteLibraryItemTitle": "删除词库条目",
   "deleteLibraryItemConfirmation": "确定从{name}中删除“{value}”吗？",
-  "@deleteLibraryItemConfirmation": {"placeholders": {"value": {"type": "String"}, "name": {"type": "String"}}},
+  "@deleteLibraryItemConfirmation": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "deleteLibraryItemAction": "删除",
   "libraryItemDeleted": "已删除：{value}",
-  "@libraryItemDeleted": {"placeholders": {"value": {"type": "String"}}},
+  "@libraryItemDeleted": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
   "libraryItemDeleteFailed": "删除失败：{error}",
-  "@libraryItemDeleteFailed": {"placeholders": {"error": {"type": "String"}}},
+  "@libraryItemDeleteFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "clearLibraryTitle": "清空{name}",
-  "@clearLibraryTitle": {"placeholders": {"name": {"type": "String"}}},
+  "@clearLibraryTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "clearLibraryConfirmation": "将删除{name}中的全部 {count} 条内容。此操作无法撤销，确定继续吗？",
-  "@clearLibraryConfirmation": {"placeholders": {"name": {"type": "String"}, "count": {"type": "int"}}},
+  "@clearLibraryConfirmation": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "clearLibraryAction": "全部清空",
   "libraryCleared": "已清空{name}",
-  "@libraryCleared": {"placeholders": {"name": {"type": "String"}}},
+  "@libraryCleared": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "libraryClearFailed": "清空失败：{error}",
-  "@libraryClearFailed": {"placeholders": {"error": {"type": "String"}}},
+  "@libraryClearFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "libraryImportEmpty": "文件中没有可导入的词库内容",
   "libraryImportCount": "{name} {count} 条",
-  "@libraryImportCount": {"placeholders": {"name": {"type": "String"}, "count": {"type": "int"}}},
+  "@libraryImportCount": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "libraryImportSucceeded": "已导入：{summary}",
-  "@libraryImportSucceeded": {"placeholders": {"summary": {"type": "String"}}},
+  "@libraryImportSucceeded": {
+    "placeholders": {
+      "summary": {
+        "type": "String"
+      }
+    }
+  },
   "libraryImportFailed": "导入词库失败：{error}",
-  "@libraryImportFailed": {"placeholders": {"error": {"type": "String"}}},
+  "@libraryImportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "listSeparator": "，",
   "fontPickerTitle": "选择字体",
   "fontSearchHint": "搜索字体",
   "fontResultCount": "共 {count} 个字体",
-  "@fontResultCount": {"placeholders": {"count": {"type": "int"}}},
+  "@fontResultCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "fontSystemDefault": "系统默认",
   "fontBuiltIn": "内置",
   "fontPreview": "预览",
@@ -576,7 +1241,13 @@
   "aboutAppTagline": "业余无线电点名记录与协作工具",
   "aboutAppDescription": "为现场和远程书记员提供完整点名记录、实时草稿协作与主控显示。OpenLogTool 专注于点名现场工作流，不以替代个人通联日志为目标。",
   "aboutVersionChip": "版本 {version}",
-  "@aboutVersionChip": {"placeholders": {"version": {"type": "String"}}},
+  "@aboutVersionChip": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "aboutVersionSection": "版本信息",
   "aboutVersionLabel": "应用版本",
   "aboutBuildLabel": "构建编号",
@@ -586,10 +1257,25 @@
   "aboutCheckUpdates": "检查更新",
   "aboutCheckingUpdates": "正在检查…",
   "aboutUpToDate": "当前已是最新版本（{version}）",
-  "@aboutUpToDate": {"placeholders": {"version": {"type": "String"}}},
+  "@aboutUpToDate": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "aboutUpdateAvailableTitle": "发现新版本",
   "aboutUpdateAvailableMessage": "当前版本：{currentVersion}\n最新版本：{latestVersion}",
-  "@aboutUpdateAvailableMessage": {"placeholders": {"currentVersion": {"type": "String"}, "latestVersion": {"type": "String"}}},
+  "@aboutUpdateAvailableMessage": {
+    "placeholders": {
+      "currentVersion": {
+        "type": "String"
+      },
+      "latestVersion": {
+        "type": "String"
+      }
+    }
+  },
   "aboutOpenRelease": "查看并下载",
   "aboutUpdateLater": "稍后",
   "aboutUpdateCheckFailed": "检查更新失败，请检查网络后重试",
@@ -604,7 +1290,13 @@
   "aboutLicenseHint": "OpenLogTool 是自由开源软件",
   "aboutCopyright": "© 2026 Mazha0309 · BG5CRL",
   "aboutLinkOpenFailed": "无法打开链接：{error}",
-  "@aboutLinkOpenFailed": {"placeholders": {"error": {"type": "String"}}},
+  "@aboutLinkOpenFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "restoreDefaultSettings": "恢复默认设置",
   "settingsTitle": "应用设置",
   "settingsSubtitle": "统一管理应用外观、点名台行为、主控显示、服务器账户和本机数据。",
@@ -642,7 +1334,13 @@
   "logsClose": "关闭",
   "logsCopied": "日志已复制",
   "logsCount": "共 {count} 条持久化日志",
-  "@logsCount": {"placeholders": {"count": {"type": "int"}}},
+  "@logsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "logsSearchHint": "搜索消息、来源、错误或堆栈",
   "logsLevelAll": "全部",
   "logsLevelDebug": "调试",
@@ -661,7 +1359,13 @@
   "resetSettingsConfirmAction": "恢复默认",
   "resetSettingsSucceeded": "已恢复默认设置",
   "resetSettingsFailed": "恢复默认设置失败：{error}",
-  "@resetSettingsFailed": {"placeholders": {"error": {"type": "String"}}},
+  "@resetSettingsFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "localDataOperationsTitle": "本机数据",
   "localDataOperationsHint": "管理本机数据库的诊断、备份与重置；这些操作不会直接修改服务器数据。",
   "databaseDiagnosticsSection": "诊断",
@@ -675,19 +1379,67 @@
   "personalCloudUpToDate": "个人记录和词库改动均已同步",
   "personalCloudDecisionRequired": "首次配对或真实编辑冲突需要确认；互不冲突的改动已安全合并。",
   "personalCloudError": "账户个人云快照同步失败：{error}",
-  "@personalCloudError": {"placeholders": {"error": {"type": "String"}}},
+  "@personalCloudError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "personalCloudLocalSummary": "本机个人记录：{sessionCount} 场、{logCount} 条",
-  "@personalCloudLocalSummary": {"placeholders": {"sessionCount": {"type": "int"}, "logCount": {"type": "int"}}},
+  "@personalCloudLocalSummary": {
+    "placeholders": {
+      "sessionCount": {
+        "type": "int"
+      },
+      "logCount": {
+        "type": "int"
+      }
+    }
+  },
   "personalCloudRemoteSummary": "账户云快照：{sessionCount} 场、{logCount} 条 · 修订 {revision}",
-  "@personalCloudRemoteSummary": {"placeholders": {"sessionCount": {"type": "int"}, "logCount": {"type": "int"}, "revision": {"type": "int"}}},
+  "@personalCloudRemoteSummary": {
+    "placeholders": {
+      "sessionCount": {
+        "type": "int"
+      },
+      "logCount": {
+        "type": "int"
+      },
+      "revision": {
+        "type": "int"
+      }
+    }
+  },
   "personalCloudRemoteEmpty": "当前账户还没有个人云快照",
   "personalCloudDictionaryLocalSummary": "本机词库改动：{itemCount} 项",
-  "@personalCloudDictionaryLocalSummary": {"placeholders": {"itemCount": {"type": "int"}}},
+  "@personalCloudDictionaryLocalSummary": {
+    "placeholders": {
+      "itemCount": {
+        "type": "int"
+      }
+    }
+  },
   "personalCloudDictionaryRemoteSummary": "账户词库快照：{itemCount} 项改动 · 修订 {revision}",
-  "@personalCloudDictionaryRemoteSummary": {"placeholders": {"itemCount": {"type": "int"}, "revision": {"type": "int"}}},
+  "@personalCloudDictionaryRemoteSummary": {
+    "placeholders": {
+      "itemCount": {
+        "type": "int"
+      },
+      "revision": {
+        "type": "int"
+      }
+    }
+  },
   "personalCloudDictionaryRemoteEmpty": "当前账户还没有词库快照",
   "personalCloudConflictSummary": "有 {count} 个冲突字段需要选择",
-  "@personalCloudConflictSummary": {"placeholders": {"count": {"type": "int"}}},
+  "@personalCloudConflictSummary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "personalCloudConfirmMerge": "确认安全合并",
   "personalCloudKeepLocalConflicts": "冲突项保留本机值",
   "personalCloudKeepRemoteConflicts": "冲突项保留云端值",
@@ -698,7 +1450,16 @@
   "personalCloudConflictSelectAllLocal": "全部选本机",
   "personalCloudConflictSelectAllRemote": "全部选云端",
   "personalCloudConflictSelectionProgress": "已选择 {selected}/{total} 项；全部选择后才能应用。",
-  "@personalCloudConflictSelectionProgress": {"placeholders": {"selected": {"type": "int"}, "total": {"type": "int"}}},
+  "@personalCloudConflictSelectionProgress": {
+    "placeholders": {
+      "selected": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "personalCloudConflictApply": "应用选择",
   "personalCloudConflictApplySucceeded": "冲突选择已应用并完成同步",
   "personalCloudConflictNoneTitle": "当前没有同步冲突",
@@ -708,7 +1469,16 @@
   "personalCloudConflictRecordsDataset": "个人记录",
   "personalCloudConflictDictionaryDataset": "个人词库",
   "personalCloudConflictEntityReference": "{dataset} · 标识 {id}",
-  "@personalCloudConflictEntityReference": {"placeholders": {"dataset": {"type": "String"}, "id": {"type": "String"}}},
+  "@personalCloudConflictEntityReference": {
+    "placeholders": {
+      "dataset": {
+        "type": "String"
+      },
+      "id": {
+        "type": "String"
+      }
+    }
+  },
   "personalCloudConflictBaseline": "共同基线",
   "personalCloudConflictValueAbsent": "不存在（选择此侧将删除该项）",
   "personalCloudConflictValueEmpty": "空值",
@@ -716,9 +1486,21 @@
   "personalCloudConflictDeletionField": "删除状态",
   "personalCloudConflictDictionaryStateField": "词库状态",
   "personalCloudFieldConflictTitle": "字段 {field} 双方都有值且不同",
-  "@personalCloudFieldConflictTitle": {"placeholders": {"field": {"type": "String"}}},
+  "@personalCloudFieldConflictTitle": {
+    "placeholders": {
+      "field": {
+        "type": "String"
+      }
+    }
+  },
   "personalCloudEntityConflictTitle": "{entity} 冲突",
-  "@personalCloudEntityConflictTitle": {"placeholders": {"entity": {"type": "String"}}},
+  "@personalCloudEntityConflictTitle": {
+    "placeholders": {
+      "entity": {
+        "type": "String"
+      }
+    }
+  },
   "personalCloudEntitySession": "会话",
   "personalCloudEntityLog": "记录",
   "personalCloudEntityDictionaryItem": "词库项",
@@ -729,12 +1511,42 @@
   "personalCloudRestoreLocal": "从云快照恢复本机",
   "personalCloudReplaceTitle": "替换账户个人云快照",
   "personalCloudReplaceWarning": "将以本机 {localSessions} 场、{localLogs} 条个人记录完整替换账户云快照中的 {remoteSessions} 场、{remoteLogs} 条记录。不会写入或修改协作会话；此操作会同步到其他已登录设备。",
-  "@personalCloudReplaceWarning": {"placeholders": {"localSessions": {"type": "int"}, "localLogs": {"type": "int"}, "remoteSessions": {"type": "int"}, "remoteLogs": {"type": "int"}}},
+  "@personalCloudReplaceWarning": {
+    "placeholders": {
+      "localSessions": {
+        "type": "int"
+      },
+      "localLogs": {
+        "type": "int"
+      },
+      "remoteSessions": {
+        "type": "int"
+      },
+      "remoteLogs": {
+        "type": "int"
+      }
+    }
+  },
   "personalCloudReplacePhrase": "用本机记录替换账户云快照",
   "personalCloudReplaceAction": "确认替换云快照",
   "personalCloudRestoreTitle": "从账户个人云快照恢复",
   "personalCloudRestoreWarning": "将以账户云快照中的 {remoteSessions} 场、{remoteLogs} 条记录替换本机的 {localSessions} 场、{localLogs} 条个人记录。词库、设置和协作会话不受影响。",
-  "@personalCloudRestoreWarning": {"placeholders": {"remoteSessions": {"type": "int"}, "remoteLogs": {"type": "int"}, "localSessions": {"type": "int"}, "localLogs": {"type": "int"}}},
+  "@personalCloudRestoreWarning": {
+    "placeholders": {
+      "remoteSessions": {
+        "type": "int"
+      },
+      "remoteLogs": {
+        "type": "int"
+      },
+      "localSessions": {
+        "type": "int"
+      },
+      "localLogs": {
+        "type": "int"
+      }
+    }
+  },
   "personalCloudRestorePhrase": "用账户云快照替换本机记录",
   "personalCloudRestoreAction": "确认恢复本机",
   "personalCloudReplaceSucceeded": "账户云快照已保存本机个人记录",
@@ -743,20 +1555,68 @@
   "databaseStatusTitle": "本机数据库状态",
   "databaseStatusHint": "查看本机内容、协作待办和高级数据库诊断",
   "databaseStatusSchemaVersion": "数据库结构版本：{version}",
-  "@databaseStatusSchemaVersion": {"placeholders": {"version": {"type": "String"}}},
+  "@databaseStatusSchemaVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "databaseStatusBackupFormatVersion": "备份格式版本：{version}",
-  "@databaseStatusBackupFormatVersion": {"placeholders": {"version": {"type": "String"}}},
+  "@databaseStatusBackupFormatVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "databaseStatusLocalContentSection": "本机内容",
   "databaseStatusLocalContentHint": "仅统计本机数据库中的会话、点名记录和词库内容",
   "databaseStatusSessionsLabel": "会话",
   "databaseStatusSessionsSummary": "进行中 {active} · 已关闭 {closed} · 已归档 {archived} · 已删除 {deleted}",
-  "@databaseStatusSessionsSummary": {"placeholders": {"active": {"type": "int"}, "closed": {"type": "int"}, "archived": {"type": "int"}, "deleted": {"type": "int"}}},
+  "@databaseStatusSessionsSummary": {
+    "placeholders": {
+      "active": {
+        "type": "int"
+      },
+      "closed": {
+        "type": "int"
+      },
+      "archived": {
+        "type": "int"
+      },
+      "deleted": {
+        "type": "int"
+      }
+    }
+  },
   "databaseStatusLogsLabel": "点名记录",
   "databaseStatusDictionariesLabel": "词库条目",
   "databaseStatusLifecycleSummary": "可用 {active} · 已删除 {deleted}",
-  "@databaseStatusLifecycleSummary": {"placeholders": {"active": {"type": "int"}, "deleted": {"type": "int"}}},
+  "@databaseStatusLifecycleSummary": {
+    "placeholders": {
+      "active": {
+        "type": "int"
+      },
+      "deleted": {
+        "type": "int"
+      }
+    }
+  },
   "databaseStatusDictionarySummary": "{label} {active}（已删除 {deleted}）",
-  "@databaseStatusDictionarySummary": {"placeholders": {"label": {"type": "String"}, "active": {"type": "int"}, "deleted": {"type": "int"}}},
+  "@databaseStatusDictionarySummary": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      },
+      "active": {
+        "type": "int"
+      },
+      "deleted": {
+        "type": "int"
+      }
+    }
+  },
   "databaseStatusDictionaryDevice": "设备",
   "databaseStatusDictionaryAntenna": "天线",
   "databaseStatusDictionaryQth": "QTH",
@@ -774,13 +1634,25 @@
   "databaseStatusAdvancedHint": "仅用于故障诊断；基础设施表为 0 通常是正常状态",
   "databaseStatusUnknown": "未知",
   "databaseStatusLoadFailed": "读取本机数据库状态失败：{error}",
-  "@databaseStatusLoadFailed": {"placeholders": {"error": {"type": "String"}}},
+  "@databaseStatusLoadFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "databaseExportTitle": "导出本机数据库",
   "databaseExportHint": "备份会话、记录、词库以及本机协作副本和待同步状态",
   "databaseExportDialogTitle": "保存 OpenLogTool 本机数据库备份",
   "databaseExportSucceeded": "本机数据库备份已导出",
   "databaseExportFailed": "导出本机数据库失败：{error}",
-  "@databaseExportFailed": {"placeholders": {"error": {"type": "String"}}},
+  "@databaseExportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "databaseImportTitle": "导入本机数据库",
   "databaseImportHint": "选择 JSON 备份并预览后，完整替换当前本机数据库",
   "databaseImportPickerTitle": "选择 OpenLogTool 本机数据库备份",
@@ -799,24 +1671,63 @@
   "databaseImportConfirmAction": "覆盖并导入",
   "databaseImportSucceeded": "本机数据库已导入，界面数据已刷新",
   "databaseImportSucceededSummary": "本机数据库已导入：{sessionCount} 场会话、{logCount} 条记录；可在会话页查看历史会话",
-  "@databaseImportSucceededSummary": {"placeholders": {"sessionCount": {"type": "int"}, "logCount": {"type": "int"}}},
+  "@databaseImportSucceededSummary": {
+    "placeholders": {
+      "sessionCount": {
+        "type": "int"
+      },
+      "logCount": {
+        "type": "int"
+      }
+    }
+  },
   "databaseImportInvalid": "所选文件不是有效的 OpenLogTool 数据库备份（{error}）",
-  "@databaseImportInvalid": {"placeholders": {"error": {"type": "String"}}},
+  "@databaseImportInvalid": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "databaseImportReadFailed": "无法读取所选备份：{error}",
-  "@databaseImportReadFailed": {"placeholders": {"error": {"type": "String"}}},
+  "@databaseImportReadFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "databaseImportFailed": "导入本机数据库失败：{error}",
-  "@databaseImportFailed": {"placeholders": {"error": {"type": "String"}}},
+  "@databaseImportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "databaseClearTitle": "清空本机数据",
   "databaseClearHint": "清除本机记录、协作副本和自定义词条，并恢复内置词库默认内容",
   "databaseClearWarning": "此操作不可撤销。将清除本机的所有会话、点名记录、协作副本、待同步队列和自定义词条；不会删除或关闭服务器会话，也不会退出登录或重置外观。内置词库会恢复为默认内容。",
   "databaseClearConfirmationPhrase": "清空全部数据",
   "databaseClearConfirmationInstruction": "请输入“{phrase}”以确认：",
-  "@databaseClearConfirmationInstruction": {"placeholders": {"phrase": {"type": "String"}}},
+  "@databaseClearConfirmationInstruction": {
+    "placeholders": {
+      "phrase": {
+        "type": "String"
+      }
+    }
+  },
   "databaseClearConfirmationLabel": "确认文本",
   "databaseClearConfirmAction": "永久清空本机数据",
   "databaseClearSucceeded": "本机数据已清空，内置词库已恢复为默认内容",
   "databaseClearFailed": "清空本机数据失败：{error}",
-  "@databaseClearFailed": {"placeholders": {"error": {"type": "String"}}},
+  "@databaseClearFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "databaseReplacementRefreshFailed": "操作已写入本机数据库，但界面刷新或内置词库恢复失败。请返回会话页后重试；如仍异常再重启应用。",
   "databaseMaintenanceCollaborationBusy": "当前正在发布、加入或处理其他协作操作，请等待操作结束后再管理本机数据库。",
   "localCollaborationOperationBusy": "另一项协作操作仍在进行，请等待结束后重试。",
@@ -855,11 +1766,35 @@
   "select": "选择",
   "exportPathDefaultHint": "留空时使用系统下载目录",
   "fileNameTemplateExample": "如：点名记录_{yyyy}-{MM}-{dd}",
-  "@fileNameTemplateExample": {"placeholders": {"MM": {"type": "String"}, "dd": {"type": "String"}, "yyyy": {"type": "String"}}},
+  "@fileNameTemplateExample": {
+    "placeholders": {
+      "MM": {
+        "type": "String"
+      },
+      "dd": {
+        "type": "String"
+      },
+      "yyyy": {
+        "type": "String"
+      }
+    }
+  },
   "fileNameTemplateHint": "使用模板变量自动生成文件名",
   "headerTemplate": "抬头模板",
   "headerTemplateExample": "如：{yyyy}-{MM}-{dd}日点名记录",
-  "@headerTemplateExample": {"placeholders": {"MM": {"type": "String"}, "dd": {"type": "String"}, "yyyy": {"type": "String"}}},
+  "@headerTemplateExample": {
+    "placeholders": {
+      "MM": {
+        "type": "String"
+      },
+      "dd": {
+        "type": "String"
+      },
+      "yyyy": {
+        "type": "String"
+      }
+    }
+  },
   "headerTemplateHint": "未使用会话名或会话名为空时生效；支持模板变量",
   "headerBackgroundColor": "抬头背景色",
   "tableHeaderBackgroundColor": "表头背景色",
@@ -881,77 +1816,248 @@
   "templateSessionDescription": "当前会话名称，如：2024年夏季点名",
   "templateExamplesTitle": "使用示例",
   "templateFileNameExampleOne": "文件名：点名记录_{yyyy}-{MM}-{dd}",
-  "@templateFileNameExampleOne": {"placeholders": {"MM": {"type": "String"}, "dd": {"type": "String"}, "yyyy": {"type": "String"}}},
+  "@templateFileNameExampleOne": {
+    "placeholders": {
+      "MM": {
+        "type": "String"
+      },
+      "dd": {
+        "type": "String"
+      },
+      "yyyy": {
+        "type": "String"
+      }
+    }
+  },
   "templateFileNameExampleOneResult": "点名记录_2024-03-28.xlsx",
   "templateFileNameExampleTwo": "文件名：通联_{yyyy}-{MM}-{dd}_{HH}{mm}{ss}",
-  "@templateFileNameExampleTwo": {"placeholders": {"HH": {"type": "String"}, "MM": {"type": "String"}, "dd": {"type": "String"}, "mm": {"type": "String"}, "ss": {"type": "String"}, "yyyy": {"type": "String"}}},
+  "@templateFileNameExampleTwo": {
+    "placeholders": {
+      "HH": {
+        "type": "String"
+      },
+      "MM": {
+        "type": "String"
+      },
+      "dd": {
+        "type": "String"
+      },
+      "mm": {
+        "type": "String"
+      },
+      "ss": {
+        "type": "String"
+      },
+      "yyyy": {
+        "type": "String"
+      }
+    }
+  },
   "templateFileNameExampleTwoResult": "通联_2024-03-28_143045.xlsx",
   "templateHeaderExample": "抬头：{yyyy}年{MM}月{dd}日点名记录",
-  "@templateHeaderExample": {"placeholders": {"MM": {"type": "String"}, "dd": {"type": "String"}, "yyyy": {"type": "String"}}},
+  "@templateHeaderExample": {
+    "placeholders": {
+      "MM": {
+        "type": "String"
+      },
+      "dd": {
+        "type": "String"
+      },
+      "yyyy": {
+        "type": "String"
+      }
+    }
+  },
   "templateHeaderExampleResult": "2024年03月28日点名记录",
   "templateVariablesTip": "提示：使用模板变量可以让文件名和抬头自动包含当前日期时间，方便文件管理。",
   "chooseColor": "选择{label}",
-  "@chooseColor": {"placeholders": {"label": {"type": "String"}}},
+  "@chooseColor": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
   "colorHexValue": "HEX：#{value}",
-  "@colorHexValue": {"placeholders": {"value": {"type": "String"}}},
+  "@colorHexValue": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
   "colorOpacity": "透明度",
   "noDataToExport": "没有数据可以导出",
   "saveExportFileDialog": "保存 {format} 导出文件",
-  "@saveExportFileDialog": {"placeholders": {"format": {"type": "String"}}},
+  "@saveExportFileDialog": {
+    "placeholders": {
+      "format": {
+        "type": "String"
+      }
+    }
+  },
   "downloadsDirectoryUnavailable": "无法访问下载目录",
   "exportSavedViaSystemPicker": "{format} 导出成功，已通过系统文件选择器保存",
-  "@exportSavedViaSystemPicker": {"placeholders": {"format": {"type": "String"}}},
+  "@exportSavedViaSystemPicker": {
+    "placeholders": {
+      "format": {
+        "type": "String"
+      }
+    }
+  },
   "exportSucceeded": "{format} 导出成功",
-  "@exportSucceeded": {"placeholders": {"format": {"type": "String"}}},
+  "@exportSucceeded": {
+    "placeholders": {
+      "format": {
+        "type": "String"
+      }
+    }
+  },
   "fileSavedTo": "文件已保存到：\n{path}",
-  "@fileSavedTo": {"placeholders": {"path": {"type": "String"}}},
+  "@fileSavedTo": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "exportFailed": "导出失败：{error}",
-  "@exportFailed": {"placeholders": {"error": {"type": "String"}}},
+  "@exportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "excelGenerationFailed": "导出失败：无法生成 Excel 文件",
   "importSucceeded": "导入成功：{count} 条记录",
-  "@importSucceeded": {"placeholders": {"count": {"type": "int"}}},
+  "@importSucceeded": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "importFailed": "导入失败：{error}",
-  "@importFailed": {"placeholders": {"error": {"type": "String"}}},
+  "@importFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "excelImportComingSoon": "Excel 导入功能开发中",
   "excelImportLlmProcessing": "正在用 AI 解析 Excel 内容…",
   "excelImportPreviewTitle": "导入预览",
   "excelImportPreviewCount": "共识别 {count} 条记录",
-  "@excelImportPreviewCount": {"placeholders": {"count": {"type": "int"}}},
+  "@excelImportPreviewCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "excelImportConfirm": "确认导入",
   "excelImportSuccess": "已导入 {count} 条记录",
-  "@excelImportSuccess": {"placeholders": {"count": {"type": "int"}}},
+  "@excelImportSuccess": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "excelImportFailed": "导入失败：{error}",
-  "@excelImportFailed": {"placeholders": {"error": {"type": "String"}}},
+  "@excelImportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "pathCopied": "路径已复制",
   "createSession": "新建会话",
   "createSessionTitle": "新建点名会话",
   "createSessionNameHint": "输入会话名称",
   "sessionCreated": "已创建会话“{title}”",
-  "@sessionCreated": {"placeholders": {"title": {"type": "String"}}},
+  "@sessionCreated": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "createSessionFailed": "创建会话失败：{error}",
-  "@createSessionFailed": {"placeholders": {"error": {"type": "String"}}},
+  "@createSessionFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "searchSessions": "搜索会话",
   "allSessionStatuses": "全部状态",
   "sessionArchived": "已归档",
   "sessionPage": "第 {page} / {total} 页",
-  "@sessionPage": {"placeholders": {"page": {"type": "int"}, "total": {"type": "int"}}},
+  "@sessionPage": {
+    "placeholders": {
+      "page": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "moreSessionActions": "更多会话操作",
   "openAndManageCollaboration": "打开并管理协作",
   "exportLibraryJson": "导出词库 JSON",
   "libraryExportDialogTitle": "导出词库",
   "libraryExportSucceeded": "词库已导出",
   "libraryExportFailed": "导出词库失败：{error}",
-  "@libraryExportFailed": {"placeholders": {"error": {"type": "String"}}},
+  "@libraryExportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "editLibraryItem": "编辑",
   "editLibraryItemTitle": "编辑“{name}”",
-  "@editLibraryItemTitle": {"placeholders": {"name": {"type": "String"}}},
+  "@editLibraryItemTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "editLibraryItemLabel": "词库内容",
   "libraryItemRenamed": "已更新为“{value}”",
-  "@libraryItemRenamed": {"placeholders": {"value": {"type": "String"}}},
+  "@libraryItemRenamed": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
   "libraryItemRenameFailed": "修改失败：{error}",
-  "@libraryItemRenameFailed": {"placeholders": {"error": {"type": "String"}}},
+  "@libraryItemRenameFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "libraryPageStatus": "第 {current} / {total} 页",
-  "@libraryPageStatus": {"placeholders": {"current": {"type": "int"}, "total": {"type": "int"}}},
+  "@libraryPageStatus": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "previousPage": "上一页",
   "nextPage": "下一页",
   "settingsCategoryAppearance": "外观",
@@ -995,7 +2101,13 @@
   "aiEditProfile": "编辑配置",
   "aiDeleteProfileTitle": "删除 AI 配置",
   "aiDeleteProfileMessage": "确定删除“{name}”及其本机密钥吗？",
-  "@aiDeleteProfileMessage": {"placeholders": {"name": {"type": "String"}}},
+  "@aiDeleteProfileMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "aiProfileName": "配置名称",
   "aiBaseUrl": "API Base URL",
   "aiModelName": "模型名称",
@@ -1014,7 +2126,13 @@
   "aiInvalidJson": "JSON 格式无效",
   "aiInvalidBaseUrl": "请输入有效的 HTTP(S) API 地址",
   "aiSettingsFailed": "AI 设置操作失败：{error}",
-  "@aiSettingsFailed": {"placeholders": {"error": {"type": "String"}}},
+  "@aiSettingsFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "aiProtocolAudioTranscriptions": "音频转写 multipart",
   "aiProtocolChatAudio": "Chat input_audio",
   "aiProtocolChatText": "Chat 文本提取",
@@ -1027,20 +2145,44 @@
   "aiWorkbenchUnavailable": "当前记录为只读或正在处理，暂时不能识别。",
   "aiReadyStatus": "点击麦克风录制一条点名内容。",
   "aiRecordingStatus": "正在录音 {elapsed}",
-  "@aiRecordingStatus": {"placeholders": {"elapsed": {"type": "String"}}},
+  "@aiRecordingStatus": {
+    "placeholders": {
+      "elapsed": {
+        "type": "String"
+      }
+    }
+  },
   "aiLiveTranscriptTitle": "实时识别字段",
   "aiLiveStructuredWaiting": "正在积累一段完整的点名内容，识别出的字段会显示在这里。",
   "aiLiveStructuredUpdating": "正在根据目前的完整内容整理字段…",
   "aiLiveTranscriptionRetrying": "实时识别暂时失败；停止录音后仍会用完整内容重试：{error}",
-  "@aiLiveTranscriptionRetrying": {"placeholders": {"error": {"type": "String"}}},
+  "@aiLiveTranscriptionRetrying": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "aiRecognizingStatus": "正在识别并整理候选内容…",
   "aiStartRecording": "录音",
   "aiStopAndRecognize": "识别",
   "aiMicrophonePermissionDenied": "未获得麦克风权限。",
   "aiRecordingFailed": "录音失败：{error}",
-  "@aiRecordingFailed": {"placeholders": {"error": {"type": "String"}}},
+  "@aiRecordingFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "aiRecognitionFailed": "识别失败：{error}",
-  "@aiRecognitionFailed": {"placeholders": {"error": {"type": "String"}}},
+  "@aiRecognitionFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "aiReviewTitle": "确认 AI 候选内容",
   "aiTranscriptTitle": "原始转写",
   "aiCopyTranscript": "复制转写",
@@ -1048,16 +2190,40 @@
   "aiNoStructuredCandidates": "服务没有返回结构化字段，你仍可查看或复制上方转写。",
   "aiCandidateRecord": "候选记录",
   "aiCandidateNumber": "候选 {number}",
-  "@aiCandidateNumber": {"placeholders": {"number": {"type": "int"}}},
+  "@aiCandidateNumber": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
   "aiCandidateHint": "空字段会默认勾选；替换已有内容必须由你手动勾选确认。",
   "aiApplySelected": "应用所选字段",
   "aiCandidatesApplied": "已应用 {count} 个候选字段。",
-  "@aiCandidatesApplied": {"placeholders": {"count": {"type": "int"}}},
+  "@aiCandidatesApplied": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "aiCandidatesStale": "录音后记录内容已经变化，这些候选已不能安全应用。",
   "aiApplyFailed": "无法应用 AI 候选：{error}",
-  "@aiApplyFailed": {"placeholders": {"error": {"type": "String"}}},
+  "@aiApplyFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "aiWillReplaceValue": "将替换：{value}",
-  "@aiWillReplaceValue": {"placeholders": {"value": {"type": "String"}}},
+  "@aiWillReplaceValue": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
   "aiWillFillEmpty": "将填入空字段",
   "aiReplacementNeedsConfirmation": "勾选后确认替换",
   "aiCandidateUnchanged": "内容已经一致",
@@ -1090,22 +2256,55 @@
   "aiDictionaryNeedsAssistant": "请先在设置中配置并启用文字助手。",
   "aiDictionaryNoSuggestions": "没有发现需要处理的词条。",
   "aiDictionaryApplied": "已应用 {count} 条词库建议。",
-  "@aiDictionaryApplied": {"placeholders": {"count": {"type": "int"}}},
+  "@aiDictionaryApplied": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "aiDictionaryFailed": "词库 AI 操作失败：{error}",
-  "@aiDictionaryFailed": {"placeholders": {"error": {"type": "String"}}},
+  "@aiDictionaryFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "aiDictionaryOptimizing": "正在优化词库",
   "aiDictionaryRecognizing": "正在识别历史词条",
   "aiDictionaryPreparing": "正在整理本地数据…",
   "aiDictionaryProgress": "已完成 {completed} / {total}",
-  "@aiDictionaryProgress": {"placeholders": {"completed": {"type": "int"}, "total": {"type": "int"}}},
+  "@aiDictionaryProgress": {
+    "placeholders": {
+      "completed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "aiDictionaryReviewTitle": "确认词库建议",
   "aiDictionaryReviewHint": "根据 {recordCount} 条历史记录及当前词库生成。只有勾选的内容会写入。",
-  "@aiDictionaryReviewHint": {"placeholders": {"recordCount": {"type": "int"}}},
+  "@aiDictionaryReviewHint": {
+    "placeholders": {
+      "recordCount": {
+        "type": "int"
+      }
+    }
+  },
   "aiDictionaryActionAdd": "新增",
   "aiDictionaryActionRename": "改名",
   "aiDictionaryActionMerge": "合并",
   "aiDictionaryUsedCount": "历史出现 {count} 次",
-  "@aiDictionaryUsedCount": {"placeholders": {"count": {"type": "int"}}},
+  "@aiDictionaryUsedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "aiDictionaryMergeWarning": "合并会从词库隐藏源词条，默认不勾选；不会改写历史记录。",
   "aiDictionaryApplySelected": "应用所选建议",
   "fieldFormatSuggestionLabel": "格式候选",

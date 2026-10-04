@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:openlogtool/l10n/l10n.dart';
 import 'package:openlogtool/models/account_dto.dart';
 import 'package:openlogtool/providers/server_provider.dart';
@@ -8,6 +9,7 @@ import 'package:openlogtool/services/secure_token_store.dart';
 import 'package:openlogtool/services/server_api.dart';
 import 'package:openlogtool/utils/app_snack_bar.dart';
 import 'package:openlogtool/utils/server_connection_error.dart';
+import 'package:openlogtool/utils/server_url.dart';
 import 'package:openlogtool/widgets/settings/settings_ui.dart';
 import 'package:provider/provider.dart';
 
@@ -58,7 +60,7 @@ class _ServerAccountSettingsState extends State<ServerAccountSettings> {
           key: const Key('server-account-settings'),
           icon: Icons.cloud_outlined,
           title: l10n.serverSettingsTitle,
-          description: l10n.serverSettingsHint,
+          description: l10n.socialServerLinkHint,
           padding: widget.cardPadding,
           headerTrailing: _ConnectionBadge(server: server),
           child: Column(
@@ -98,6 +100,20 @@ class _ServerAccountSettingsState extends State<ServerAccountSettings> {
                 ),
               ),
               if (server.serverInfo != null) ...[
+                Align(
+                    alignment: Alignment.centerLeft,
+                    child: TextButton.icon(
+                      icon: const Icon(Icons.copy_outlined),
+                      label: Text(l10n.socialServerLink),
+                      onPressed: () async {
+                        await Clipboard.setData(
+                            ClipboardData(text: '${server.serverUrl}/connect'));
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text(l10n.socialDone)));
+                        }
+                      },
+                    )),
                 const SizedBox(height: 8),
                 SelectableText(
                   l10n.serverInstanceDetails(
@@ -252,7 +268,8 @@ class _ServerAccountSettingsState extends State<ServerAccountSettings> {
   }
 
   Future<void> _saveAndCheck(ServerProvider server) async {
-    final candidateUrl = _serverUrlController.text.trim();
+    final candidateUrl =
+        serverUrlFromConnectionInput(_serverUrlController.text);
     try {
       final info = await server.saveAndCheckServerUrl(candidateUrl);
       if (!mounted) return;

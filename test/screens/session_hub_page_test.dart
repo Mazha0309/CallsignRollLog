@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:openlogtool/l10n/l10n.dart';
 import 'package:openlogtool/models/live_draft.dart';
+import 'package:openlogtool/models/collaboration_dto.dart';
+import 'package:openlogtool/models/social_dto.dart';
 import 'package:openlogtool/providers/account_share_provider.dart';
 import 'package:openlogtool/providers/collaboration_provider.dart';
 import 'package:openlogtool/providers/log_provider.dart';
@@ -21,6 +23,227 @@ void main() {
 
   setUp(() {
     SharedPreferences.setMockInitialValues({});
+  });
+
+  testWidgets('local recording can continue without connecting or logging in',
+      (tester) async {
+    final rows = [
+      _session(id: 'current-session', title: '离线点名', status: 'active')
+    ];
+    await tester.pumpWidget(_SessionHubTestApp(
+      sessionProvider: _FakeSessionProvider(
+          sessions: rows, currentSessionId: 'current-session'),
+      logProvider: LogProvider(
+          sessionListLoader: () async => rows,
+          sessionLogPageLoader: (_, __, ___) async => []),
+    ));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('open-friends')), findsNothing);
+    expect(find.byKey(const Key('open-live-share-management')), findsNothing);
+    await tester.tap(find.byKey(const Key('continue-current-session')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('workbench-after-history')), findsOneWidget);
+  });
+
+  testWidgets(
+      'record filters use local metadata and preserve collaborative copies while logged out',
+      (tester) async {
+    final rows = [
+      _session(id: 'current-session', title: '当前记录', status: 'active'),
+      _session(id: 'my-active', title: '本地进行中', status: 'active'),
+      _session(id: 'my-closed', title: '本地已结束', status: 'closed'),
+      _session(id: 'shared-active', title: '共同进行中', status: 'active'),
+      _session(id: 'shared-closed', title: '共同已结束', status: 'closed'),
+    ];
+    await tester.pumpWidget(_SessionHubTestApp(
+      sessionProvider: _FakeSessionProvider(
+          sessions: rows,
+          currentSessionId: 'current-session',
+          collaborationSessionIds: {'shared-active', 'shared-closed'}),
+      logProvider: LogProvider(
+          sessionListLoader: () async => rows,
+          sessionLogPageLoader: (_, __, ___) async => []),
+    ));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('join-collaboration')), findsNothing);
+    for (final pair in [
+      ('personal', '本地'),
+      ('collaboration', '共同'),
+      ('closed', '已结束')
+    ]) {
+      final filter = find.byKey(Key('session-collection-${pair.$1}'));
+      await tester.ensureVisible(filter);
+      await tester.tap(filter);
+      await tester.pumpAndSettle();
+      for (final row in rows.skip(1)) {
+        expect(find.byKey(Key('session-history-row-${row.sessionId}')),
+            row.title.contains(pair.$2) ? findsOneWidget : findsNothing);
+      }
+    }
+    await tester.enterText(
+        find.byKey(const Key('session-history-search')), '本地');
+    await tester.pumpAndSettle();
+    expect(find.text('本地已结束'), findsOneWidget);
+    expect(find.text('共同已结束'), findsNothing);
+  });
+
+  testWidgets(
+      'an owner invites a named friend directly from the current session',
+      (tester) async {
+    final rows = [
+      _session(id: 'current-session', title: '今晚点名', status: 'active')
+    ];
+    final social = _HubSharingProvider();
+    await tester.pumpWidget(_SessionHubTestApp(
+      sessionProvider: _FakeSessionProvider(
+          sessions: rows, currentSessionId: 'current-session'),
+      logProvider: LogProvider(
+          sessionListLoader: () async => rows,
+          sessionLogPageLoader: (_, __, ___) async => []),
+      collaborationProvider: _HubCollaborationProvider(collaborative: true),
+      serverProvider: _LoggedInServerProvider(),
+      sharingProvider: social,
+    ));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('invite-current-session-friend')));
+    await tester.pumpAndSettle();
+    expect(
+        find.byKey(const Key('session-friend-invite-dialog')), findsOneWidget);
+    expect(find.text('BA2ABC'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('session-invite-role')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('只能查看').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('send-session-friend-invite')));
+    await tester.pumpAndSettle();
+    expect(social.calls.single, [
+      'POST',
+      '/sessions/current-session/invitations',
+      {'username': 'BA2ABC', 'role': 'viewer'}
+    ]);
+  });
+
+  testWidgets(
+      'ended history refreshes after device-local lifecycle changes without a server',
+      (tester) async {
+    final rows = [
+      _session(id: 'current-session', title: '当前点名', status: 'active'),
+      _session(id: 'background-session', title: '本机历史', status: 'active'),
+    ];
+    final sessions = _FakeSessionProvider(
+        sessions: rows, currentSessionId: 'current-session');
+    await tester.pumpWidget(_SessionHubTestApp(
+      sessionProvider: sessions,
+      logProvider: LogProvider(
+          sessionListLoader: () async => rows,
+          sessionLogPageLoader: (_, __, ___) async => []),
+    ));
+    await tester.pumpAndSettle();
+    final ended = find.byKey(const Key('session-collection-closed'));
+    await tester.ensureVisible(ended);
+    await tester.pumpAndSettle();
+    await tester.tap(ended);
+    await tester.pumpAndSettle();
+    expect(find.text('本机历史'), findsNothing);
+    sessions.simulateLocalClose('background-session');
+    await tester.pumpAndSettle();
+    expect(find.text('本机历史'), findsOneWidget);
+  });
+
+  testWidgets(
+      'local-to-collaborative conversion requires upload consent before inviting anyone',
+      (tester) async {
+    final rows = [
+      _session(id: 'current-session', title: '本地私有点名', status: 'active')
+    ];
+    final collaboration = _HubCollaborationProvider();
+    final social = _HubSharingProvider();
+    await tester.pumpWidget(_SessionHubTestApp(
+      sessionProvider: _FakeSessionProvider(
+          sessions: rows, currentSessionId: 'current-session'),
+      logProvider: LogProvider(
+          sessionListLoader: () async => rows,
+          sessionLogPageLoader: (_, __, ___) async => []),
+      collaborationProvider: collaboration,
+      serverProvider: _LoggedInServerProvider(),
+      sharingProvider: social,
+    ));
+    await tester.pumpAndSettle();
+    expect(collaboration.publishCalls, 0);
+    final enable =
+        find.byKey(const Key('enable-current-session-collaboration'));
+    await tester.ensureVisible(enable);
+    await tester.pumpAndSettle();
+    await tester.tap(enable);
+    await tester.pumpAndSettle();
+    expect(find.textContaining('此操作只上传当前会话'), findsOneWidget);
+    expect(find.text('http://127.0.0.1:3000'), findsOneWidget);
+    await tester.tap(find.text('取消'));
+    await tester.pumpAndSettle();
+    expect(collaboration.publishCalls, 0);
+    expect(social.calls, isEmpty);
+    await tester.ensureVisible(enable);
+    await tester.pumpAndSettle();
+    await tester.tap(enable);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('confirm-session-upload')));
+    await tester.pumpAndSettle();
+    expect(collaboration.publishCalls, 1);
+    expect(social.calls, isEmpty);
+    expect(
+        find.byKey(const Key('session-friend-invite-dialog')), findsOneWidget);
+  });
+
+  testWidgets(
+      'a logged-out collaborative replica is not presented as an ordinary local session',
+      (tester) async {
+    final rows = [
+      _session(id: 'current-session', title: '协作副本', status: 'active')
+    ];
+    await tester.pumpWidget(_SessionHubTestApp(
+      sessionProvider: _FakeSessionProvider(
+          sessions: rows, currentSessionId: 'current-session'),
+      logProvider: LogProvider(
+          sessionListLoader: () async => rows,
+          sessionLogPageLoader: (_, __, ___) async => []),
+      collaborationProvider: _HubCollaborationProvider(collaborative: true),
+    ));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('close-current-local-session')), findsNothing);
+    expect(find.byKey(const Key('close-collaboration-locally')), findsNothing);
+    expect(
+        find.byKey(const Key('convert-collaboration-to-local')), findsNothing);
+    expect(find.byKey(const Key('delete-current-local-session')), findsNothing);
+    expect(
+        find.byKey(const Key('open-collaboration-management')), findsOneWidget);
+    expect(find.byKey(const Key('create-session')), findsOneWidget);
+  });
+
+  testWidgets('collaborative history never offers a local end action',
+      (tester) async {
+    final rows = [
+      _session(id: 'current', title: '本地当前', status: 'active'),
+      _session(id: 'shared', title: '共同记录', status: 'active'),
+    ];
+    await tester.pumpWidget(_SessionHubTestApp(
+      sessionProvider: _FakeSessionProvider(
+        sessions: rows,
+        currentSessionId: 'current',
+        collaborationSessionIds: {'shared'},
+      ),
+      logProvider: LogProvider(
+        sessionListLoader: () async => rows,
+        sessionLogPageLoader: (_, __, ___) async => [],
+      ),
+    ));
+    await tester.pumpAndSettle();
+    final menu = find.byKey(const Key('session-history-menu-shared'));
+    await tester.ensureVisible(menu);
+    await tester.tap(menu);
+    await tester.pumpAndSettle();
+    expect(find.widgetWithText(PopupMenuItem<dynamic>, '结束记录'), findsNothing);
+    expect(find.text('协作与成员'), findsOneWidget);
+    expect(find.text('仅在本机关闭会话'), findsNothing);
   });
 
   testWidgets('SessionHubPage uses the shared responsive section surfaces',
@@ -61,11 +284,15 @@ void main() {
     expect(find.byKey(const Key('current-session-section')), findsOneWidget);
     expect(find.byKey(const Key('session-history-section')), findsOneWidget);
     expect(find.byType(SettingsSectionCard), findsAtLeastNWidgets(2));
-    expect(find.byKey(const Key('open-live-share-management')), findsOneWidget);
-    expect(find.byKey(const Key('join-collaboration')), findsOneWidget);
+    expect(find.byKey(const Key('open-live-share-management')), findsNothing);
+    expect(find.byKey(const Key('join-collaboration')), findsNothing);
+    expect(
+        find.byKey(const Key('open-collaboration-management')), findsNothing);
+    expect(find.byKey(const Key('continue-current-session')), findsOneWidget);
+    expect(find.text('current-session'), findsNothing);
     expect(find.byKey(const Key('create-session')), findsOneWidget);
     expect(find.byKey(const Key('session-history-search')), findsOneWidget);
-    expect(find.text('仅在本机关闭会话'), findsOneWidget);
+    expect(find.text('结束记录'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
@@ -187,7 +414,8 @@ void main() {
     expect(find.byKey(const Key('workbench-after-history')), findsOneWidget);
   });
 
-  testWidgets('joining collaboration without login shows the server hint',
+  testWidgets(
+      'offline first launch offers recording without a login requirement',
       (tester) async {
     final sessionProvider = _FakeSessionProvider(
       sessions: [],
@@ -206,14 +434,15 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byKey(const Key('join-collaboration')));
-    await tester.pumpAndSettle();
-
+    expect(find.byKey(const Key('create-session')), findsOneWidget);
+    expect(find.byKey(const Key('join-collaboration')), findsNothing);
     expect(find.byKey(const Key('join-collaboration-dialog')), findsNothing);
-    expect(
-      find.textContaining('请先在“设置 → 服务器与账户”中检测服务器并登录'),
-      findsOneWidget,
-    );
+    expect(find.textContaining('无需服务器或账号'), findsOneWidget);
+    expect(find.byKey(const Key('configure-optional-server')), findsNothing);
+    await tester.ensureVisible(find.byKey(const Key('optional-online-expand')));
+    await tester.tap(find.byKey(const Key('optional-online-expand')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('configure-optional-server')), findsOneWidget);
   });
 
   testWidgets('creating a session returns directly to the workbench',
@@ -314,7 +543,7 @@ void main() {
   });
 
   testWidgets(
-      'SessionHubPage exposes a direct Live Share entry for the current session',
+      'Live Share remains available for a connected collaborative session',
       (tester) async {
     final sessions = [
       _session(
@@ -336,6 +565,8 @@ void main() {
       _SessionHubTestApp(
         sessionProvider: sessionProvider,
         logProvider: logProvider,
+        collaborationProvider: _HubCollaborationProvider(collaborative: true),
+        serverProvider: _LoggedInServerProvider(),
       ),
     );
     await tester.pumpAndSettle();
@@ -348,9 +579,10 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(
-      find.byKey(const Key('public-share-access-required')),
-      findsOneWidget,
-    );
+        tester
+            .widget<CollaborationScreen>(find.byType(CollaborationScreen))
+            .focusPublicShare,
+        isTrue);
   });
 
   testWidgets(
@@ -575,7 +807,7 @@ void main() {
       refreshedSessions
           .singleWhere((session) => session.sessionId == 'current-session')
           .status,
-      'closed',
+      'active',
     );
   });
 
@@ -652,12 +884,14 @@ class _SessionHubTestApp extends StatefulWidget {
     required this.logProvider,
     this.collaborationProvider,
     this.serverProvider,
+    this.sharingProvider,
   });
 
   final SessionProvider sessionProvider;
   final LogProvider logProvider;
   final CollaborationProvider? collaborationProvider;
   final ServerProvider? serverProvider;
+  final AccountShareProvider? sharingProvider;
 
   @override
   State<_SessionHubTestApp> createState() => _SessionHubTestAppState();
@@ -687,7 +921,11 @@ class _SessionHubTestAppState extends State<_SessionHubTestApp> {
             ChangeNotifierProvider(
               create: (_) => ServerProvider(autoLoadSettings: false),
             ),
-          ChangeNotifierProvider(create: (_) => AccountShareProvider()),
+          if (widget.sharingProvider != null)
+            ChangeNotifierProvider<AccountShareProvider>.value(
+                value: widget.sharingProvider!)
+          else
+            ChangeNotifierProvider(create: (_) => AccountShareProvider()),
           ChangeNotifierProvider(create: (_) => SettingsProvider()),
         ],
         child: MaterialApp(
@@ -763,6 +1001,61 @@ class _LoggedInServerProvider extends ServerProvider {
 
   @override
   String? get accountId => 'user-1';
+
+  @override
+  ServerInfoDto get serverInfo => ServerInfoDto(
+      serverInstanceId: 'server-1',
+      protocolMin: 1,
+      protocolMax: 1,
+      features: const ['sessionPublishing', 'friendCollaboration'],
+      serverTime: DateTime.utc(2026),
+      environment: 'test');
+}
+
+class _HubCollaborationProvider extends CollaborationProvider {
+  _HubCollaborationProvider({this.collaborative = false});
+  bool collaborative;
+  int publishCalls = 0;
+  @override
+  bool get isOwner => collaborative;
+  @override
+  LocalCollaborationBinding? get binding => !collaborative
+      ? null
+      : const LocalCollaborationBinding(
+          serverInstanceId: 'server-1',
+          serverOrigin: 'http://127.0.0.1:3000',
+          accountId: 'user-1',
+          sessionId: 'current-session',
+          membershipId: 'membership-1',
+          membershipVersion: 1,
+          role: SessionRole.owner,
+          replicaState: 'ready',
+          lastAppliedSeq: 0,
+          lastSeenHeadSeq: 0,
+          revokedAt: null);
+  @override
+  Future<void> publishCurrentSession() async {
+    publishCalls++;
+    collaborative = true;
+    notifyListeners();
+  }
+}
+
+class _HubSharingProvider extends AccountShareProvider {
+  final calls = <List<Object?>>[];
+  @override
+  bool get supportsFriends => true;
+  @override
+  SocialSnapshot get social => SocialSnapshot(friends: [
+        SocialPerson.fromJson({'userId': 'bob', 'username': 'BA2ABC'})
+      ]);
+  @override
+  Future<void> refresh() async {}
+  @override
+  Future<void> mutateSocial(String method, String path,
+      [Map<String, Object?> body = const {}]) async {
+    calls.add([method, path, body]);
+  }
 }
 
 class _FakeSessionProvider extends SessionProvider {
@@ -782,6 +1075,7 @@ class _FakeSessionProvider extends SessionProvider {
   final Set<String> _collaborationSessionIds;
   Session? _currentSession;
   int _databaseRevision = 0;
+  int _localDataRevision = 0;
   final List<String?> startedTitles = [];
 
   @override
@@ -795,6 +1089,17 @@ class _FakeSessionProvider extends SessionProvider {
 
   @override
   int get databaseRevision => _databaseRevision;
+
+  @override
+  int get dataRevision => _localDataRevision;
+
+  void simulateLocalClose(String id) {
+    final index = _sessions.indexWhere((session) => session.sessionId == id);
+    final old = _sessions[index];
+    _sessions[index] = _session(id: id, title: old.title, status: 'closed');
+    _localDataRevision++;
+    notifyListeners();
+  }
 
   void simulateDatabaseReplacement(List<Session> sessions) {
     final previousSessionId = _currentSession?.sessionId;
@@ -834,22 +1139,6 @@ class _FakeSessionProvider extends SessionProvider {
       title: title ?? '新记录',
       status: 'active',
     );
-    for (var index = 0; index < _sessions.length; index += 1) {
-      final existing = _sessions[index];
-      if (existing.status == 'active' &&
-          !_collaborationSessionIds.contains(existing.sessionId)) {
-        _sessions[index] = Session(
-          sessionId: existing.sessionId,
-          title: existing.title,
-          status: 'closed',
-          shareCode: existing.shareCode,
-          createdAt: existing.createdAt,
-          updatedAt: created.createdAt,
-          closedAt: created.createdAt,
-          deletedAt: existing.deletedAt,
-        );
-      }
-    }
     _sessions.add(created);
     _currentSession = created;
     notifyListeners();
@@ -875,21 +1164,6 @@ class _FakeSessionProvider extends SessionProvider {
 
   @override
   Future<void> reopenLocalSession(String sessionId) async {
-    for (var candidate = 0; candidate < _sessions.length; candidate += 1) {
-      final existing = _sessions[candidate];
-      if (existing.sessionId != sessionId && existing.status == 'active') {
-        _sessions[candidate] = Session(
-          sessionId: existing.sessionId,
-          title: existing.title,
-          status: 'closed',
-          shareCode: existing.shareCode,
-          createdAt: existing.createdAt,
-          updatedAt: '2026-07-13T12:00:00Z',
-          closedAt: '2026-07-13T12:00:00Z',
-          deletedAt: existing.deletedAt,
-        );
-      }
-    }
     final index = _sessions.indexWhere(
       (session) => session.sessionId == sessionId,
     );

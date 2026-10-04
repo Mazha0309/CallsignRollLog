@@ -96,7 +96,8 @@ void main() {
     expect(collaboration.joinedCodes, ['ABCDE12345']);
   });
 
-  testWidgets('a bound session can stop collaboration without server access',
+  testWidgets(
+      'offline collaboration exposes no destructive detach or local end',
       (tester) async {
     tester.view.physicalSize = const Size(800, 1000);
     tester.view.devicePixelRatio = 1;
@@ -129,78 +130,22 @@ void main() {
         ),
       ),
     );
-    await tester.pumpAndSettle();
-
-    final stopButton = find.byKey(const Key('convert-collaboration-to-local'));
-    expect(stopButton, findsOneWidget);
-    await tester.ensureVisible(stopButton);
-    await tester.tap(stopButton);
     await tester.pumpAndSettle();
 
     expect(
-      find.byKey(const Key('convert-collaboration-to-local-dialog')),
-      findsOneWidget,
-    );
-    expect(find.textContaining('服务器共享会话'), findsOneWidget);
-    expect(find.textContaining('未同步队列、冲突'), findsOneWidget);
-    expect(find.textContaining('未提交实时草稿会从本机永久丢弃'), findsOneWidget);
-    await tester.tap(
-      find.byKey(const Key('confirm-convert-collaboration-to-local')),
-    );
+        find.byKey(const Key('convert-collaboration-to-local')), findsNothing);
+    expect(find.byKey(const Key('close-collaboration-locally')), findsNothing);
+    expect(collaboration.localStopCalls, 0);
+    expect(find.textContaining('切换页面或暂时断网不会退出协作'), findsOneWidget);
+    expect(find.text('连接暂时不可用，已有记录仍保留在本机。'), findsOneWidget);
+    expect(find.text('session-1'), findsNothing);
+    final diagnostics = find
+        .byKey(const PageStorageKey<String>('collaboration-technical-details'));
+    await tester.ensureVisible(diagnostics);
+    await tester
+        .tap(find.descendant(of: diagnostics, matching: find.text('连接与诊断详情')));
     await tester.pumpAndSettle();
-
-    expect(collaboration.localStopCalls, 1);
-    expect(find.text('已停止本机协作并转为本地会话'), findsOneWidget);
-  });
-
-  testWidgets('offline collaboration can be closed only on this device',
-      (tester) async {
-    tester.view.physicalSize = const Size(800, 1000);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.resetPhysicalSize);
-    addTearDown(tester.view.resetDevicePixelRatio);
-    final collaboration = _TestCollaborationProvider(
-      binding: _binding(role: SessionRole.owner),
-      state: CollaborationState.failed,
-    );
-    final server = _OfflineServerProvider();
-    final sessions = _TestSessionProvider();
-    addTearDown(collaboration.dispose);
-    addTearDown(server.dispose);
-    addTearDown(sessions.dispose);
-
-    await tester.pumpWidget(
-      MultiProvider(
-        providers: [
-          ChangeNotifierProvider<CollaborationProvider>.value(
-            value: collaboration,
-          ),
-          ChangeNotifierProvider<ServerProvider>.value(value: server),
-          ChangeNotifierProvider<SessionProvider>.value(value: sessions),
-        ],
-        child: const MaterialApp(
-          locale: Locale('zh', 'CN'),
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
-          home: CollaborationScreen(),
-        ),
-      ),
-    );
-    await tester.pumpAndSettle();
-
-    final close = find.byKey(const Key('close-collaboration-locally'));
-    await tester.ensureVisible(close);
-    await tester.tap(close);
-    await tester.pumpAndSettle();
-
-    expect(find.textContaining('服务器共享会话、成员及其他设备不受影响'), findsOneWidget);
-    await tester.tap(
-      find.byKey(const Key('confirm-close-collaboration-locally')),
-    );
-    await tester.pumpAndSettle();
-
-    expect(collaboration.localCloseCalls, 1);
-    expect(find.text('已在本机关闭会话'), findsOneWidget);
+    expect(find.text('session-1'), findsOneWidget);
   });
 
   testWidgets('current collaboration data can be deleted only on this device',
@@ -309,10 +254,11 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(collaboration.localCopyTitles, ['Revoked session（本地副本）']);
-    expect(find.text('已切换到可编辑本地副本'), findsOneWidget);
+    expect(find.text('已另存并切换到独立会话，原协作会话已保留'), findsOneWidget);
   });
 
-  testWidgets('a synchronized session can be converted directly on this device',
+  testWidgets(
+      'online session saves a copy without stopping or replacing collaboration',
       (tester) async {
     tester.view.physicalSize = const Size(800, 1000);
     tester.view.devicePixelRatio = 1;
@@ -348,27 +294,74 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    final convertButton =
-        find.byKey(const Key('convert-collaboration-to-local'));
-    expect(convertButton, findsOneWidget);
-    expect(find.byKey(const Key('create-editable-local-copy')), findsNothing);
-    await tester.ensureVisible(convertButton);
-    await tester.tap(convertButton);
-    await tester.pumpAndSettle();
-
     expect(
-      find.byKey(const Key('convert-collaboration-to-local-dialog')),
-      findsOneWidget,
-    );
-    expect(find.textContaining('服务器共享会话、成员和其他设备不受影响'), findsOneWidget);
-    await tester.tap(
-      find.byKey(const Key('confirm-convert-collaboration-to-local')),
-    );
+        find.byKey(const Key('convert-collaboration-to-local')), findsNothing);
+    expect(find.byKey(const Key('close-collaboration-locally')), findsNothing);
+    final more = find.byKey(const Key('more-local-collaboration-actions'));
+    await tester.ensureVisible(more);
+    await tester.tap(more);
     await tester.pumpAndSettle();
-
-    expect(collaboration.directConversionCalls, 1);
-    expect(find.text('已停止本机协作并转为本地会话'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('create-editable-local-copy')));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('原协作会话和你的成员身份不变'), findsOneWidget);
+    expect(find.textContaining('也不会删除'), findsOneWidget);
+    await tester
+        .tap(find.byKey(const Key('confirm-create-editable-local-copy')));
+    await tester.pumpAndSettle();
+    expect(collaboration.localCopyTitles, ['Revoked session（本地副本）']);
+    expect(collaboration.directConversionCalls, 0);
+    expect(collaboration.localStopCalls, 0);
   });
+  for (final switchAccount in [false, true]) {
+    testWidgets(
+        'member leave changes only membership; stale context=$switchAccount',
+        (tester) async {
+      tester.view.physicalSize = const Size(900, 1100);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final collaboration = _TestCollaborationProvider(
+        binding: _binding(role: SessionRole.editor),
+        state: CollaborationState.ready,
+      );
+      final server = _LoggedInServerProvider();
+      final sessions = _TestSessionProvider();
+      addTearDown(collaboration.dispose);
+      addTearDown(server.dispose);
+      addTearDown(sessions.dispose);
+      await tester.pumpWidget(MultiProvider(
+        providers: [
+          ChangeNotifierProvider<CollaborationProvider>.value(
+              value: collaboration),
+          ChangeNotifierProvider<ServerProvider>.value(value: server),
+          ChangeNotifierProvider<SessionProvider>.value(value: sessions),
+        ],
+        child: const MaterialApp(
+          locale: Locale('zh', 'CN'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: CollaborationScreen(),
+        ),
+      ));
+      await tester.pumpAndSettle();
+      expect(
+          find.byKey(const Key('close-collaboration-session')), findsNothing);
+      final leave = find.widgetWithText(OutlinedButton, '离开协作');
+      await tester.ensureVisible(leave);
+      await tester.tap(leave);
+      await tester.pumpAndSettle();
+      expect(find.textContaining('其他成员可继续记录'), findsOneWidget);
+      expect(find.textContaining('只是暂时离开页面，无需退出协作'), findsOneWidget);
+      if (switchAccount) server.testContextRevision++;
+      await tester.tap(find.widgetWithText(FilledButton, '确认'));
+      await tester.pumpAndSettle();
+      expect(collaboration.leaveCalls, switchAccount ? 0 : 1);
+      expect(collaboration.localCopyTitles, isEmpty);
+      expect(collaboration.localStopCalls, 0);
+      expect(collaboration.directConversionCalls, 0);
+      expect(collaboration.localDeleteCalls, 0);
+    });
+  }
 }
 
 LocalCollaborationBinding _binding({
@@ -408,8 +401,18 @@ class _TestCollaborationProvider extends CollaborationProvider {
   final List<String> localCopyTitles = [];
   int directConversionCalls = 0;
   int localStopCalls = 0;
-  int localCloseCalls = 0;
   int localDeleteCalls = 0;
+  int leaveCalls = 0;
+
+  @override
+  SessionRole? get effectiveRole =>
+      testState == CollaborationState.ready ? testBinding?.role : null;
+
+  @override
+  bool get isOwner => effectiveRole == SessionRole.owner;
+
+  @override
+  Future<void> leaveCurrentSession() async => leaveCalls++;
 
   @override
   LocalCollaborationBinding? get binding => testBinding;
@@ -447,11 +450,6 @@ class _TestCollaborationProvider extends CollaborationProvider {
   }
 
   @override
-  Future<void> closeCurrentSessionLocally() async {
-    localCloseCalls += 1;
-  }
-
-  @override
   Future<void> deleteCurrentSessionLocally() async {
     localDeleteCalls += 1;
   }
@@ -459,6 +457,11 @@ class _TestCollaborationProvider extends CollaborationProvider {
 
 class _LoggedInServerProvider extends ServerProvider {
   _LoggedInServerProvider() : super(autoLoadSettings: false);
+
+  int testContextRevision = 0;
+
+  @override
+  int get contextRevision => testContextRevision;
 
   @override
   bool get isLoggedIn => true;

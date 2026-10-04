@@ -21,11 +21,9 @@ String localCollaborationActionErrorText(
   return l10n.operationFailed(raw.replaceFirst('Bad state: ', ''));
 }
 
-/// Device-local escape hatches for the current collaboration replica.
-///
-/// These actions never claim to close, delete, or leave the shared server
-/// session. Server membership and shared-session actions remain on the
-/// collaboration management screen as separate controls.
+/// Independent copies and explicit data cleanup, not session lifecycle actions.
+/// Ending a shared session and leaving its membership live in collaboration
+/// management; neither operation is emulated by detaching a local replica.
 class CollaborationLocalSessionAction extends StatelessWidget {
   const CollaborationLocalSessionAction({
     super.key,
@@ -52,30 +50,6 @@ class CollaborationLocalSessionAction extends StatelessWidget {
       runSpacing: 8,
       crossAxisAlignment: WrapCrossAlignment.center,
       children: [
-        OutlinedButton.icon(
-          key: const Key('convert-collaboration-to-local'),
-          onPressed: collaboration.isBusy
-              ? null
-              : () => _confirmStopCollaboration(
-                    context,
-                    collaboration: collaboration,
-                    sourceTitle: session.title,
-                  ),
-          icon: const Icon(Icons.cloud_off_outlined),
-          label: Text(context.l10n.convertCollaborationToLocal),
-        ),
-        OutlinedButton.icon(
-          key: const Key('close-collaboration-locally'),
-          onPressed: collaboration.isBusy
-              ? null
-              : () => _confirmCloseLocally(
-                    context,
-                    collaboration: collaboration,
-                    sourceTitle: session.title,
-                  ),
-          icon: const Icon(Icons.inventory_2_outlined),
-          label: Text(context.l10n.closeCollaborationLocally),
-        ),
         MenuAnchor(
           menuChildren: [
             MenuItemButton(
@@ -127,93 +101,13 @@ class CollaborationLocalSessionAction extends StatelessWidget {
     );
   }
 
-  Future<void> _confirmStopCollaboration(
-    BuildContext context, {
-    required CollaborationProvider collaboration,
-    required String sourceTitle,
-  }) async {
-    final cleanConversion = collaboration.canConvertCurrentSessionDirectly;
-    final accepted = await showDialog<bool>(
-          context: context,
-          builder: (dialogContext) => AlertDialog(
-            key: const Key('convert-collaboration-to-local-dialog'),
-            title: Text(context.l10n.convertCollaborationToLocalTitle),
-            content: Text(
-              cleanConversion
-                  ? context.l10n.convertCollaborationToLocalConfirmation(
-                      sourceTitle,
-                    )
-                  : context.l10n
-                      .convertCollaborationToLocalUnsyncedConfirmation(
-                      sourceTitle,
-                    ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(dialogContext, false),
-                child: Text(context.l10n.cancel),
-              ),
-              FilledButton(
-                key: const Key('confirm-convert-collaboration-to-local'),
-                onPressed: () => Navigator.pop(dialogContext, true),
-                child: Text(context.l10n.convertCollaborationToLocal),
-              ),
-            ],
-          ),
-        ) ??
-        false;
-    if (!accepted || !context.mounted) return;
-
-    await _runLocalAction(
-      context,
-      cleanConversion
-          ? collaboration.convertCurrentSessionToLocal
-          : collaboration.stopCurrentSessionLocally,
-      success: context.l10n.convertCollaborationToLocalSucceeded,
-    );
-  }
-
-  Future<void> _confirmCloseLocally(
-    BuildContext context, {
-    required CollaborationProvider collaboration,
-    required String sourceTitle,
-  }) async {
-    final accepted = await showDialog<bool>(
-          context: context,
-          builder: (dialogContext) => AlertDialog(
-            key: const Key('close-collaboration-locally-dialog'),
-            title: Text(context.l10n.historySessionCloseTitle),
-            content: Text(
-              context.l10n.historySessionCloseConfirmation(sourceTitle),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(dialogContext, false),
-                child: Text(context.l10n.cancel),
-              ),
-              FilledButton(
-                key: const Key('confirm-close-collaboration-locally'),
-                onPressed: () => Navigator.pop(dialogContext, true),
-                child: Text(context.l10n.closeCollaborationLocally),
-              ),
-            ],
-          ),
-        ) ??
-        false;
-    if (!accepted || !context.mounted) return;
-
-    await _runLocalAction(
-      context,
-      collaboration.closeCurrentSessionLocally,
-      success: context.l10n.historySessionClosed,
-    );
-  }
-
   Future<void> _confirmCreateCopy(
     BuildContext context, {
     required CollaborationProvider collaboration,
     required String sourceTitle,
   }) async {
+    final sourceSessionId = context.read<SessionProvider>().currentSessionId;
+    final sourceBinding = collaboration.binding;
     final accepted = await showDialog<bool>(
           context: context,
           builder: (dialogContext) => AlertDialog(
@@ -238,6 +132,17 @@ class CollaborationLocalSessionAction extends StatelessWidget {
         false;
     if (!accepted || !context.mounted) return;
 
+    // A dialog must never copy another session selected while it was open.
+    if (context.read<SessionProvider>().currentSessionId != sourceSessionId ||
+        collaboration.binding?.sessionId != sourceBinding?.sessionId ||
+        collaboration.binding?.accountId != sourceBinding?.accountId ||
+        collaboration.binding?.serverInstanceId !=
+            sourceBinding?.serverInstanceId) {
+      ScaffoldMessenger.of(context).showLoggedSnackBar(
+        SnackBar(content: Text(context.l10n.hubContextChanged)),
+      );
+      return;
+    }
     await _runLocalAction(
       context,
       () => collaboration.createEditableLocalCopy(
