@@ -8,7 +8,12 @@ import 'package:openlogtool/providers/server_provider.dart';
 import 'package:openlogtool/providers/session_provider.dart';
 import 'package:openlogtool/screens/collaboration_screen.dart';
 import 'package:openlogtool/services/server_api.dart';
+import 'package:openlogtool/theme/app_theme.dart';
+import 'package:openlogtool/widgets/friend_search_dialog.dart';
 import 'package:openlogtool/widgets/session_friend_actions.dart';
+import 'package:openlogtool/widgets/session_join_policy_control.dart';
+import 'package:openlogtool/widgets/settings/settings_ui.dart';
+import 'package:openlogtool/widgets/session_sharing_dialog.dart';
 
 class SocialScreen extends StatefulWidget {
   const SocialScreen({super.key, this.onSessionOpened, this.initialTab = 0})
@@ -21,6 +26,8 @@ class SocialScreen extends StatefulWidget {
 
 class _SocialScreenState extends State<SocialScreen> {
   bool _working = false;
+  FriendSession? _pendingOpen;
+  String? _pendingOpenScope;
   @override
   void initState() {
     super.initState();
@@ -44,6 +51,7 @@ class _SocialScreenState extends State<SocialScreen> {
                 'FRIEND_REQUIRED' => l.socialErrorFriends,
                 'FRIEND_SELF' => l.socialErrorSelf,
                 'FRIEND_BLOCKED' => l.socialErrorBlocked,
+                'MEMBERSHIP_REVOKED' => l.socialDirectJoinRemoved,
                 'REQUEST_CLOSED' || 'ALREADY_MEMBER' => l.socialErrorClosed,
                 _ => l.operationFailed(error.message),
               }
@@ -58,40 +66,34 @@ class _SocialScreenState extends State<SocialScreen> {
   }
 
   Future<void> _addFriend() async {
-    var draftName = '';
-    final name = await showDialog<String>(
-        context: context,
-        builder: (c) => AlertDialog(
-              title: Text(c.l10n.socialAddFriend),
-              content: TextField(
-                  key: const Key('friend-username'),
-                  onChanged: (value) => draftName = value,
-                  autofocus: true,
-                  maxLength: 64,
-                  decoration: InputDecoration(labelText: c.l10n.socialUsername),
-                  onSubmitted: (value) {
-                    if (value.trim().isNotEmpty) Navigator.pop(c, value.trim());
-                  }),
-              actions: [
-                TextButton(
-                    onPressed: () => Navigator.pop(c),
-                    child: Text(c.l10n.cancel)),
-                FilledButton(
-                    onPressed: () {
-                      if (draftName.trim().isNotEmpty) {
-                        Navigator.pop(c, draftName.trim());
-                      }
-                    },
-                    child: Text(c.l10n.socialSend))
-              ],
-            ));
-    if (!mounted || name == null) return;
-    final provider = context.read<AccountShareProvider>();
-    final ok = await _run(() =>
-        provider.mutateSocial('POST', '/friend-requests', {'username': name}));
-    if (ok && mounted) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(context.l10n.socialPending)));
+    await showFriendSearchDialog(context);
+  }
+
+  Future<void> _joinDirectly(FriendSession session) async {
+    final social = context.read<AccountShareProvider>();
+    final collaboration = context.read<CollaborationProvider>();
+    final scope = social.accountScope;
+    final route = ModalRoute.of(context);
+    final success = await _run(() async {
+      await social.mutateSocial(
+          'POST', '/sessions/${Uri.encodeComponent(session.sessionId)}/join');
+      if (!mounted ||
+          social.accountScope != scope ||
+          route?.isCurrent != true) {
+        return;
+      }
+      setState(() {
+        _pendingOpen = session;
+        _pendingOpenScope = scope;
+      });
+      await collaboration.openJoinedSession(session.sessionId);
+    });
+    if (success &&
+        mounted &&
+        social.accountScope == scope &&
+        route?.isCurrent == true) {
+      Navigator.pop(context);
+      widget.onSessionOpened?.call();
     }
   }
 
@@ -161,15 +163,24 @@ class _SocialScreenState extends State<SocialScreen> {
   Future<void> _respond(SocialRequest request, String action) async {
     final provider = context.read<AccountShareProvider>();
     final collaboration = context.read<CollaborationProvider>();
+    final scope = provider.accountScope;
+    final route = ModalRoute.of(context);
     final shouldOpen = action == 'accept' && request.kind == 'invitation';
     final success = await _run(() async {
       await provider.mutateSocial('POST',
           '/${request.sessionId == null ? 'friend-requests' : 'session-requests'}/${Uri.encodeComponent(request.id)}/$action');
-      if (shouldOpen && mounted) {
+      if (shouldOpen &&
+          mounted &&
+          provider.accountScope == scope &&
+          route?.isCurrent == true) {
         await collaboration.openJoinedSession(request.sessionId!);
       }
     });
-    if (success && shouldOpen && mounted) {
+    if (success &&
+        shouldOpen &&
+        mounted &&
+        provider.accountScope == scope &&
+        route?.isCurrent == true) {
       Navigator.pop(context);
       widget.onSessionOpened?.call();
     }
@@ -177,8 +188,16 @@ class _SocialScreenState extends State<SocialScreen> {
 
   Future<void> _open(String id, {bool manage = false}) async {
     final collaboration = context.read<CollaborationProvider>();
+    final social = context.read<AccountShareProvider>();
+    final scope = social.accountScope;
+    final route = ModalRoute.of(context);
     final ok = await _run(() => collaboration.openJoinedSession(id));
-    if (!ok || !mounted) return;
+    if (!ok ||
+        !mounted ||
+        social.accountScope != scope ||
+        route?.isCurrent != true) {
+      return;
+    }
     if (manage) {
       await Navigator.push(
           context,
@@ -192,6 +211,8 @@ class _SocialScreenState extends State<SocialScreen> {
   }
 
   Future<void> _remove(SocialPerson friend, bool block) async {
+    final provider = context.read<AccountShareProvider>();
+    final scope = provider.accountScope;
     final confirmed = await showDialog<bool>(
         context: context,
         builder: (c) => AlertDialog(
@@ -208,7 +229,11 @@ class _SocialScreenState extends State<SocialScreen> {
               ],
             ));
     if (confirmed != true || !mounted) return;
-    final provider = context.read<AccountShareProvider>();
+    if (provider.accountScope != scope) {
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.l10n.hubContextChanged)));
+      return;
+    }
     await _run(() => provider.mutateSocial(
         block ? 'PUT' : 'DELETE',
         block
@@ -222,6 +247,7 @@ class _SocialScreenState extends State<SocialScreen> {
     final server = context.watch<ServerProvider>();
     final l = context.l10n;
     final data = provider.social;
+    if (_pendingOpenScope != provider.accountScope) _pendingOpen = null;
     final disabled = _working || provider.busy;
     return DefaultTabController(
         length: 3,
@@ -260,64 +286,137 @@ class _SocialScreenState extends State<SocialScreen> {
                     ]),
                   Expanded(
                       child: TabBarView(children: [
-                    _list([
-                      Text(l.socialIntro),
-                      const SizedBox(height: 16),
-                      Align(
-                          alignment: Alignment.centerLeft,
-                          child: FilledButton.icon(
-                              key: const Key('social-add-friend'),
-                              onPressed: disabled ? null : _addFriend,
-                              icon: const Icon(Icons.person_add_outlined),
-                              label: Text(l.socialAddFriend))),
-                      const SizedBox(height: 16),
-                      if (data.friends.isEmpty) Text(l.socialNoFriends),
-                      for (final friend in data.friends)
-                        Card(
-                            child: ListTile(
-                                leading: const CircleAvatar(
-                                    child: Icon(Icons.person_outline)),
-                                title: Text(friend.username),
-                                trailing: PopupMenuButton<String>(
-                                    enabled: !disabled,
-                                    onSelected: (v) =>
-                                        _remove(friend, v == 'block'),
-                                    itemBuilder: (_) => [
-                                          PopupMenuItem(
-                                              value: 'remove',
-                                              child: Text(l.socialRemove)),
-                                          PopupMenuItem(
-                                              value: 'block',
-                                              child: Text(l.socialBlock)),
-                                        ]))),
+                    _list('friends', [
+                      SettingsSectionCard(
+                        icon: Icons.people_outline,
+                        title: l.socialFriends,
+                        description: l.socialIntro,
+                        headerTrailing: OutlinedButton.icon(
+                            key: const Key('social-add-friend'),
+                            onPressed: disabled ? null : _addFriend,
+                            icon: const Icon(Icons.person_search_outlined),
+                            label: Text(l.socialAddFriend)),
+                        child: data.friends.isEmpty
+                            ? AppNotice(
+                                message: l.socialNoFriends,
+                                icon: Icons.person_add_outlined)
+                            : AppTileGroup(children: [
+                                for (final friend in data.friends)
+                                  ListTile(
+                                      contentPadding: EdgeInsets.zero,
+                                      leading: const AppIconBadge(
+                                          icon: Icons.person_outline,
+                                          size: AppIconBadgeSize.action),
+                                      title: Text(friend.username),
+                                      trailing: PopupMenuButton<String>(
+                                          enabled: !disabled,
+                                          onSelected: (v) =>
+                                              _remove(friend, v == 'block'),
+                                          itemBuilder: (_) => [
+                                                PopupMenuItem(
+                                                    value: 'remove',
+                                                    child:
+                                                        Text(l.socialRemove)),
+                                                PopupMenuItem(
+                                                    value: 'block',
+                                                    child: Text(l.socialBlock)),
+                                              ])),
+                              ]),
+                      ),
                       if (data.blocks.isNotEmpty) ...[
-                        const SizedBox(height: 24),
-                        Text(l.socialBlocked),
-                        for (final person in data.blocks)
-                          ListTile(
-                              title: Text(person.username),
-                              trailing: TextButton(
-                                  onPressed: disabled
-                                      ? null
-                                      : () => _run(() => provider.mutateSocial(
-                                          'DELETE',
-                                          '/blocks/${Uri.encodeComponent(person.username)}')),
-                                  child: Text(l.socialUnblock)))
+                        const SizedBox(height: AppSpace.md),
+                        SettingsSectionCard(
+                            icon: Icons.block_outlined,
+                            title: l.socialBlocked,
+                            tone: AppTone.neutral,
+                            child: AppTileGroup(children: [
+                              for (final person in data.blocks)
+                                ListTile(
+                                    contentPadding: EdgeInsets.zero,
+                                    title: Text(person.username),
+                                    trailing: TextButton(
+                                        onPressed: disabled
+                                            ? null
+                                            : () => _run(() =>
+                                                provider.mutateSocial('DELETE',
+                                                    '/blocks/${Uri.encodeComponent(person.username)}')),
+                                        child: Text(l.socialUnblock))),
+                            ])),
                       ],
                     ]),
-                    _list([
+                    _list('messages', [
                       if (data.friendRequests.isEmpty &&
-                          data.sessionRequests.isEmpty)
-                        Text(l.socialNoMessages),
+                          data.sessionRequests.isEmpty &&
+                          provider.inbox.isEmpty)
+                        AppNotice(
+                            message: l.socialNoMessages,
+                            icon: Icons.inbox_outlined),
                       for (final request in [
                         ...data.friendRequests,
                         ...data.sessionRequests
                       ])
                         _requestCard(request, provider, disabled),
+                      for (final grant in provider.inbox)
+                        SettingsSectionCard(
+                            icon: Icons.share_outlined,
+                            title: l.sharedSessionFrom(
+                                grant.grantorUsername.isEmpty
+                                    ? grant.grantorUserId
+                                    : grant.grantorUsername),
+                            description:
+                                '${grant.scopeMode == 'all' ? l.shareAll : '${l.shareSelected} (${grant.selectedSessions.length})'} · ${grant.canEditLogs ? l.shareEditLogs : l.shareViewOnly}${grant.canDeleteLogs ? ' · ${l.shareDeleteLogs}' : ''}',
+                            child: Wrap(spacing: 8, children: [
+                              FilledButton(
+                                  onPressed: disabled
+                                      ? null
+                                      : () {
+                                          final scope = provider.accountScope;
+                                          _run(() => provider.respondShare(
+                                              grant.id, 'accept',
+                                              expectedScope: scope));
+                                        },
+                                  child: Text(l.socialAccept)),
+                              TextButton(
+                                  onPressed: disabled
+                                      ? null
+                                      : () {
+                                          final scope = provider.accountScope;
+                                          _run(() => provider.respondShare(
+                                              grant.id, 'reject',
+                                              expectedScope: scope));
+                                        },
+                                  child: Text(l.socialReject)),
+                            ])),
+                      if (provider.supportsBatchSharing)
+                        Align(
+                            alignment: Alignment.centerLeft,
+                            child: TextButton.icon(
+                                onPressed: () =>
+                                    showSessionSharingDialog(context),
+                                icon: const Icon(Icons.share_outlined),
+                                label: Text(l.shareSessionsTitle))),
                     ]),
-                    _list([
-                      Text(l.socialVisibilityHint),
-                      const SizedBox(height: 16),
+                    _list('sessions', [
+                      AppNotice(
+                          message: l.socialVisibilityHint,
+                          icon: Icons.lock_outline),
+                      const SizedBox(height: AppSpace.md),
+                      if (_pendingOpen case final joined?) ...[
+                        SettingsSectionCard(
+                          key: const Key('social-joined-session-retry'),
+                          icon: Icons.check_circle_outline,
+                          title: joined.title,
+                          description: l.socialAccepted,
+                          child: Align(
+                              alignment: AlignmentDirectional.centerStart,
+                              child: FilledButton.tonal(
+                                  onPressed: disabled
+                                      ? null
+                                      : () => _open(joined.sessionId),
+                                  child: Text(l.socialOpen))),
+                        ),
+                        const SizedBox(height: AppSpace.md),
+                      ],
                       if (context
                                   .watch<SessionProvider>()
                                   .currentSession
@@ -334,37 +433,36 @@ class _SocialScreenState extends State<SocialScreen> {
                                     }),
                             icon: const Icon(Icons.cloud_upload_outlined),
                             label: Text(l.socialPublish)),
-                      if (data.sessions.isEmpty) Text(l.socialNoSessions),
+                      if (data.sessions.isEmpty)
+                        Padding(
+                            padding: const EdgeInsets.only(top: AppSpace.sm),
+                            child: Text(l.socialNoSessions)),
                       for (final session in data.sessions)
-                        Card(
-                            child: Padding(
-                                padding: const EdgeInsets.all(16),
+                        Padding(
+                            padding: const EdgeInsets.only(bottom: AppSpace.md),
+                            child: SettingsSectionCard(
+                                icon: Icons.groups_outlined,
+                                title: session.title,
+                                description: session.ownerUsername,
                                 child: Column(
                                     crossAxisAlignment:
-                                        CrossAxisAlignment.start,
+                                        CrossAxisAlignment.stretch,
                                     children: [
-                                      Text(session.title,
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .titleMedium),
-                                      Text(session.ownerUsername),
-                                      const SizedBox(height: 8),
                                       if (session.ownerId ==
                                           provider.accountId) ...[
-                                        SwitchListTile(
-                                            contentPadding: EdgeInsets.zero,
-                                            title: Text(l.socialDiscoverable),
-                                            value:
-                                                session.visibility == 'friends',
-                                            onChanged: disabled
-                                                ? null
-                                                : (value) => _run(() =>
-                                                    provider.mutateSocial('PUT',
-                                                        '/sessions/${Uri.encodeComponent(session.sessionId)}', {
-                                                      'visibility': value
-                                                          ? 'friends'
-                                                          : 'private'
-                                                    }))),
+                                        SessionJoinPolicyControl(
+                                            session: session,
+                                            disabled: disabled,
+                                            supportsDirectJoin:
+                                                provider.supportsDirectJoin,
+                                            onChanged: (body) async {
+                                              await _run(() =>
+                                                  provider.mutateSocial(
+                                                      'PUT',
+                                                      '/sessions/${Uri.encodeComponent(session.sessionId)}',
+                                                      body));
+                                            }),
+                                        const SizedBox(height: AppSpace.sm),
                                         Wrap(
                                             spacing: 8,
                                             runSpacing: 8,
@@ -382,20 +480,52 @@ class _SocialScreenState extends State<SocialScreen> {
                                                           manage: true),
                                                   child: Text(l.socialManage)),
                                             ]),
-                                      ] else
-                                        FilledButton.tonal(
-                                            onPressed: disabled ||
-                                                    data.sessionRequests.any(
-                                                        (r) =>
-                                                            r.sessionId ==
-                                                                session
-                                                                    .sessionId &&
-                                                            r.status ==
-                                                                'pending')
-                                                ? null
-                                                : () => _invite(session,
-                                                    apply: true),
-                                            child: Text(l.socialApply)),
+                                      ] else ...[
+                                        Wrap(
+                                            spacing: AppSpace.xs,
+                                            runSpacing: AppSpace.xs,
+                                            children: [
+                                              AppStatusPill(
+                                                  label: session.joinPolicy ==
+                                                              'direct' &&
+                                                          provider
+                                                              .supportsDirectJoin
+                                                      ? l.socialJoinDirect
+                                                      : l.socialJoinApproval,
+                                                  icon:
+                                                      Icons.group_add_outlined),
+                                              if (session.joinPolicy ==
+                                                      'direct' &&
+                                                  provider.supportsDirectJoin)
+                                                AppStatusPill(
+                                                    label:
+                                                        session.defaultRole ==
+                                                                'editor'
+                                                            ? l.socialEdit
+                                                            : l.socialView),
+                                            ]),
+                                        const SizedBox(height: AppSpace.sm),
+                                        Align(
+                                            alignment: AlignmentDirectional
+                                                .centerStart,
+                                            child: FilledButton.tonal(
+                                                onPressed: disabled ||
+                                                        (session.joinPolicy !=
+                                                                'direct' &&
+                                                            data.sessionRequests.any((r) =>
+                                                                r.sessionId ==
+                                                                    session
+                                                                        .sessionId &&
+                                                                r.status ==
+                                                                    'pending'))
+                                                    ? null
+                                                    : () => session.joinPolicy ==
+                                                                'direct' &&
+                                                            provider.supportsDirectJoin
+                                                        ? _joinDirectly(session)
+                                                        : _invite(session, apply: true),
+                                                child: Text(session.joinPolicy == 'direct' && provider.supportsDirectJoin ? l.socialDirectJoin : l.socialApply))),
+                                      ],
                                     ]))),
                     ]),
                   ])),
@@ -403,15 +533,10 @@ class _SocialScreenState extends State<SocialScreen> {
         ));
   }
 
-  Widget _list(List<Widget> children) =>
-      ListView(padding: const EdgeInsets.all(16), children: [
-        Center(
-            child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 820),
-                child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: children))),
-      ]);
+  Widget _list(String tab, List<Widget> children) => AppPageFrame(
+      scrollKey: PageStorageKey('social-$tab'),
+      child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch, children: children));
 
   Widget _requestCard(
       SocialRequest r, AccountShareProvider provider, bool disabled) {
@@ -423,16 +548,17 @@ class _SocialScreenState extends State<SocialScreen> {
             ? l.socialInvitation
             : l.socialApplication;
     final subject = r.kind == 'invitation' ? r.recipientId : r.senderId;
-    return Card(
+    return Padding(
         key: Key('social-request-${r.id}'),
-        child: Padding(
-            padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.only(bottom: AppSpace.md),
+        child: SettingsSectionCard(
+            icon:
+                r.kind == null ? Icons.person_add_outlined : Icons.mail_outline,
+            title: incoming ? r.senderUsername : r.recipientUsername,
+            description:
+                '$label · ${incoming ? l.socialReceived : l.socialSent}',
             child:
                 Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(
-                  '$label · ${incoming ? r.senderUsername : r.recipientUsername}',
-                  style: Theme.of(context).textTheme.titleMedium),
-              Text(incoming ? l.socialReceived : l.socialSent),
               if (r.sessionTitle != null)
                 Text(
                     '${r.sessionTitle} · ${r.role == 'editor' ? l.socialEdit : l.socialView}'),
@@ -455,19 +581,26 @@ class _SocialScreenState extends State<SocialScreen> {
                                 child: Text(l.socialReject)),
                           ]
                         : [
-                            Text(l.socialPending),
+                            AppStatusPill(
+                                label: l.socialRequestSent,
+                                icon: Icons.schedule),
                             TextButton(
                                 onPressed: disabled
                                     ? null
                                     : () => _respond(r, 'cancel'),
                                 child: Text(l.cancel))
                           ])
-              else if (r.sessionId != null && subject == provider.accountId)
+              else if (r.status == 'accepted' &&
+                  r.sessionId != null &&
+                  subject == provider.accountId)
                 FilledButton.tonal(
                     onPressed: disabled ? null : () => _open(r.sessionId!),
                     child: Text(l.socialOpen))
               else
-                Text(l.socialAccepted),
+                AppStatusPill(
+                    label: r.status == 'accepted'
+                        ? l.socialAccepted
+                        : l.socialRequestClosed),
             ])));
   }
 }

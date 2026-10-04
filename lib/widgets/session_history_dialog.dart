@@ -9,6 +9,8 @@ import 'package:openlogtool/providers/session_provider.dart';
 import 'package:openlogtool/src/bridge/rust_api.dart';
 import 'package:openlogtool/src/bridge/models/session.dart';
 import 'package:provider/provider.dart';
+import 'package:openlogtool/widgets/session_sharing_dialog.dart';
+import 'package:openlogtool/widgets/shared_session_records_dialog.dart';
 
 typedef SessionHistoryLoader = Future<List<Session>> Function();
 typedef SessionHistoryAction = Future<void> Function(Session session);
@@ -17,7 +19,7 @@ typedef SessionCollaborationBindingChecker = Future<bool> Function(
   String sessionId,
 );
 
-enum _SessionCollection { all, personal, collaboration, closed }
+enum _SessionCollection { all, personal, collaboration, shared, closed }
 
 enum _SessionRowAction { closeLocally, manageCollaboration, deleteLocally }
 
@@ -199,7 +201,24 @@ class _SessionHistoryPanelState extends State<SessionHistoryPanel> {
     AccountShareProvider sharing,
   ) async {
     final local = await sessions.listAvailableSessionEntries();
-    return [...local, ...sharing.sharedHistoryEntries()];
+    final sharedCollaborationIds = sharing.sharedSessions
+        .where((s) => s.source == 'collaboration')
+        .map((s) => s.sessionId)
+        .toSet();
+    final shared = <String, SessionListEntry>{};
+    for (final entry in sharing.sharedHistoryEntries()) {
+      final source = entry.sharedSession;
+      final key = source?.source == 'collaboration'
+          ? 'collaboration:${source!.sessionId}'
+          : '${source?.grantorUserId}:${source?.source}:${entry.session.sessionId}';
+      shared.putIfAbsent(key, () => entry);
+    }
+    return [
+      ...local.where((entry) =>
+          !entry.hasCollaborationBinding ||
+          !sharedCollaborationIds.contains(entry.session.sessionId)),
+      ...shared.values,
+    ]..sort((a, b) => b.session.updatedAt.compareTo(a.session.updatedAt));
   }
 
   void _reload() {
@@ -220,114 +239,31 @@ class _SessionHistoryPanelState extends State<SessionHistoryPanel> {
     final query = _query.trim().toLowerCase();
     return entries.where((entry) {
       final session = entry.session;
-      if (session.sessionId == currentSessionId) return false;
-      final collaborative = entry.hasCollaborationBinding || entry.isShared;
+      if (!entry.isShared && session.sessionId == currentSessionId) {
+        return false;
+      }
+      final collaborative = entry.hasCollaborationBinding;
       if (!switch (_collection) {
         _SessionCollection.all => true,
-        _SessionCollection.personal => !collaborative,
+        _SessionCollection.personal => !collaborative && !entry.isShared,
         _SessionCollection.collaboration => collaborative,
+        _SessionCollection.shared => entry.isShared,
         _SessionCollection.closed => session.status == 'closed',
       }) {
         return false;
       }
       return query.isEmpty ||
           session.title.toLowerCase().contains(query) ||
-          session.sessionId.toLowerCase().contains(query);
+          session.sessionId.toLowerCase().contains(query) ||
+          (entry.sharedGrantorUsername?.toLowerCase().contains(query) ?? false);
     }).toList(growable: false);
   }
 
   Future<void> _browseShared(SessionListEntry entry) async {
     final sharing = context.read<AccountShareProvider>();
-    final shared = sharing.sharedSessionById(entry.session.sessionId);
-    if (shared == null) return;
-    var logs = const <Map<String, Object?>>[];
-    try {
-      logs = await sharing.loadSharedLogs(shared);
-    } catch (_) {
-      logs = const [];
-    }
-    if (!mounted) return;
-    await showDialog<void>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(entry.session.title),
-        content: SizedBox(
-          width: 420,
-          height: 320,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                dialogContext.l10n.sharedSessionFrom(
-                  entry.sharedGrantorUsername ?? '',
-                ),
-              ),
-              const SizedBox(height: 12),
-              Expanded(
-                child: logs.isEmpty
-                    ? Text(dialogContext.l10n.historySessionsEmpty)
-                    : ListView.builder(
-                        itemCount: logs.length,
-                        itemBuilder: (context, index) {
-                          final log = logs[index];
-                          return ListTile(
-                            dense: true,
-                            title: Text('${log['callsign'] ?? ''}'),
-                            subtitle: Text('${log['time'] ?? ''}'),
-                          );
-                        },
-                      ),
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: Text(dialogContext.l10n.cancel),
-          ),
-          if (shared.canJoin)
-            FilledButton(
-              onPressed: () async {
-                final passphrase = await showDialog<String>(
-                  context: dialogContext,
-                  builder: (passContext) {
-                    final controller = TextEditingController();
-                    return AlertDialog(
-                      title: Text(passContext.l10n.joinSharedSession),
-                      content: TextField(
-                        controller: controller,
-                        obscureText: true,
-                        decoration: InputDecoration(
-                          labelText: passContext.l10n.joinSharedSession,
-                        ),
-                      ),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(passContext),
-                          child: Text(passContext.l10n.cancel),
-                        ),
-                        FilledButton(
-                          onPressed: () =>
-                              Navigator.pop(passContext, controller.text),
-                          child: Text(passContext.l10n.join),
-                        ),
-                      ],
-                    );
-                  },
-                );
-                if (passphrase == null || passphrase.trim().isEmpty) return;
-                await sharing.joinOwnedSession(
-                  sessionId: shared.sessionId,
-                  passphrase: passphrase.trim(),
-                );
-                if (dialogContext.mounted) Navigator.pop(dialogContext);
-              },
-              child: Text(dialogContext.l10n.joinSharedSession),
-            ),
-        ],
-      ),
-    );
+    final shared = entry.sharedSession ??
+        sharing.sharedSessionById(entry.session.sessionId);
+    if (shared != null) await showSharedSessionRecords(context, shared);
   }
 
   Future<void> _open(Session session) async {
@@ -555,16 +491,19 @@ class _SessionHistoryPanelState extends State<SessionHistoryPanel> {
               future: _entries,
               builder: (context, snapshot) {
                 final entries = (snapshot.data ?? const <SessionListEntry>[])
-                    .where(
-                        (entry) => entry.session.sessionId != currentSessionId);
+                    .where((entry) =>
+                        entry.isShared ||
+                        entry.session.sessionId != currentSessionId);
                 final collections = {
                   _SessionCollection.all: context.l10n.hubAllRecords,
                   _SessionCollection.personal: context.l10n.hubMyRecords,
                   if (_collection == _SessionCollection.collaboration ||
-                      entries.any((entry) =>
-                          entry.hasCollaborationBinding || entry.isShared))
+                      entries.any((entry) => entry.hasCollaborationBinding))
                     _SessionCollection.collaboration:
                         context.l10n.hubTogetherRecords,
+                  if (_collection == _SessionCollection.shared ||
+                      entries.any((entry) => entry.isShared))
+                    _SessionCollection.shared: context.l10n.sharedSessionBadge,
                   _SessionCollection.closed: context.l10n.hubEndedRecords,
                 };
                 return Wrap(
@@ -621,6 +560,12 @@ class _SessionHistoryPanelState extends State<SessionHistoryPanel> {
                     }),
                   ),
                 ),
+                if (context.watch<AccountShareProvider>().supportsBatchSharing)
+                  OutlinedButton.icon(
+                      key: const Key('history-share-sessions'),
+                      onPressed: () => showSessionSharingDialog(context),
+                      icon: const Icon(Icons.share_outlined),
+                      label: Text(context.l10n.shareSessionsTitle)),
               ],
             ),
             const SizedBox(height: 12),
@@ -880,7 +825,8 @@ class _SessionHistoryPanelState extends State<SessionHistoryPanel> {
       ],
     );
     return Card(
-      key: Key('session-history-row-${session.sessionId}'),
+      key: Key(
+          'session-history-row-${entry.sharedSession?.identity ?? session.sessionId}'),
       margin: EdgeInsets.zero,
       elevation: 0,
       child: InkWell(

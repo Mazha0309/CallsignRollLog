@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:openlogtool/models/dictionary_item.dart';
+import 'package:openlogtool/utils/dictionary_ranking.dart';
+import 'package:openlogtool/utils/dictionary_usage_store.dart';
 import 'package:openlogtool/utils/ime_safe_upper_case_formatter.dart';
 import 'package:openlogtool/widgets/autocomplete_options_list.dart';
+import 'package:openlogtool/widgets/scroll_safe_unfocus.dart';
 
-class DictionaryAutocompleteField extends StatelessWidget {
+class DictionaryAutocompleteField extends StatefulWidget {
   final TextEditingController controller;
   final FocusNode? focusNode;
   final String label;
@@ -16,6 +19,7 @@ class DictionaryAutocompleteField extends StatelessWidget {
   final bool enabled;
   final String? Function(String?)? validator;
   final void Function(String)? onChanged;
+  final DictionaryUsageStore? usageStore;
 
   const DictionaryAutocompleteField({
     super.key,
@@ -30,58 +34,59 @@ class DictionaryAutocompleteField extends StatelessWidget {
     this.enabled = true,
     this.validator,
     this.onChanged,
+    this.usageStore,
   });
 
   @override
+  State<DictionaryAutocompleteField> createState() =>
+      _DictionaryAutocompleteFieldState();
+}
+
+class _DictionaryAutocompleteFieldState
+    extends State<DictionaryAutocompleteField> {
+  final GlobalKey _optionsKey = GlobalKey();
+  final _outsideTap = ScrollSafeUnfocus();
+  late final DictionaryUsageStore _usageStore;
+
+  @override
+  void initState() {
+    super.initState();
+    _usageStore = widget.usageStore ?? DictionaryUsageStore.shared();
+    _usageStore.ensureLoaded();
+  }
+
+  @override
+  void dispose() {
+    _outsideTap.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final textCapitalization =
-        upperCase ? TextCapitalization.characters : TextCapitalization.none;
-    final inputFormatters = upperCase
+    final textCapitalization = widget.upperCase
+        ? TextCapitalization.characters
+        : TextCapitalization.none;
+    final inputFormatters = widget.upperCase
         ? const [ImeSafeUpperCaseTextFormatter()]
         : const <TextInputFormatter>[];
 
     return Autocomplete<_DictionaryOption>(
-      textEditingController: controller,
-      focusNode: focusNode,
+      textEditingController: widget.controller,
+      focusNode: widget.focusNode,
       optionsBuilder: (TextEditingValue value) {
-        if (value.text.isEmpty) return const Iterable.empty();
-        final query = value.text.toLowerCase();
-        final scored = <_ScoredDictionaryOption>[];
-        for (final option in options) {
-          if (!option.matches(value.text)) continue;
-          var score = 0;
-          final raw = option.raw.toLowerCase();
-          final pinyin = option.pinyin.toLowerCase();
-          final abbr = option.abbreviation.toLowerCase();
-          if (abbr.startsWith(query)) {
-            score += 1000;
-          } else if (abbr.contains(query)) {
-            score += 500;
-          }
-          if (raw.startsWith(query)) {
-            score += 300;
-          } else if (raw.contains(query)) {
-            score += 100;
-          }
-          if (pinyin.startsWith(query)) {
-            score += 200;
-          } else if (pinyin.contains(query)) {
-            score += 50;
-          }
-          scored.add(_ScoredDictionaryOption(option, score));
-        }
-        scored.sort((a, b) {
-          if (b.score != a.score) return b.score.compareTo(a.score);
-          return a.option.raw.compareTo(b.option.raw);
-        });
-        return <_DictionaryOption>[
-          for (final scoredOption in scored.take(20))
-            _DictionaryOption(scoredOption.option),
+        return [
+          for (final option in rankDictionaryMatches(
+            query: value.text,
+            options: widget.options,
+            usageCount: (item) => _usageStore.countFor(item.type, item.raw),
+          ))
+            _DictionaryOption(option),
         ];
       },
       displayStringForOption: (option) => option.value,
       onSelected: (_DictionaryOption selection) {
-        controller.value = TextEditingValue(
+        _usageStore.recordSelection(selection.item.type, selection.value);
+        widget.controller.value = TextEditingValue(
           text: selection.value,
           selection: TextSelection.collapsed(offset: selection.value.length),
         );
@@ -98,23 +103,26 @@ class DictionaryAutocompleteField extends StatelessWidget {
           child: TextFormField(
             controller: fieldController,
             focusNode: fieldFocusNode,
-            enabled: enabled,
-            validator: validator,
+            enabled: widget.enabled,
+            validator: widget.validator,
             decoration: InputDecoration(
-              labelText: label,
-              hintText: hintText,
+              labelText: widget.label,
+              hintText: widget.hintText,
               isDense: true,
               contentPadding: EdgeInsets.symmetric(
                 horizontal: 12,
-                vertical: isCompact ? 10 : 14,
+                vertical: widget.isCompact ? 10 : 14,
               ),
             ),
-            onChanged: onChanged,
+            onChanged: widget.onChanged,
             onFieldSubmitted: (_) => onFieldSubmitted(),
-            textInputAction: textInputAction ?? TextInputAction.next,
+            textInputAction: widget.textInputAction ?? TextInputAction.next,
             textCapitalization: textCapitalization,
             inputFormatters: inputFormatters,
-            onTapOutside: (_) => fieldFocusNode.unfocus(),
+            onTapOutside: (event) {
+              if (isGlobalOffsetInside(event.position, _optionsKey)) return;
+              _outsideTap.onTapOutside(event, fieldFocusNode);
+            },
           ),
         );
       },
@@ -129,6 +137,7 @@ class DictionaryAutocompleteField extends StatelessWidget {
         return Align(
           alignment: Alignment.topLeft,
           child: Material(
+            key: _optionsKey,
             elevation: 3,
             color: theme.colorScheme.surfaceContainer,
             clipBehavior: Clip.antiAlias,
@@ -176,10 +185,4 @@ class _DictionaryOption {
   final DictionaryItem item;
   _DictionaryOption(this.item);
   String get value => item.raw;
-}
-
-class _ScoredDictionaryOption {
-  final DictionaryItem option;
-  final int score;
-  _ScoredDictionaryOption(this.option, this.score);
 }

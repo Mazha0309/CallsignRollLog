@@ -100,6 +100,312 @@ abstract class AppLocalizations {
     Locale('zh')
   ];
 
+  /// No description provided for @shareSessionsTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'共享会话'**
+  String get shareSessionsTitle;
+
+  /// No description provided for @shareSelected.
+  ///
+  /// In zh, this message translates to:
+  /// **'多选会话'**
+  String get shareSelected;
+
+  /// No description provided for @shareAll.
+  ///
+  /// In zh, this message translates to:
+  /// **'持续共享全部'**
+  String get shareAll;
+
+  /// No description provided for @shareAllHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'包含当前和以后新建的所有本人会话。新建或离线修改的本地会话完成云同步后，对方即可看到。'**
+  String get shareAllHint;
+
+  /// No description provided for @shareSelectedHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'只共享勾选的本人会话；不会自动包含以后新建的会话，也不会转共享别人的记录。'**
+  String get shareSelectedHint;
+
+  /// No description provided for @shareViewOnly.
+  ///
+  /// In zh, this message translates to:
+  /// **'仅查看'**
+  String get shareViewOnly;
+
+  /// No description provided for @shareEditLogs.
+  ///
+  /// In zh, this message translates to:
+  /// **'允许新增、修改记录'**
+  String get shareEditLogs;
+
+  /// No description provided for @shareDeleteLogs.
+  ///
+  /// In zh, this message translates to:
+  /// **'另外允许删除记录'**
+  String get shareDeleteLogs;
+
+  /// No description provided for @sharePermissionHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'删除整个会话、结束会话和转授权仍由所有者控制；已结束的会话只能查看。'**
+  String get sharePermissionHint;
+
+  /// No description provided for @shareRecipientHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'选择好友，或输入同一服务器上的用户名'**
+  String get shareRecipientHint;
+
+  /// No description provided for @shareSend.
+  ///
+  /// In zh, this message translates to:
+  /// **'发送共享邀请'**
+  String get shareSend;
+
+  /// No description provided for @shareManage.
+  ///
+  /// In zh, this message translates to:
+  /// **'已发出的共享'**
+  String get shareManage;
+
+  /// No description provided for @shareRevoke.
+  ///
+  /// In zh, this message translates to:
+  /// **'撤销共享'**
+  String get shareRevoke;
+
+  /// No description provided for @shareRevokeHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'撤销后，对方将无法继续通过这项授权查看或操作你的会话。已加入的独立协作不受影响。'**
+  String get shareRevokeHint;
+
+  /// No description provided for @shareSaved.
+  ///
+  /// In zh, this message translates to:
+  /// **'共享设置已保存'**
+  String get shareSaved;
+
+  /// No description provided for @shareSyncFirst.
+  ///
+  /// In zh, this message translates to:
+  /// **'请先在个人云同步中确认配对或解决冲突，再重试共享。不会自动覆盖云端数据。'**
+  String get shareSyncFirst;
+
+  /// No description provided for @shareSyncLocal.
+  ///
+  /// In zh, this message translates to:
+  /// **'同步本机记录'**
+  String get shareSyncLocal;
+
+  /// No description provided for @shareNeedsSelection.
+  ///
+  /// In zh, this message translates to:
+  /// **'请选择接收人，并至少勾选一个会话；也可以选择持续共享全部。'**
+  String get shareNeedsSelection;
+
+  /// No description provided for @shareAccessChanged.
+  ///
+  /// In zh, this message translates to:
+  /// **'账号或共享权限已变化，请关闭后重新打开。'**
+  String get shareAccessChanged;
+
+  /// No description provided for @shareConflict.
+  ///
+  /// In zh, this message translates to:
+  /// **'记录已被其他人修改，请刷新后重新编辑，避免覆盖对方的修改。'**
+  String get shareConflict;
+
+  /// No description provided for @shareLoadFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'共享数据加载失败，请检查网络后重试。'**
+  String get shareLoadFailed;
+
+  /// No description provided for @shareOperationFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'操作未完成，请检查连接和当前权限后重试。'**
+  String get shareOperationFailed;
+
+  /// No description provided for @shareExisting.
+  ///
+  /// In zh, this message translates to:
+  /// **'已向该用户发出共享，请在下面的共享管理中修改。'**
+  String get shareExisting;
+
+  /// No description provided for @shareAddRecord.
+  ///
+  /// In zh, this message translates to:
+  /// **'新增记录'**
+  String get shareAddRecord;
+
+  /// No description provided for @shareRecordsHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'正在浏览共享记录，不会切换你当前的记录会话。'**
+  String get shareRecordsHint;
+
+  /// No description provided for @shareUpgradeRequired.
+  ///
+  /// In zh, this message translates to:
+  /// **'请先升级服务器以使用多选共享与操作授权。'**
+  String get shareUpgradeRequired;
+
+  /// No description provided for @shareSelectVisible.
+  ///
+  /// In zh, this message translates to:
+  /// **'全选搜索结果'**
+  String get shareSelectVisible;
+
+  /// No description provided for @shareClearSelection.
+  ///
+  /// In zh, this message translates to:
+  /// **'清空选择'**
+  String get shareClearSelection;
+
+  /// No description provided for @socialSearch.
+  ///
+  /// In zh, this message translates to:
+  /// **'搜索'**
+  String get socialSearch;
+
+  /// No description provided for @socialSearchHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'输入用户名或注册呼号'**
+  String get socialSearchHint;
+
+  /// No description provided for @socialSearchScope.
+  ///
+  /// In zh, this message translates to:
+  /// **'仅搜索当前服务器上的用户，不会搜索或公开个人记录。'**
+  String get socialSearchScope;
+
+  /// No description provided for @socialSearchStart.
+  ///
+  /// In zh, this message translates to:
+  /// **'输入至少 2 个字符，搜索后选择要添加的人。'**
+  String get socialSearchStart;
+
+  /// No description provided for @socialSearchEmpty.
+  ///
+  /// In zh, this message translates to:
+  /// **'没有找到匹配的用户，请确认对方在同一服务器注册。'**
+  String get socialSearchEmpty;
+
+  /// No description provided for @socialSearchMore.
+  ///
+  /// In zh, this message translates to:
+  /// **'结果较多，请输入更完整的用户名。'**
+  String get socialSearchMore;
+
+  /// No description provided for @socialSearchFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'搜索失败，请检查连接后重试。'**
+  String get socialSearchFailed;
+
+  /// No description provided for @socialSearchUpgrade.
+  ///
+  /// In zh, this message translates to:
+  /// **'此服务器尚不支持用户搜索，请先升级服务端。'**
+  String get socialSearchUpgrade;
+
+  /// No description provided for @socialSearchRateLimited.
+  ///
+  /// In zh, this message translates to:
+  /// **'搜索太频繁，请稍后再试。'**
+  String get socialSearchRateLimited;
+
+  /// No description provided for @socialAlreadyFriend.
+  ///
+  /// In zh, this message translates to:
+  /// **'已是好友'**
+  String get socialAlreadyFriend;
+
+  /// No description provided for @socialRequestSent.
+  ///
+  /// In zh, this message translates to:
+  /// **'申请已发送'**
+  String get socialRequestSent;
+
+  /// No description provided for @socialRequestIncoming.
+  ///
+  /// In zh, this message translates to:
+  /// **'对方已申请加你为好友'**
+  String get socialRequestIncoming;
+
+  /// No description provided for @socialRequestClosed.
+  ///
+  /// In zh, this message translates to:
+  /// **'申请已结束'**
+  String get socialRequestClosed;
+
+  /// No description provided for @socialJoinMode.
+  ///
+  /// In zh, this message translates to:
+  /// **'加入方式'**
+  String get socialJoinMode;
+
+  /// No description provided for @socialJoinInviteOnly.
+  ///
+  /// In zh, this message translates to:
+  /// **'仅邀请'**
+  String get socialJoinInviteOnly;
+
+  /// No description provided for @socialJoinApproval.
+  ///
+  /// In zh, this message translates to:
+  /// **'好友申请，审批后加入'**
+  String get socialJoinApproval;
+
+  /// No description provided for @socialJoinDirect.
+  ///
+  /// In zh, this message translates to:
+  /// **'好友直接加入'**
+  String get socialJoinDirect;
+
+  /// No description provided for @socialDirectRole.
+  ///
+  /// In zh, this message translates to:
+  /// **'直接加入的新成员权限'**
+  String get socialDirectRole;
+
+  /// No description provided for @socialDirectJoinWarning.
+  ///
+  /// In zh, this message translates to:
+  /// **'开启后，同一服务器上的好友无需审批即可加入，并查看这个会话已有和新增的全部记录。仅影响此会话，其他会话仍然私有。'**
+  String get socialDirectJoinWarning;
+
+  /// No description provided for @socialDirectJoinExistingHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'此权限只适用于之后直接加入的成员，已有成员的权限不变。被移出的成员需要重新邀请或审批。'**
+  String get socialDirectJoinExistingHint;
+
+  /// No description provided for @socialDirectJoinConfirm.
+  ///
+  /// In zh, this message translates to:
+  /// **'确认开放'**
+  String get socialDirectJoinConfirm;
+
+  /// No description provided for @socialDirectJoin.
+  ///
+  /// In zh, this message translates to:
+  /// **'直接加入'**
+  String get socialDirectJoin;
+
+  /// No description provided for @socialDirectJoinRemoved.
+  ///
+  /// In zh, this message translates to:
+  /// **'你已被移出此会话，请联系负责人重新邀请。'**
+  String get socialDirectJoinRemoved;
+
   /// No description provided for @detailsType.
   ///
   /// In zh, this message translates to:
@@ -163,7 +469,7 @@ abstract class AppLocalizations {
   /// No description provided for @sessionPeopleHint.
   ///
   /// In zh, this message translates to:
-  /// **'好友不等于会话成员。邀请被接受或申请获批后，对方才能查看此会话记录；公开页面单独管理。'**
+  /// **'在这里选择谁可以加入、处理邀请和申请。好友默认不开放记录；公开页面单独管理。'**
   String get sessionPeopleHint;
 
   /// No description provided for @sessionPendingRequests.
@@ -457,13 +763,13 @@ abstract class AppLocalizations {
   /// No description provided for @socialVisibilityHint.
   ///
   /// In zh, this message translates to:
-  /// **'好友只能看到会话标题，获准加入后才能查看记录。'**
+  /// **'好友可见的会话会出现在这里。加入方式由负责人设置，成为成员后才能查看记录。'**
   String get socialVisibilityHint;
 
   /// No description provided for @socialNoFriends.
   ///
   /// In zh, this message translates to:
-  /// **'还没有好友，输入搭档的用户名发送申请。'**
+  /// **'还没有好友，搜索搭档的用户名或注册呼号来添加。'**
   String get socialNoFriends;
 
   /// No description provided for @socialNoMessages.

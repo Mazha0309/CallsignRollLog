@@ -8,6 +8,8 @@ import 'package:openlogtool/models/live_draft.dart';
 import 'package:openlogtool/src/bridge/rust_api.dart';
 import 'package:openlogtool/src/bridge/models/log_entry.dart' as bridge;
 import 'package:openlogtool/utils/ime_safe_upper_case_formatter.dart';
+import 'package:openlogtool/widgets/autocomplete_options_list.dart';
+import 'package:openlogtool/widgets/scroll_safe_unfocus.dart';
 import 'package:openlogtool/utils/log_time.dart';
 
 typedef CallsignHistoryLoader = Future<List<bridge.LogEntry>> Function(
@@ -91,6 +93,7 @@ class _CallsignHistoryFieldState extends State<CallsignHistoryField>
   OverlayEntry? _overlayEntry;
   final GlobalKey _overlayPanelKey = GlobalKey();
   final FocusNode _ownFocusNode = FocusNode();
+  final _outsideTap = ScrollSafeUnfocus();
   late final FocusOnKeyEventCallback _historyKeyHandler;
   FocusNode? _keyHandlerNode;
   FocusOnKeyEventCallback? _previousKeyHandler;
@@ -212,6 +215,7 @@ class _CallsignHistoryFieldState extends State<CallsignHistoryField>
 
   @override
   void dispose() {
+    _outsideTap.dispose();
     WidgetsBinding.instance.removeObserver(this);
     _focusLossTimer?.cancel();
     _remotePreviewExpiryTimer?.cancel();
@@ -882,20 +886,10 @@ class _CallsignHistoryFieldState extends State<CallsignHistoryField>
         textCapitalization: TextCapitalization.characters,
         inputFormatters: const [ImeSafeUpperCaseTextFormatter()],
         onTapOutside: (event) {
-          final overlayContext = _overlayPanelKey.currentContext;
-          if (overlayContext != null) {
-            final renderObject = overlayContext.findRenderObject();
-            if (renderObject is RenderBox && renderObject.attached) {
-              final local = renderObject.globalToLocal(event.position);
-              if (local.dx >= 0 &&
-                  local.dy >= 0 &&
-                  local.dx <= renderObject.size.width &&
-                  local.dy <= renderObject.size.height) {
-                return;
-              }
-            }
+          if (isGlobalOffsetInside(event.position, _overlayPanelKey)) {
+            return;
           }
-          _effFocus.unfocus();
+          _outsideTap.onTapOutside(event, _effFocus);
         },
       ),
     );

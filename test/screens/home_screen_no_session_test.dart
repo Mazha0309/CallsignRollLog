@@ -115,6 +115,39 @@ void main() {
     expect(find.byKey(const Key('create-session')), findsOneWidget);
   });
 
+  testWidgets(
+      'phone system back returns from a settings category before leaving settings',
+      (tester) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(
+      _HomeScreenTestApp(sessions: _EmptySessionProvider()),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.descendant(
+      of: find.byKey(const Key('mobile-navigation')),
+      matching: find.text('设置'),
+    ));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('settings-category-appearance')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('settings-category-back')), findsOneWidget);
+
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    expect(
+        tester
+            .widget<NavigationBar>(find.byKey(const Key('mobile-navigation')))
+            .selectedIndex,
+        3);
+    expect(
+        find.byKey(const Key('settings-category-navigation')), findsOneWidget);
+    expect(find.byKey(const Key('settings-category-back')), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('active workbench keeps the new hierarchy on a phone',
       (tester) async {
     tester.view.physicalSize = const Size(390, 844);

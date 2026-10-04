@@ -394,10 +394,12 @@ class _CollaborationScreenState extends State<CollaborationScreen> {
               children: [
                 if ((context.watch<AccountShareProvider?>()?.supportsFriends ??
                         false) &&
-                    collaboration.binding != null)
+                    collaboration.binding != null) ...[
                   SessionPeopleActions(
                       key: ValueKey(collaboration.binding!.sessionId),
                       sessionId: collaboration.binding!.sessionId),
+                  const SizedBox(height: AppSpace.md),
+                ],
                 _memberManagementCard(collaboration, server),
               ],
             ),
@@ -1600,77 +1602,75 @@ class _CollaborationScreenState extends State<CollaborationScreen> {
     CollaborationProvider collaboration,
     ServerProvider server,
   ) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              context.l10n.membersTitle,
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            const SizedBox(height: 8),
-            ...collaboration.members.map(
-              (member) => ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: Icon(
-                  member.role == SessionRole.owner
-                      ? Icons.workspace_premium
-                      : Icons.person,
-                ),
-                title: Text(member.username ?? member.userId),
-                subtitle: Text(_roleLabel(member.role)),
-                trailing: member.userId == server.accountId
-                    ? Text(context.l10n.currentAccount)
-                    : PopupMenuButton<String>(
-                        enabled: !collaboration.isBusy,
-                        onSelected: (action) {
-                          if (action == 'owner') {
-                            _confirmTransfer(collaboration, member);
-                          } else if (action == 'remove') {
-                            _confirmRemove(collaboration, member);
-                          } else if (action == 'editor') {
-                            _run(
-                              () => collaboration.updateMemberRole(
-                                member.userId,
-                                InviteRole.editor,
-                              ),
-                              success: context.l10n.memberSetEditor,
-                            );
-                          } else if (action == 'viewer') {
-                            _run(
-                              () => collaboration.updateMemberRole(
-                                member.userId,
-                                InviteRole.viewer,
-                              ),
-                              success: context.l10n.memberSetViewer,
-                            );
-                          }
-                        },
-                        itemBuilder: (_) => [
-                          PopupMenuItem(
-                            value: 'editor',
-                            child: Text(context.l10n.setAsEditor),
-                          ),
-                          PopupMenuItem(
-                            value: 'viewer',
-                            child: Text(context.l10n.setAsViewer),
-                          ),
-                          PopupMenuItem(
-                            value: 'owner',
-                            child: Text(context.l10n.transferOwnership),
-                          ),
-                          PopupMenuItem(
-                            value: 'remove',
-                            child: Text(context.l10n.removeMember),
-                          ),
-                        ],
-                      ),
+    return SettingsSectionCard(
+      key: const Key('session-members-card'),
+      icon: Icons.groups_outlined,
+      title: context.l10n.membersTitle,
+      child: AppTileGroup(
+        children: [
+          ...collaboration.members.map(
+            (member) => ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: AppIconBadge(
+                icon: member.role == SessionRole.owner
+                    ? Icons.workspace_premium_outlined
+                    : Icons.person_outline,
+                size: AppIconBadgeSize.action,
+                tone: member.role == SessionRole.owner
+                    ? AppTone.primary
+                    : AppTone.neutral,
               ),
+              title: Text(member.username ?? member.userId),
+              subtitle: Text(_roleLabel(member.role)),
+              trailing: member.userId == server.accountId
+                  ? Text(context.l10n.currentAccount)
+                  : PopupMenuButton<String>(
+                      enabled: !collaboration.isBusy,
+                      onSelected: (action) {
+                        if (action == 'owner') {
+                          _confirmTransfer(collaboration, member);
+                        } else if (action == 'remove') {
+                          _confirmRemove(collaboration, member);
+                        } else if (action == 'editor') {
+                          _run(
+                            () => collaboration.updateMemberRole(
+                              member.userId,
+                              InviteRole.editor,
+                            ),
+                            success: context.l10n.memberSetEditor,
+                          );
+                        } else if (action == 'viewer') {
+                          _run(
+                            () => collaboration.updateMemberRole(
+                              member.userId,
+                              InviteRole.viewer,
+                            ),
+                            success: context.l10n.memberSetViewer,
+                          );
+                        }
+                      },
+                      itemBuilder: (_) => [
+                        PopupMenuItem(
+                          value: 'editor',
+                          child: Text(context.l10n.setAsEditor),
+                        ),
+                        PopupMenuItem(
+                          value: 'viewer',
+                          child: Text(context.l10n.setAsViewer),
+                        ),
+                        PopupMenuItem(
+                          value: 'owner',
+                          child: Text(context.l10n.transferOwnership),
+                        ),
+                        PopupMenuItem(
+                          value: 'remove',
+                          child: Text(context.l10n.removeMember),
+                        ),
+                      ],
+                    ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

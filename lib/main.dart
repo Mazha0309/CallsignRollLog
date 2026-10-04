@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:provider/provider.dart';
 import 'package:openlogtool/providers/log_provider.dart';
 import 'package:openlogtool/providers/personal_cloud_provider.dart';
@@ -24,6 +23,7 @@ import 'package:openlogtool/services/app_logger.dart';
 import 'package:openlogtool/services/controller_window_service.dart';
 import 'package:openlogtool/services/app_fonts.dart';
 import 'package:openlogtool/services/key_value_store.dart';
+import 'package:openlogtool/services/url_sync.dart';
 import 'package:openlogtool/theme/app_theme.dart';
 import 'package:openlogtool/utils/windows_accessibility_guard.dart';
 import 'package:openlogtool/bootstrap/rust_library_loader.dart';
@@ -33,9 +33,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 
 /// 主控屏标签页的初始参数快照。
-/// 必须在 usePathUrlStrategy() 之前捕获：PathUrlStrategy 初始化时会把
-/// 浏览器 URL 规范化（replaceState），随后 query 参数（?page=controller）
-/// 会被丢弃，动态读取将拿不到。
+/// 启动时捕获，不随主窗口后续的页面、会话切换改变。
 late final ({bool isController, String? sessionId}) controllerTabRoute;
 
 void main(List<String> args) {
@@ -54,9 +52,9 @@ void main(List<String> args) {
 }
 
 Future<void> _bootstrap(List<String> args) async {
-  // 先于 usePathUrlStrategy 捕获主控屏标签页参数。
+  // URL 只由 UrlSync 管理，避免 Flutter 路由与会话查询参数争用 history。
   controllerTabRoute = web_bridge.controllerTabRouteSnapshot();
-  usePathUrlStrategy();
+  UrlSync.configure();
   WidgetsFlutterBinding.ensureInitialized();
   final isControllerChild =
       ControllerWindowService.isControllerChildArguments(args);
@@ -262,6 +260,8 @@ class MyApp extends StatelessWidget {
 
     return MaterialApp(
       title: 'OpenLogTool',
+      initialRoute: '/',
+      navigatorObservers: UrlSync.navigatorObservers,
       debugShowCheckedModeBanner: false,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,

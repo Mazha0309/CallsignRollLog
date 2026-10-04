@@ -19,6 +19,7 @@ class AccountShareProvider with ChangeNotifier {
   ServerProvider? _server;
   List<SharedSessionDto> _sharedSessions = const [];
   List<AccountShareGrantDto> _inbox = const [];
+  List<AccountShareGrantDto> _outgoing = const [];
   Object? _lastError;
   SocialSnapshot _social = const SocialSnapshot();
   String? _scope;
@@ -33,6 +34,13 @@ class AccountShareProvider with ChangeNotifier {
   bool get loading => _loading;
   bool get busy => _busy;
   String? get accountId => _server?.accountId;
+  String? get accountScope => _scope;
+  bool get supportsBatchSharing =>
+      supportsLegacySharing &&
+      (_server?.serverInfo?.features.contains('batchSessionSharing') ?? false);
+  bool get supportsDirectJoin =>
+      supportsFriends &&
+      (_server?.serverInfo?.features.contains('friendDirectJoin') ?? false);
   bool get supportsFriends =>
       _server?.isLoggedIn == true &&
       (_server?.serverInfo?.features.contains('friendCollaboration') ?? false);
@@ -43,10 +51,12 @@ class AccountShareProvider with ChangeNotifier {
 
   List<SharedSessionDto> get sharedSessions => _sharedSessions;
   List<AccountShareGrantDto> get inbox => _inbox;
+  List<AccountShareGrantDto> get outgoing => _outgoing;
   int get pendingInboundCount => supportsFriends
       ? [..._social.friendRequests, ..._social.sessionRequests]
-          .where((r) => r.recipientId == accountId && r.status == 'pending')
-          .length
+              .where((r) => r.recipientId == accountId && r.status == 'pending')
+              .length +
+          _inbox.length
       : _inbox.length;
   Object? get lastError => _lastError;
 
@@ -60,7 +70,7 @@ class AccountShareProvider with ChangeNotifier {
     _server = server;
     final nextScope = '${server.contextRevision}|${server.serverUrl}|'
         '${server.accountId}|${server.serverInfo?.serverInstanceId}|$supportsFriends|$isSupported|'
-        '${server.serverInfo?.features.contains('socialWebSocket')}';
+        '${server.serverInfo?.features.contains('socialWebSocket')}|$supportsBatchSharing';
     if (_scope == nextScope) return;
     _scope = nextScope;
     _epoch++;
@@ -70,6 +80,7 @@ class AccountShareProvider with ChangeNotifier {
     _refreshAgain = false;
     _sharedSessions = const [];
     _inbox = const [];
+    _outgoing = const [];
     _social = const SocialSnapshot();
     _lastError = null;
     _loading = false;
@@ -119,9 +130,19 @@ class AccountShareProvider with ChangeNotifier {
       if (supportsLegacySharing) {
         final shared = await api.listSharedSessions();
         final inbox = await api.listSessionShares('inbox');
+        final outbox = supportsBatchSharing
+            ? await api.listSessionShares('outbox')
+            : const <AccountShareGrantDto>[];
+        final active = supportsBatchSharing
+            ? await api.listSessionShares('active')
+            : const <AccountShareGrantDto>[];
         if (_disposed || epoch != _epoch) return;
         _sharedSessions = shared;
         _inbox = inbox;
+        _outgoing = [
+          ...outbox,
+          ...active.where((grant) => grant.grantorUserId == accountId)
+        ];
       }
       _lastError = null;
       revision++;
@@ -138,6 +159,19 @@ class AccountShareProvider with ChangeNotifier {
         }
       }
     }
+  }
+
+  /// Search results belong to this account/server, never a later connection.
+  Future<SocialUserSearchPage> searchUsers(String query) async {
+    if (_disposed || !supportsFriends) throw StateError('SOCIAL_UNAVAILABLE');
+    final text = query.trim();
+    if (text.runes.length < 2 || text.runes.length > 64) {
+      throw ArgumentError.value(query, 'query', 'Use 2–64 characters');
+    }
+    final scope = _scope;
+    final result = await _server!.api.searchSocialUsers(text);
+    if (_disposed || scope != _scope) throw StateError('ACCOUNT_CHANGED');
+    return result;
   }
 
   Future<void> mutateSocial(String method, String path,
@@ -194,14 +228,109 @@ class AccountShareProvider with ChangeNotifier {
   }
 
   Future<void> acceptRequest(String shareId) async {
-    final server = _server;
-    if (server == null) return;
-    await server.api.acceptSessionShare(
-      shareId: shareId,
-      idempotencyKey: 'share-accept-${DateTime.now().microsecondsSinceEpoch}',
-    );
-    await refresh();
+    await respondShare(shareId, 'accept', expectedScope: _scope);
   }
+
+  Future<void> _shareMutation(String method, String path,
+      Map<String, Object?> body, String? expectedScope) async {
+    if (_disposed || !supportsLegacySharing || _busy || expectedScope != _scope) {
+      throw StateError('ACCOUNT_CHANGED');
+    }
+    final scope = _scope;
+    final api = _server!.api;
+    final operation = '$method|$path|${jsonEncode(body)}';
+    final key = _pendingMutations.putIfAbsent(
+        operation,
+        () => List.generate(
+            16,
+            (_) => Random.secure()
+                .nextInt(256)
+                .toRadixString(16)
+                .padLeft(2, '0')).join());
+    _busy = true;
+    notifyListeners();
+    try {
+      await api.accountShareMutation(method, path,
+          body: body, idempotencyKey: key);
+      if (_disposed || scope != _scope) throw StateError('ACCOUNT_CHANGED');
+      _pendingMutations.remove(operation);
+      _epoch++;
+      _loading = false;
+      await refresh();
+      if (_disposed || scope != _scope) throw StateError('ACCOUNT_CHANGED');
+    } finally {
+      if (!_disposed && scope == _scope) {
+        _busy = false;
+        notifyListeners();
+      }
+    }
+  }
+
+  Future<void> respondShare(String id, String action,
+          {required String? expectedScope}) =>
+      _shareMutation(
+          'POST',
+          '/session-shares/${Uri.encodeComponent(id)}/$action',
+          const {},
+          expectedScope);
+
+  Future<void> saveShare(
+      {required String username,
+      required String scopeMode,
+      required List<ShareSessionRef> sessions,
+      required bool canEditLogs,
+      required bool canDeleteLogs,
+      required String? expectedScope,
+      String? grantId}) {
+    if (!supportsBatchSharing) throw StateError('SHARING_UPGRADE_REQUIRED');
+    return _shareMutation(
+        grantId == null ? 'POST' : 'PATCH',
+        '/session-shares${grantId == null ? '' : '/${Uri.encodeComponent(grantId)}'}',
+        {
+          if (grantId == null) 'granteeUsername': username,
+          'includePersonal': true,
+          'includeOwned': true,
+          'includeEditor': false,
+          'canJoinAs': 'none',
+          'scopeMode': scopeMode,
+          'selectedSessions': scopeMode == 'all'
+              ? []
+              : sessions.map((s) => s.toJson()).toList(),
+          'canEditLogs': canEditLogs,
+          'canDeleteLogs': canDeleteLogs,
+        },
+        expectedScope);
+  }
+
+  Future<List<ShareSessionRef>> loadShareCandidates() async {
+    if (!supportsBatchSharing) throw StateError('SHARING_UPGRADE_REQUIRED');
+    final scope = _scope;
+    final rows = await _server!.api.listShareCandidates();
+    if (_disposed || scope != _scope) throw StateError('ACCOUNT_CHANGED');
+    return rows;
+  }
+
+  Future<SharedRecordsPage> loadSharedRecords(SharedSessionDto session,
+      {int page = 1, String query = '', required String? expectedScope}) async {
+    if (_disposed || !supportsLegacySharing || expectedScope != _scope) {
+      throw StateError('ACCOUNT_CHANGED');
+    }
+    final result =
+        await _server!.api.sharedRecordsPage(session, page: page, query: query);
+    if (_disposed || expectedScope != _scope) {
+      throw StateError('ACCOUNT_CHANGED');
+    }
+    return result;
+  }
+
+  Future<void> mutateSharedRecord(
+          SharedSessionDto session, Map<String, Object?> body,
+          {required String? expectedScope}) =>
+      _shareMutation(
+          'POST',
+          '/shared-sessions/${Uri.encodeComponent(session.source)}/${Uri.encodeComponent(session.sessionId)}/logs/mutations',
+          {'grantId': session.grantId, ...body},
+          expectedScope);
 
   SharedSessionDto? sharedSessionById(String sessionId) {
     for (final item in _sharedSessions) {
@@ -252,6 +381,7 @@ class AccountShareProvider with ChangeNotifier {
           hasCollaborationBinding: false,
           isShared: true,
           sharedGrantorUsername: item.grantorUsername,
+          sharedSession: item,
         ),
     ];
   }

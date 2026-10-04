@@ -5,8 +5,12 @@ import 'package:openlogtool/models/social_dto.dart';
 import 'package:openlogtool/providers/account_share_provider.dart';
 import 'package:openlogtool/providers/collaboration_provider.dart';
 import 'package:openlogtool/providers/session_provider.dart';
+import 'package:openlogtool/providers/server_provider.dart';
 import 'package:openlogtool/screens/social_screen.dart';
+import 'package:openlogtool/theme/app_theme.dart';
 import 'package:openlogtool/widgets/session_friend_actions.dart';
+import 'package:openlogtool/widgets/session_join_policy_control.dart';
+import 'package:openlogtool/widgets/settings/settings_ui.dart';
 
 /// Owner actions scoped to one session, backed by the account-level WS snapshot.
 class SessionPeopleActions extends StatefulWidget {
@@ -19,7 +23,8 @@ class SessionPeopleActions extends StatefulWidget {
 class _SessionPeopleActionsState extends State<SessionPeopleActions> {
   bool _working = false;
   String? _error;
-  String? _acceptedRequests;
+  int? _socialRevision;
+  (int, String, String?, String)? _memberScope;
   bool _needsMemberRefresh = false;
   bool _refreshScheduled = false;
 
@@ -66,14 +71,16 @@ class _SessionPeopleActionsState extends State<SessionPeopleActions> {
       return;
     }
     if (action == 'accept') {
+      final revision = social.revision;
       await collaboration.refreshManagement();
-      _needsMemberRefresh = false;
+      _needsMemberRefresh = social.revision != revision;
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final social = context.watch<AccountShareProvider>();
+    final server = context.watch<ServerProvider>();
     final collaboration = context.watch<CollaborationProvider>();
     final session = context.watch<SessionProvider>().currentSession;
     final l = context.l10n;
@@ -93,18 +100,23 @@ class _SessionPeopleActionsState extends State<SessionPeopleActions> {
     final requests = social.social.sessionRequests
         .where((r) => r.sessionId == widget.sessionId && r.status == 'pending')
         .toList();
-    final accepted = social.social.sessionRequests
-        .where((r) => r.sessionId == widget.sessionId && r.status == 'accepted')
-        .map((r) => r.id)
-        .toList()
-      ..sort();
-    final fingerprint = accepted.join('|');
-    if (_acceptedRequests != null && _acceptedRequests != fingerprint) {
+    final scope = (
+      server.contextRevision,
+      server.serverUrl,
+      server.accountId,
+      widget.sessionId
+    );
+    if (_memberScope != scope) {
+      _memberScope = scope;
+      _socialRevision = social.revision;
+      _needsMemberRefresh = false;
+    } else if (_socialRevision != social.revision) {
       _needsMemberRefresh = true;
     }
-    _acceptedRequests = fingerprint;
-    // Account WS invalidations refresh the social snapshot. If a friend accepts
-    // elsewhere, update the visible member list as well, without a polling loop.
+    _socialRevision = social.revision;
+    // Account WS invalidations include direct joins, which create no accepted
+    // request. Refresh membership after every new account snapshot instead of
+    // inferring membership changes from invitation IDs or adding a poll.
     if (_needsMemberRefresh &&
         !_refreshScheduled &&
         !disabled &&
@@ -113,7 +125,17 @@ class _SessionPeopleActionsState extends State<SessionPeopleActions> {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _refreshScheduled = false;
         if (!mounted ||
+            _memberScope != scope ||
+            (
+                  server.contextRevision,
+                  server.serverUrl,
+                  server.accountId,
+                  widget.sessionId
+                ) !=
+                scope ||
             _working ||
+            social.busy ||
+            social.loading ||
             collaboration.isBusy ||
             collaboration.binding?.sessionId != widget.sessionId ||
             !collaboration.isOwner) {
@@ -123,104 +145,108 @@ class _SessionPeopleActionsState extends State<SessionPeopleActions> {
         _run(collaboration.refreshManagement);
       });
     }
-    return Card(
+    return SettingsSectionCard(
         key: const Key('session-people-actions'),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child:
-              Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-            Text(l.sessionPeopleTitle,
-                style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: 8),
-            Text(l.sessionPeopleHint),
-            if (social.lastError != null || _error != null) ...[
-              const SizedBox(height: 8),
-              Text(_error ?? l.operationFailed('${social.lastError}'),
-                  style: TextStyle(color: Theme.of(context).colorScheme.error)),
-            ],
-            const SizedBox(height: 12),
-            Wrap(spacing: 8, runSpacing: 8, children: [
-              FilledButton.icon(
-                  key: const Key('people-invite-friend'),
-                  onPressed: disabled || closed ? null : () => _run(_invite),
-                  icon: const Icon(Icons.person_add_outlined),
-                  label: Text(l.socialInvite)),
-              OutlinedButton.icon(
-                  onPressed: disabled
-                      ? null
-                      : () => _run(() async {
-                            await social.refresh();
-                            if (mounted &&
-                                collaboration.binding?.sessionId ==
-                                    widget.sessionId &&
-                                collaboration.isOwner) {
-                              await collaboration.refreshManagement();
-                            }
-                          }),
-                  icon: const Icon(Icons.refresh),
-                  label: Text(l.refresh)),
-            ]),
-            if (visible != null)
-              SwitchListTile(
-                key: const Key('people-friend-visibility'),
-                contentPadding: EdgeInsets.zero,
-                title: Text(l.socialDiscoverable),
-                subtitle: Text(l.socialVisibilityHint),
-                value: visible.visibility == 'friends',
-                onChanged: disabled || closed
+        icon: Icons.person_add_outlined,
+        title: l.sessionPeopleTitle,
+        description: l.sessionPeopleHint,
+        child:
+            Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          if (social.lastError != null || _error != null) ...[
+            AppNotice(
+                message: _error ?? l.operationFailed('${social.lastError}'),
+                tone: AppTone.danger),
+            const SizedBox(height: AppSpace.sm),
+          ],
+          Wrap(spacing: AppSpace.xs, runSpacing: AppSpace.xs, children: [
+            FilledButton.icon(
+                key: const Key('people-invite-friend'),
+                onPressed: disabled || closed ? null : () => _run(_invite),
+                icon: const Icon(Icons.person_add_outlined),
+                label: Text(l.socialInvite)),
+            OutlinedButton.icon(
+                onPressed: disabled
                     ? null
-                    : (value) => _run(() => social.mutateSocial(
-                        'PUT',
-                        '/sessions/${Uri.encodeComponent(widget.sessionId)}',
-                        {'visibility': value ? 'friends' : 'private'})),
-              ),
-            const Divider(height: 24),
-            Text(l.sessionPendingRequests,
-                style: Theme.of(context).textTheme.titleSmall),
-            if (requests.isEmpty)
-              Padding(
-                  padding: const EdgeInsets.only(top: 8),
-                  child: Text(l.socialNoMessages)),
-            for (final request in requests)
-              Padding(
-                key: Key('session-request-${request.id}'),
-                padding: const EdgeInsets.only(top: 12),
-                child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                          '${request.kind == 'application' ? l.socialApplication : l.socialInvitation} · '
-                          '${request.senderId == social.accountId ? request.recipientUsername : request.senderUsername}'),
-                      Text(request.role == 'editor'
-                          ? l.socialEdit
-                          : l.socialView),
-                      Wrap(spacing: 8, runSpacing: 8, children: [
-                        if (request.recipientId == social.accountId) ...[
-                          TextButton(
-                              onPressed: disabled || closed
-                                  ? null
-                                  : () =>
-                                      _run(() => _respond(request, 'accept')),
-                              child: Text(l.socialAccept)),
-                          TextButton(
-                              onPressed: disabled
-                                  ? null
-                                  : () =>
-                                      _run(() => _respond(request, 'reject')),
-                              child: Text(l.socialReject)),
-                        ] else ...[
-                          Text(l.socialPending),
-                          TextButton(
-                              onPressed: disabled
-                                  ? null
-                                  : () =>
-                                      _run(() => _respond(request, 'cancel')),
-                              child: Text(l.cancel)),
-                        ],
-                      ]),
-                    ]),
-              ),
+                    : () => _run(() async {
+                          await social.refresh();
+                          if (mounted &&
+                              collaboration.binding?.sessionId ==
+                                  widget.sessionId &&
+                              collaboration.isOwner) {
+                            await collaboration.refreshManagement();
+                          }
+                        }),
+                icon: const Icon(Icons.refresh),
+                label: Text(l.refresh)),
           ]),
-        ));
+          if (visible != null) ...[
+            const SizedBox(height: AppSpace.md),
+            SessionJoinPolicyControl(
+              key: const Key('people-friend-visibility'),
+              session: visible,
+              disabled: disabled || closed,
+              supportsDirectJoin: social.supportsDirectJoin,
+              onChanged: (policy) => _run(() => social.mutateSocial(
+                  'PUT',
+                  '/sessions/${Uri.encodeComponent(widget.sessionId)}',
+                  policy)),
+            ),
+          ],
+          const Divider(height: AppSpace.lg),
+          AppSectionLabel(l.sessionPendingRequests),
+          if (requests.isEmpty)
+            Padding(
+                padding: const EdgeInsets.only(top: AppSpace.xxs),
+                child: Text(l.socialNoMessages,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color:
+                            Theme.of(context).colorScheme.onSurfaceVariant))),
+          for (final request in requests)
+            Padding(
+              key: Key('session-request-${request.id}'),
+              padding: const EdgeInsets.only(top: AppSpace.sm),
+              child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                        '${request.kind == 'application' ? l.socialApplication : l.socialInvitation} · '
+                        '${request.senderId == social.accountId ? request.recipientUsername : request.senderUsername}'),
+                    Text(request.role == 'editor' ? l.socialEdit : l.socialView,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurfaceVariant)),
+                    const SizedBox(height: AppSpace.xs),
+                    Wrap(
+                        spacing: AppSpace.xs,
+                        runSpacing: AppSpace.xs,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        children: [
+                          if (request.recipientId == social.accountId) ...[
+                            FilledButton.tonal(
+                                onPressed: disabled || closed
+                                    ? null
+                                    : () =>
+                                        _run(() => _respond(request, 'accept')),
+                                child: Text(l.socialAccept)),
+                            TextButton(
+                                onPressed: disabled
+                                    ? null
+                                    : () =>
+                                        _run(() => _respond(request, 'reject')),
+                                child: Text(l.socialReject)),
+                          ] else ...[
+                            AppStatusPill(label: l.socialPending),
+                            TextButton(
+                                onPressed: disabled
+                                    ? null
+                                    : () =>
+                                        _run(() => _respond(request, 'cancel')),
+                                child: Text(l.cancel)),
+                          ],
+                        ]),
+                  ]),
+            ),
+        ]));
   }
 }

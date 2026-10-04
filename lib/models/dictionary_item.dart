@@ -1,5 +1,7 @@
 import 'dart:math';
 
+import 'package:openlogtool/utils/dictionary_match.dart';
+
 class DictionaryItem {
   final int? id;
   final String raw;
@@ -219,10 +221,12 @@ class DictionaryItem {
   }
 
   bool matches(String query) {
-    final lowerQuery = query.toLowerCase();
-    return raw.toLowerCase().contains(lowerQuery) ||
-        pinyin.toLowerCase().contains(lowerQuery) ||
-        abbreviation.toLowerCase().contains(lowerQuery);
+    return matchDictionaryText(
+      query: query,
+      raw: raw,
+      pinyin: pinyin,
+      abbreviation: abbreviation,
+    ) != null;
   }
 
   @override

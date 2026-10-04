@@ -1,5 +1,7 @@
-import 'url_sync_web.dart' if (dart.library.io) 'url_sync_stub.dart'
-    as url_sync_platform;
+import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
+import 'package:flutter_web_plugins/url_strategy.dart';
+import 'package:openlogtool/services/browser_url_history.dart';
 
 /// 页面名与 HomeScreen tab 索引映射。
 const _pages = ['workbench', 'sessions', 'data', 'settings'];
@@ -36,11 +38,30 @@ SyncRoute parseSyncQuery(String query) {
 
 /// 浏览器 URL 同步：非 Web 平台为空实现。
 class UrlSync {
+  static final BrowserUrlHistory? _history =
+      kIsWeb ? BrowserUrlHistory(BrowserPlatformLocation()) : null;
+
+  /// Call before binding initialization. Query links belong to this service,
+  /// not to MaterialApp's named-route machinery.
+  static void configure() => setUrlStrategy(null);
+
+  static List<NavigatorObserver> get navigatorObservers =>
+      [if (_history case final history?) history];
+
   /// 初始化：立即回调一次当前 URL 的路由，并监听浏览器前进/后退。
-  static void init({required void Function(SyncRoute route) onRouteChanged}) =>
-      url_sync_platform.urlSyncInit(onRouteChanged);
+  static VoidCallback init({
+    required void Function(SyncRoute route) onRouteChanged,
+    bool Function()? onBackWithinPage,
+  }) =>
+      _history?.attach(
+        onQueryChanged: (query) => onRouteChanged(parseSyncQuery(query)),
+        onBackWithinPage: onBackWithinPage,
+      ) ??
+      () {};
 
   /// 更新 URL（不触发 popstate，避免与前进/后退冲突）。
   static void push(String page, String? session) =>
-      url_sync_platform.urlSyncPush(page, session);
+      _history?.pushQuery(buildSyncQuery(page, session));
+
+  static void checkpoint() => _history?.checkpoint();
 }

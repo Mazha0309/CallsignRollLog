@@ -14,6 +14,7 @@ import 'package:openlogtool/screens/collaboration_screen.dart';
 import 'package:openlogtool/screens/session_hub_page.dart';
 import 'package:openlogtool/src/bridge/models/log_entry.dart' as bridge_log;
 import 'package:openlogtool/src/bridge/models/session.dart';
+import 'package:openlogtool/theme/app_theme.dart';
 import 'package:openlogtool/widgets/settings/settings_ui.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -73,6 +74,13 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('open-collaboration-management')));
     await tester.pumpAndSettle();
+    final peopleCard = find.byKey(const Key('session-people-actions'));
+    final membersCard = find.byKey(const Key('session-members-card'));
+    expect(tester.widget(peopleCard), isA<SettingsSectionCard>());
+    expect(tester.widget(membersCard), isA<SettingsSectionCard>());
+    expect(
+        tester.getTopLeft(membersCard).dy - tester.getBottomLeft(peopleCard).dy,
+        AppSpace.md);
     expect(find.byKey(const Key('people-invite-friend')), findsOneWidget);
     expect(
         find.byKey(const Key('session-request-pending-here')), findsOneWidget);
@@ -91,6 +99,10 @@ void main() {
     await tester.pumpAndSettle();
     expect(collaboration.managementRefreshes, 2);
     expect(find.byKey(const Key('session-request-pending-here')), findsNothing);
+    // A direct join emits a fresh WS snapshot without any accepted request.
+    social.simulateDirectJoinNotification();
+    await tester.pumpAndSettle();
+    expect(collaboration.managementRefreshes, 3);
     expect(tester.takeException(), isNull);
   });
 
@@ -239,8 +251,13 @@ void main() {
     ));
     await tester.pumpAndSettle();
     expect(collaboration.publishCalls, 0);
-    final enable =
-        find.byKey(const Key('enable-current-session-collaboration'));
+    final enable = find.byKey(const Key('invite-current-session-friend'));
+    final actionRow = find.byKey(const Key('current-session-actions'));
+    expect(find.descendant(of: actionRow, matching: enable), findsOneWidget);
+    final originalButton = tester.element(enable);
+    final originalPosition =
+        tester.getTopLeft(enable) - tester.getTopLeft(actionRow);
+    final originalLabel = tester.widget<FilledButton>(enable).child;
     await tester.ensureVisible(enable);
     await tester.pumpAndSettle();
     await tester.tap(enable);
@@ -261,6 +278,21 @@ void main() {
     expect(social.calls, isEmpty);
     expect(
         find.byKey(const Key('session-friend-invite-dialog')), findsOneWidget);
+    await tester.tap(find.text('取消'));
+    await tester.pumpAndSettle();
+    expect(find.descendant(of: actionRow, matching: enable), findsOneWidget);
+    expect(tester.element(enable), same(originalButton));
+    expect(tester.getTopLeft(enable) - tester.getTopLeft(actionRow),
+        originalPosition);
+    expect(tester.widget<FilledButton>(enable).child.runtimeType,
+        originalLabel.runtimeType);
+    expect(
+        find.byKey(const Key('open-collaboration-management')), findsOneWidget);
+    await tester.tap(enable);
+    await tester.pumpAndSettle();
+    expect(
+        find.byKey(const Key('session-friend-invite-dialog')), findsOneWidget);
+    expect(collaboration.publishCalls, 1);
   });
 
   testWidgets(
@@ -1129,6 +1161,12 @@ class _ManagementSharingProvider extends _HubSharingProvider {
   bool accepted = false;
   void simulateAcceptedNotification() {
     accepted = true;
+    revision++;
+    notifyListeners();
+  }
+
+  void simulateDirectJoinNotification() {
+    revision++;
     notifyListeners();
   }
 

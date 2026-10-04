@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
@@ -15,6 +17,188 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
+  testWidgets(
+      'username Next focuses password and desktop Enter submits only once',
+      (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    final provider = _AuthTestServer()..pending = Completer<String>();
+    addTearDown(provider.dispose);
+    await tester.pumpWidget(_AuthTestApp(provider: provider));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('server-login-button')));
+    await tester.pumpAndSettle();
+    final username = find.byKey(const Key('server-auth-username-field'));
+    final password = find.byKey(const Key('server-auth-password-field'));
+    await tester.enterText(username, '  BG5CRL  ');
+    await tester.testTextInput.receiveAction(TextInputAction.next);
+    await tester.pump();
+    expect(_authTextField(tester, password).focusNode!.hasFocus, isTrue);
+    await tester.enterText(password, '  unchanged password  ');
+    final oldButton = tester
+        .widget<FilledButton>(
+          find.byKey(const Key('server-auth-submit-button')),
+        )
+        .onPressed!;
+    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+    await tester.pump();
+    // Exercise a second queued callback before the disabled UI rebuild is used.
+    oldButton();
+    _authTextField(tester, password).onSubmitted!('ignored');
+    await tester.pump();
+    expect(provider.loginCalls, 1);
+    expect(provider.lastUsername, 'BG5CRL');
+    expect(provider.lastPassword, '  unchanged password  ');
+    expect(
+        tester
+            .widget<FilledButton>(
+              find.byKey(const Key('server-auth-submit-button')),
+            )
+            .onPressed,
+        isNull);
+    provider.pending!.complete('user-1');
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('server-auth-dialog')), findsNothing);
+    expect(tester.takeException(), isNull);
+  }, variant: const TargetPlatformVariant({TargetPlatform.windows}));
+
+  testWidgets(
+      'phone login keeps focus and draft through provider and keyboard changes',
+      (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(390, 844);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetViewInsets);
+    final provider = _AuthTestServer();
+    addTearDown(provider.dispose);
+    await tester.pumpWidget(_AuthTestApp(provider: provider));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('server-login-button')));
+    await tester.pumpAndSettle();
+    final username = find.byKey(const Key('server-auth-username-field'));
+    final password = find.byKey(const Key('server-auth-password-field'));
+    await tester.enterText(username, 'BG5CRL');
+    await tester.enterText(password, 'in-progress-password');
+    final userController = tester.widget<TextFormField>(username).controller;
+    final passwordController =
+        tester.widget<TextFormField>(password).controller;
+    final passwordFocus = _authTextField(tester, password).focusNode;
+    provider.emitChange();
+    tester.view.viewInsets = const FakeViewPadding(bottom: 300);
+    await tester.pumpAndSettle();
+    expect(tester.widget<TextFormField>(username).controller,
+        same(userController));
+    expect(tester.widget<TextFormField>(password).controller,
+        same(passwordController));
+    expect(passwordFocus!.hasFocus, isTrue);
+    expect(userController!.text, 'BG5CRL');
+    expect(passwordController!.text, 'in-progress-password');
+    expect(tester.takeException(), isNull);
+    tester.view.physicalSize = const Size(390, 640);
+    await tester.pumpAndSettle();
+    expect(passwordFocus.hasFocus, isTrue);
+    expect(passwordController.text, 'in-progress-password');
+    expect(tester.takeException(), isNull);
+    await tester.tapAt(const Offset(8, 8));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('server-auth-dialog')), findsOneWidget);
+    expect(passwordController.text, 'in-progress-password');
+    expect(provider.loginCalls, 0);
+  });
+
+  testWidgets('failed sign-in preserves credentials for an in-place retry',
+      (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    final provider = _AuthTestServer()..failure = 'test login failure';
+    addTearDown(provider.dispose);
+    await tester.pumpWidget(_AuthTestApp(provider: provider));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('server-login-button')));
+    await tester.pumpAndSettle();
+    final username = find.byKey(const Key('server-auth-username-field'));
+    final password = find.byKey(const Key('server-auth-password-field'));
+    await tester.enterText(username, 'BG5CRL');
+    await tester.enterText(password, 'first-password');
+    await tester.testTextInput.receiveAction(TextInputAction.done);
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('server-auth-error')), findsOneWidget);
+    expect(tester.widget<TextFormField>(username).controller!.text, 'BG5CRL');
+    expect(tester.widget<TextFormField>(password).controller!.text,
+        'first-password');
+    provider.failure = null;
+    await tester.enterText(password, 'second-password');
+    await tester.testTextInput.receiveAction(TextInputAction.done);
+    await tester.pumpAndSettle();
+    expect(provider.loginCalls, 2);
+    expect(provider.lastPassword, 'second-password');
+    expect(find.byKey(const Key('server-auth-dialog')), findsNothing);
+  });
+
+  for (final registration in [false, true]) {
+    testWidgets(
+        'changed server context blocks ${registration ? 'registration' : 'login'} credentials',
+        (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      final provider = _AuthTestServer();
+      addTearDown(provider.dispose);
+      await tester.pumpWidget(_AuthTestApp(provider: provider));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(Key(
+        registration ? 'server-register-button' : 'server-login-button',
+      )));
+      await tester.pumpAndSettle();
+      await tester.enterText(
+          find.byKey(const Key('server-auth-username-field')), 'BG5CRL');
+      await tester.enterText(
+          find.byKey(const Key('server-auth-password-field')),
+          'unchanged-password');
+      if (registration) {
+        await tester.enterText(
+            find.byKey(const Key('server-auth-confirm-password-field')),
+            'unchanged-password');
+      }
+      provider.revision++;
+      provider.emitChange();
+      await tester.pump();
+      await tester.tap(find.byKey(const Key('server-auth-submit-button')));
+      await tester.pumpAndSettle();
+      expect(provider.loginCalls, 0);
+      expect(provider.registerCalls, 0);
+      expect(
+          find.text(
+              'The server, account or current session changed. Close this dialog and try again.'),
+          findsOneWidget);
+      expect(find.byKey(const Key('server-auth-dialog')), findsOneWidget);
+    });
+  }
+
+  testWidgets(
+      'registration Next goes to confirmation instead of submitting login',
+      (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    final provider = _AuthTestServer();
+    addTearDown(provider.dispose);
+    await tester.pumpWidget(_AuthTestApp(provider: provider));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('server-register-button')));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+        find.byKey(const Key('server-auth-username-field')), 'BG5CRL');
+    await tester.enterText(find.byKey(const Key('server-auth-password-field')),
+        'registration-password');
+    await tester.testTextInput.receiveAction(TextInputAction.next);
+    await tester.pump();
+    final confirm = find.byKey(const Key('server-auth-confirm-password-field'));
+    expect(_authTextField(tester, confirm).focusNode!.hasFocus, isTrue);
+    expect(provider.registerCalls, 0);
+    expect(provider.loginCalls, 0);
+    await tester.enterText(confirm, 'registration-password');
+    await tester.testTextInput.receiveAction(TextInputAction.done);
+    await tester.pumpAndSettle();
+    expect(provider.registerCalls, 1);
+    expect(provider.loginCalls, 0);
+  });
   testWidgets('shows degraded token-storage keys and localized warnings',
       (tester) async {
     SharedPreferences.setMockInitialValues({});
@@ -409,6 +593,67 @@ void main() {
     expect(provider.isLoggedIn, isTrue);
   });
 }
+
+class _AuthTestServer extends ServerProvider {
+  _AuthTestServer() : super(autoLoadSettings: false);
+  int loginCalls = 0;
+  int registerCalls = 0;
+  String? lastUsername;
+  String? lastPassword;
+  String? failure;
+  Completer<String>? pending;
+  int revision = 0;
+
+  @override
+  int get contextRevision => revision;
+
+  void emitChange() => notifyListeners();
+
+  @override
+  Future<String> login(String username, String password) async {
+    loginCalls++;
+    revision++;
+    lastUsername = username;
+    lastPassword = password;
+    if (failure case final String reason) throw StateError(reason);
+    final result = pending == null ? 'user-1' : await pending!.future;
+    revision++;
+    return result;
+  }
+
+  @override
+  Future<String> register(String username, String password) async {
+    registerCalls++;
+    revision++;
+    lastUsername = username;
+    lastPassword = password;
+    return 'user-1';
+  }
+}
+
+class _AuthTestApp extends StatelessWidget {
+  const _AuthTestApp({required this.provider});
+  final ServerProvider provider;
+
+  @override
+  Widget build(BuildContext context) =>
+      ChangeNotifierProvider<ServerProvider>.value(
+        value: provider,
+        child: const MaterialApp(
+          locale: Locale('en', 'US'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+              body: SingleChildScrollView(
+            child: ServerAccountSettings(cardPadding: 16),
+          )),
+        ),
+      );
+}
+
+TextField _authTextField(WidgetTester tester, Finder field) =>
+    tester.widget<TextField>(
+        find.descendant(of: field, matching: find.byType(TextField)));
 
 Future<void> _pumpUntilFound(WidgetTester tester, Finder finder) async {
   for (var attempt = 0; attempt < 40; attempt += 1) {

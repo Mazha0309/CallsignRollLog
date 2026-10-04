@@ -151,6 +151,16 @@ class _AppAutocompleteOptionsListState<T extends Object>
       );
 }
 
+bool isGlobalOffsetInside(Offset globalOffset, GlobalKey key) {
+  final renderObject = key.currentContext?.findRenderObject();
+  if (renderObject is! RenderBox || !renderObject.attached) return false;
+  final local = renderObject.globalToLocal(globalOffset);
+  return local.dx >= 0 &&
+      local.dy >= 0 &&
+      local.dx <= renderObject.size.width &&
+      local.dy <= renderObject.size.height;
+}
+
 class _AutocompleteScrollBehavior extends MaterialScrollBehavior {
   const _AutocompleteScrollBehavior();
 

@@ -59,8 +59,10 @@ void main() {
     }
   });
 
-  testWidgets('workbench dismisses the keyboard when dragged', (tester) async {
-    tester.view.physicalSize = const Size(600, 960);
+  testWidgets(
+      'touch scrolling the workbench preserves keyboard and draft focus',
+      (tester) async {
+    tester.view.physicalSize = const Size(375, 700);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
@@ -78,8 +80,27 @@ void main() {
     );
     expect(
       workbenchScroll.keyboardDismissBehavior,
-      ScrollViewKeyboardDismissBehavior.onDrag,
+      ScrollViewKeyboardDismissBehavior.manual,
     );
+    final input = find.byType(EditableText).first;
+    final field = tester.widget<EditableText>(input);
+    await tester.enterText(input, 'BG5CRL');
+    await tester.pumpAndSettle();
+    expect(field.focusNode.hasFocus, isTrue);
+    final scrollFinder = find
+        .ancestor(of: find.byType(LogForm), matching: find.byType(Scrollable))
+        .first;
+    final scroll = tester.state<ScrollableState>(scrollFinder);
+    final before = scroll.position.pixels;
+    final bounds = tester.getRect(scrollFinder);
+    await tester.dragFrom(
+        Offset(bounds.left + 4, bounds.top + 240), const Offset(0, -160));
+    await tester.pumpAndSettle();
+    expect(scroll.position.pixels, greaterThan(before));
+    expect(field.focusNode.hasFocus, isTrue);
+    expect(field.controller.text, 'BG5CRL');
+    expect(tester.testTextInput.isVisible, isTrue);
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets(

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:openlogtool/l10n/l10n.dart';
 import 'package:openlogtool/src/bridge/models/session.dart';
+import 'package:openlogtool/theme/app_theme.dart';
 
 class SessionDetailsPanel extends StatelessWidget {
   const SessionDetailsPanel(
@@ -16,6 +17,7 @@ class SessionDetailsPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = context.l10n;
+    final theme = Theme.of(context);
     String time(String value) {
       final parsed = DateTime.tryParse(value);
       return parsed == null
@@ -23,43 +25,71 @@ class SessionDetailsPanel extends StatelessWidget {
           : DateFormat('yyyy-MM-dd HH:mm:ss').format(parsed.toLocal());
     }
 
-    Widget row(String label, String value, {bool selectable = false}) =>
-        Padding(
-          padding: const EdgeInsets.only(bottom: 12),
-          child:
-              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(label, style: Theme.of(context).textTheme.labelMedium),
-            const SizedBox(height: 2),
+    Widget field(String name, String label, String value,
+            {bool selectable = false}) =>
+        Column(
+          key: ValueKey('session-detail-$name'),
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(label,
+                style: theme.textTheme.labelMedium
+                    ?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+            const SizedBox(height: AppSpace.xxs),
             if (selectable)
               SelectableText(value,
                   // EditableText stores a double scroll offset. Keep it separate from
                   // ExpansionTile's boolean expansion state and the outer ListView.
                   key:
-                      PageStorageKey('session-details-id-${session.sessionId}'))
+                      PageStorageKey('session-details-id-${session.sessionId}'),
+                  style: theme.textTheme.bodyMedium)
             else
-              Text(value),
-          ]),
+              Text(value, style: theme.textTheme.bodyMedium),
+          ],
         );
     return ExpansionTile(
       key: PageStorageKey('session-details-expanded-${session.sessionId}'),
       tilePadding: EdgeInsets.zero,
       title: Text(l.hubSessionDetails),
       children: [
-        Align(
-          alignment: AlignmentDirectional.centerStart,
-          child:
-              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            row(l.detailsType,
-                collaborative ? l.detailsShared : l.detailsLocal),
-            row(l.detailsStatus,
-                session.status == 'active' ? l.sessionActive : l.sessionClosed),
-            row(l.detailsRecords, l.recordCount(recordCount)),
-            row(l.detailsCreated, time(session.createdAt)),
-            row(l.detailsUpdated, time(session.updatedAt)),
-            if (session.closedAt != null)
-              row(l.detailsEnded, time(session.closedAt!)),
-            row(l.detailsId, session.sessionId, selectable: true),
-          ]),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final fieldWidth = constraints.maxWidth < AppBreakpoints.compact
+                ? constraints.maxWidth
+                : (constraints.maxWidth - AppSpace.lg) / 2;
+            final fields = [
+              field('type', l.detailsType,
+                  collaborative ? l.detailsShared : l.detailsLocal),
+              field(
+                  'status',
+                  l.detailsStatus,
+                  session.status == 'active'
+                      ? l.sessionActive
+                      : l.sessionClosed),
+              field('records', l.detailsRecords, l.recordCount(recordCount)),
+              field('created', l.detailsCreated, time(session.createdAt)),
+              field('updated', l.detailsUpdated, time(session.updatedAt)),
+              if (session.closedAt != null)
+                field('ended', l.detailsEnded, time(session.closedAt!)),
+            ];
+            return Padding(
+              padding: const EdgeInsets.only(bottom: AppSpace.md),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Wrap(
+                    spacing: AppSpace.lg,
+                    runSpacing: AppSpace.md,
+                    children: [
+                      for (final detail in fields)
+                        SizedBox(width: fieldWidth, child: detail),
+                    ],
+                  ),
+                  const Divider(height: AppSpace.lg),
+                  field('id', l.detailsId, session.sessionId, selectable: true),
+                ],
+              ),
+            );
+          },
         )
       ],
     );

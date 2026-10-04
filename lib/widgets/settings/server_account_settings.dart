@@ -304,53 +304,75 @@ class _ServerAccountSettingsState extends State<ServerAccountSettings> {
   }
 
   Future<void> _showLoginDialog(ServerProvider server) async {
-    final values = await showDialog<_Credentials>(
+    if (server.isBusy) return;
+    final serverUrl = server.serverUrl;
+    final accountId = server.accountId;
+    var contextRevision = server.contextRevision;
+    final submitted = await showDialog<bool>(
       context: context,
-      builder: (_) => const _CredentialsDialog(registration: false),
+      barrierDismissible: false,
+      builder: (_) => _CredentialsDialog(
+        registration: false,
+        isCurrentContext: () =>
+            server.serverUrl == serverUrl &&
+            server.accountId == accountId &&
+            server.contextRevision == contextRevision,
+        onSubmit: (username, password) async {
+          final attempt = server.login(username, password);
+          // login advances its context synchronously before the first await.
+          // Allow this attempt's own revision on failure/retry, not a later
+          // server/account switch while the request is running.
+          contextRevision = server.contextRevision;
+          try {
+            await attempt;
+          } on ServerApiException catch (error) {
+            if (error.code != 'PASSWORD_CHANGE_REQUIRED' ||
+                !server.passwordChangeRequired) {
+              rethrow;
+            }
+          }
+        },
+      ),
     );
-    if (values == null || !mounted) return;
-    try {
-      await server.login(values.username, values.password);
-      if (!mounted) return;
-      context.showLoggedSnackBar(
-        SnackBar(content: Text(context.l10n.serverLoginSucceeded)),
+    if (submitted != true || !mounted) return;
+    if (server.passwordChangeRequired) {
+      await showDialog<void>(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => RequiredPasswordChangeDialog(provider: server),
       );
-    } on ServerApiException catch (error) {
-      if (!mounted) return;
-      if (error.code == 'PASSWORD_CHANGE_REQUIRED' &&
-          server.passwordChangeRequired) {
-        await showDialog<void>(
-          context: context,
-          barrierDismissible: false,
-          builder: (_) => RequiredPasswordChangeDialog(provider: server),
-        );
-        return;
-      }
-      _showError(context.l10n.serverLoginFailed(_errorDetail(error)));
-    } catch (error) {
-      if (mounted) {
-        _showError(context.l10n.serverLoginFailed(_errorDetail(error)));
-      }
+      return;
     }
+    context.showLoggedSnackBar(
+      SnackBar(content: Text(context.l10n.serverLoginSucceeded)),
+    );
   }
 
   Future<void> _showRegisterDialog(ServerProvider server) async {
-    final values = await showDialog<_Credentials>(
+    if (server.isBusy) return;
+    final serverUrl = server.serverUrl;
+    final accountId = server.accountId;
+    var contextRevision = server.contextRevision;
+    final submitted = await showDialog<bool>(
       context: context,
-      builder: (_) => const _CredentialsDialog(registration: true),
+      barrierDismissible: false,
+      builder: (_) => _CredentialsDialog(
+        registration: true,
+        isCurrentContext: () =>
+            server.serverUrl == serverUrl &&
+            server.accountId == accountId &&
+            server.contextRevision == contextRevision,
+        onSubmit: (username, password) async {
+          final attempt = server.register(username, password);
+          contextRevision = server.contextRevision;
+          await attempt;
+        },
+      ),
     );
-    if (values == null || !mounted) return;
-    try {
-      await server.register(values.username, values.password);
-      if (!mounted) return;
-      context.showLoggedSnackBar(
-        SnackBar(content: Text(context.l10n.serverRegistrationSucceeded)),
-      );
-    } catch (error) {
-      if (mounted) {
-        _showError(context.l10n.serverRegistrationFailed(_errorDetail(error)));
-      }
-    }
+    if (submitted != true || !mounted) return;
+    context.showLoggedSnackBar(
+      SnackBar(content: Text(context.l10n.serverRegistrationSucceeded)),
+    );
   }
 
   Future<void> _showUsernameDialog(ServerProvider server) async {
@@ -560,6 +582,7 @@ class _RequiredPasswordChangeDialogState
   }
 
   Future<void> _submit() async {
+    if (_submitting) return;
     if (!(_formKey.currentState?.validate() ?? false)) return;
     setState(() {
       _submitting = true;
@@ -781,17 +804,15 @@ class _DeviceSessionsDialogState extends State<DeviceSessionsDialog> {
   }
 }
 
-final class _Credentials {
-  const _Credentials(this.username, this.password);
-
-  final String username;
-  final String password;
-}
-
 class _CredentialsDialog extends StatefulWidget {
-  const _CredentialsDialog({required this.registration});
+  const _CredentialsDialog(
+      {required this.registration,
+      required this.onSubmit,
+      required this.isCurrentContext});
 
   final bool registration;
+  final Future<void> Function(String username, String password) onSubmit;
+  final bool Function() isCurrentContext;
 
   @override
   State<_CredentialsDialog> createState() => _CredentialsDialogState();
@@ -802,107 +823,184 @@ class _CredentialsDialogState extends State<_CredentialsDialog> {
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmController = TextEditingController();
+  final _usernameFocus = FocusNode();
+  final _passwordFocus = FocusNode();
+  final _confirmFocus = FocusNode();
+  bool _submitting = false;
+  String? _error;
 
   @override
   void dispose() {
     _usernameController.dispose();
     _passwordController.dispose();
     _confirmController.dispose();
+    _usernameFocus.dispose();
+    _passwordFocus.dispose();
+    _confirmFocus.dispose();
     super.dispose();
+  }
+
+  Future<void> _submit() async {
+    if (_submitting) return;
+    if (!widget.isCurrentContext()) {
+      setState(() => _error = context.l10n.hubContextChanged);
+      return;
+    }
+    if (!(_formKey.currentState?.validate() ?? false)) return;
+    setState(() {
+      _submitting = true;
+      _error = null;
+    });
+    try {
+      await widget.onSubmit(
+        _usernameController.text.trim(),
+        _passwordController.text,
+      );
+      if (mounted) Navigator.pop(context, true);
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _submitting = false;
+        _error = !widget.isCurrentContext()
+            ? context.l10n.hubContextChanged
+            : widget.registration
+                ? context.l10n.serverRegistrationFailed(_errorDetail(error))
+                : context.l10n.serverLoginFailed(_errorDetail(error));
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text(
-        widget.registration
-            ? context.l10n.serverRegister
-            : context.l10n.serverLogin,
-      ),
-      content: Form(
-        key: _formKey,
-        child: SizedBox(
-          width: 400,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextFormField(
-                key: const Key('server-auth-username-field'),
-                controller: _usernameController,
-                autofocus: true,
-                autofillHints: const [AutofillHints.username],
-                decoration: InputDecoration(
-                  labelText: context.l10n.usernameLabel,
-                  border: const OutlineInputBorder(),
-                ),
-                validator: widget.registration
-                    ? (value) => (value?.trim().length ?? 0) < 3
-                        ? context.l10n.usernameLengthHint
-                        : null
-                    : (value) => _requiredValidator(context, value),
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                key: const Key('server-auth-password-field'),
-                controller: _passwordController,
-                obscureText: true,
-                autofillHints: [
-                  widget.registration
-                      ? AutofillHints.newPassword
-                      : AutofillHints.password,
-                ],
-                decoration: InputDecoration(
-                  labelText: context.l10n.passwordLabel,
-                  border: const OutlineInputBorder(),
-                ),
-                validator: widget.registration
-                    ? (value) => _passwordValidator(context, value)
-                    : (value) => _requiredValidator(context, value),
-              ),
-              if (widget.registration) ...[
-                const SizedBox(height: 12),
-                TextFormField(
-                  key: const Key('server-auth-confirm-password-field'),
-                  controller: _confirmController,
-                  obscureText: true,
-                  decoration: InputDecoration(
-                    labelText: context.l10n.confirmNewPasswordLabel,
-                    border: const OutlineInputBorder(),
-                  ),
-                  validator: (value) => value != _passwordController.text
-                      ? context.l10n.passwordMismatch
-                      : null,
-                ),
-              ],
-            ],
-          ),
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text(context.l10n.cancel),
-        ),
-        FilledButton(
-          key: const Key('server-auth-submit-button'),
-          onPressed: () {
-            if (!(_formKey.currentState?.validate() ?? false)) return;
-            Navigator.pop(
-              context,
-              _Credentials(
-                _usernameController.text.trim(),
-                _passwordController.text,
-              ),
-            );
-          },
-          child: Text(
+    return PopScope(
+        canPop: !_submitting,
+        child: AlertDialog(
+          key: const Key('server-auth-dialog'),
+          scrollable: true,
+          title: Text(
             widget.registration
                 ? context.l10n.serverRegister
                 : context.l10n.serverLogin,
           ),
-        ),
-      ],
-    );
+          content: AutofillGroup(
+              child: Form(
+            key: _formKey,
+            child: SizedBox(
+              width: 400,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextFormField(
+                    key: const Key('server-auth-username-field'),
+                    controller: _usernameController,
+                    focusNode: _usernameFocus,
+                    autofocus: true,
+                    readOnly: _submitting,
+                    autocorrect: false,
+                    enableSuggestions: false,
+                    textInputAction: TextInputAction.next,
+                    onEditingComplete: () {},
+                    onFieldSubmitted: (_) => _passwordFocus.requestFocus(),
+                    autofillHints: const [AutofillHints.username],
+                    decoration: InputDecoration(
+                      labelText: context.l10n.usernameLabel,
+                      border: const OutlineInputBorder(),
+                    ),
+                    validator: widget.registration
+                        ? (value) => (value?.trim().length ?? 0) < 3
+                            ? context.l10n.usernameLengthHint
+                            : null
+                        : (value) => _requiredValidator(context, value),
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    key: const Key('server-auth-password-field'),
+                    controller: _passwordController,
+                    focusNode: _passwordFocus,
+                    readOnly: _submitting,
+                    autocorrect: false,
+                    enableSuggestions: false,
+                    textInputAction: widget.registration
+                        ? TextInputAction.next
+                        : TextInputAction.done,
+                    onEditingComplete: () {},
+                    onFieldSubmitted: (_) {
+                      if (widget.registration) {
+                        _confirmFocus.requestFocus();
+                      } else {
+                        unawaited(_submit());
+                      }
+                    },
+                    obscureText: true,
+                    autofillHints: [
+                      widget.registration
+                          ? AutofillHints.newPassword
+                          : AutofillHints.password,
+                    ],
+                    decoration: InputDecoration(
+                      labelText: context.l10n.passwordLabel,
+                      border: const OutlineInputBorder(),
+                    ),
+                    validator: widget.registration
+                        ? (value) => _passwordValidator(context, value)
+                        : (value) => _requiredValidator(context, value),
+                  ),
+                  if (widget.registration) ...[
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      key: const Key('server-auth-confirm-password-field'),
+                      controller: _confirmController,
+                      focusNode: _confirmFocus,
+                      readOnly: _submitting,
+                      autocorrect: false,
+                      enableSuggestions: false,
+                      textInputAction: TextInputAction.done,
+                      onEditingComplete: () {},
+                      onFieldSubmitted: (_) => unawaited(_submit()),
+                      obscureText: true,
+                      decoration: InputDecoration(
+                        labelText: context.l10n.confirmNewPasswordLabel,
+                        border: const OutlineInputBorder(),
+                      ),
+                      validator: (value) => value != _passwordController.text
+                          ? context.l10n.passwordMismatch
+                          : null,
+                    ),
+                  ],
+                  if (_error != null) ...[
+                    const SizedBox(height: 12),
+                    Text(
+                      _error!,
+                      key: const Key('server-auth-error'),
+                      style:
+                          TextStyle(color: Theme.of(context).colorScheme.error),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          )),
+          actions: [
+            TextButton(
+              onPressed: _submitting ? null : () => Navigator.pop(context),
+              child: Text(context.l10n.cancel),
+            ),
+            FilledButton(
+              key: const Key('server-auth-submit-button'),
+              onPressed: _submitting ? null : _submit,
+              child: _submitting
+                  ? const SizedBox.square(
+                      dimension: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : Text(
+                      widget.registration
+                          ? context.l10n.serverRegister
+                          : context.l10n.serverLogin,
+                    ),
+            ),
+          ],
+        ));
   }
 }
 

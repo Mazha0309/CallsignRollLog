@@ -6,6 +6,7 @@ import 'package:openlogtool/src/bridge/rust_api.dart';
 import 'package:openlogtool/src/bridge/models/session.dart';
 import 'package:openlogtool/src/bridge/frb_generated.dart';
 import 'package:openlogtool/services/app_logger.dart';
+import 'package:openlogtool/models/account_share_dto.dart';
 
 typedef LocalSessionReopener = Future<Session> Function(String sessionId);
 typedef LocalSessionStarter = Future<Session> Function(String title);
@@ -36,12 +37,14 @@ class SessionListEntry {
     required this.hasCollaborationBinding,
     this.isShared = false,
     this.sharedGrantorUsername,
+    this.sharedSession,
   });
 
   final Session session;
   final bool hasCollaborationBinding;
   final bool isShared;
   final String? sharedGrantorUsername;
+  final SharedSessionDto? sharedSession;
 }
 
 class SessionProvider with ChangeNotifier {

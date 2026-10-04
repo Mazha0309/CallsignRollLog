@@ -5,9 +5,9 @@ import 'package:openlogtool/providers/app_info_provider.dart';
 import 'package:openlogtool/providers/ai_recognition_settings_provider.dart';
 import 'package:openlogtool/providers/server_provider.dart';
 import 'package:openlogtool/providers/settings_provider.dart';
+import 'package:openlogtool/screens/home_screen.dart';
 import 'package:openlogtool/widgets/settings/layout_settings.dart';
 import 'package:openlogtool/widgets/settings/theme_settings.dart';
-import 'package:openlogtool/widgets/settings_panel.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -264,6 +264,75 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('wide settings navigation and detail scroll independently',
+      (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    _usePlatformLocale(tester, const Locale('en', 'US'));
+    await _setSurface(tester, const Size(1200, 420));
+    final providers = _SettingsProviders();
+    addTearDown(providers.dispose);
+    await tester.pumpWidget(_SettingsPanelHarness(providers: providers));
+    await tester.pumpAndSettle();
+
+    final navigation = tester
+        .widget<SingleChildScrollView>(
+          find.byKey(const Key('settings-navigation-scroll')),
+        )
+        .controller!;
+    final appearance = tester
+        .widget<SingleChildScrollView>(
+          find.byKey(const Key('settings-appearance-scroll')),
+        )
+        .controller!;
+    expect(navigation, isNot(same(appearance)));
+    expect(navigation.position.maxScrollExtent, greaterThan(0));
+    expect(appearance.position.maxScrollExtent, greaterThan(0));
+
+    final detailOffset = appearance.position.maxScrollExtent.clamp(0.0, 160.0);
+    appearance.jumpTo(detailOffset);
+    await tester.pumpAndSettle();
+    expect(navigation.offset, 0);
+    navigation.jumpTo(navigation.position.maxScrollExtent);
+    await tester.pump();
+    expect(appearance.offset, detailOffset);
+
+    navigation.jumpTo(0);
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('settings-category-workbench')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('settings-category-appearance')));
+    await tester.pumpAndSettle();
+    expect(appearance.offset, detailOffset);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets(
+      'compact back stays visible while detail scrolls and returns to categories',
+      (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    _usePlatformLocale(tester, const Locale('en', 'US'));
+    await _setSurface(tester, const Size(390, 620));
+    final providers = _SettingsProviders();
+    addTearDown(providers.dispose);
+    await tester.pumpWidget(_SettingsPanelHarness(providers: providers));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('settings-category-appearance')));
+    await tester.pumpAndSettle();
+    final back = find.byKey(const Key('settings-category-back'));
+    final initialBack = tester.getRect(back);
+    await tester.drag(find.byKey(const Key('settings-appearance-scroll')),
+        const Offset(0, -300));
+    await tester.pumpAndSettle();
+    expect(tester.getRect(back), initialBack);
+    expect(back.hitTestable(), findsOneWidget);
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    expect(
+        find.byKey(const Key('settings-category-navigation')), findsOneWidget);
+    expect(find.byKey(const Key('settings-category-back')), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('AI settings and profile editor fit a narrow scaled screen',
       (tester) async {
     SharedPreferences.setMockInitialValues({});
@@ -396,24 +465,8 @@ class _SettingsPanelHost extends StatelessWidget {
   const _SettingsPanelHost();
 
   @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final isNarrow = constraints.maxWidth < 600;
-        return SingleChildScrollView(
-          key: const Key('settings-panel-scroll'),
-          padding: EdgeInsets.symmetric(
-            horizontal: isNarrow ? 8 : 24,
-            vertical: isNarrow ? 12 : 24,
-          ),
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 1120),
-              child: const SettingsPanel(),
-            ),
-          ),
-        );
-      },
-    );
-  }
+  Widget build(BuildContext context) => const SizedBox(
+        key: Key('settings-panel-scroll'),
+        child: SettingsPage(),
+      );
 }

@@ -8,6 +8,34 @@ class SocialPerson {
   final String username;
 }
 
+class SocialUserSearchResult {
+  const SocialUserSearchResult(
+      {required this.userId,
+      required this.username,
+      required this.relationship,
+      this.requestId});
+  factory SocialUserSearchResult.fromJson(SocialJson json) =>
+      SocialUserSearchResult(
+          userId: json['userId']! as String,
+          username: json['username']! as String,
+          relationship: json['relationship']! as String,
+          requestId: json['requestId'] as String?);
+  final String userId, username, relationship;
+  final String? requestId;
+}
+
+class SocialUserSearchPage {
+  const SocialUserSearchPage({this.items = const [], this.hasMore = false});
+  factory SocialUserSearchPage.fromJson(SocialJson json) =>
+      SocialUserSearchPage(
+          items: List.unmodifiable((json['items']! as List).map((value) =>
+              SocialUserSearchResult.fromJson(
+                  Map<String, Object?>.from(value as Map)))),
+          hasMore: json['hasMore']! as bool);
+  final List<SocialUserSearchResult> items;
+  final bool hasMore;
+}
+
 class SocialRequest {
   SocialRequest.fromJson(SocialJson json)
       : id = json['id']! as String,
@@ -35,8 +63,11 @@ class FriendSession {
         title = json['title']! as String,
         ownerId = json['ownerId']! as String,
         ownerUsername = json['ownerUsername']! as String,
-        visibility = json['visibility']! as String;
+        visibility = json['visibility']! as String,
+        joinPolicy = json['joinPolicy'] as String? ?? 'approval',
+        defaultRole = json['defaultRole'] as String? ?? 'viewer';
   final String sessionId, title, ownerId, ownerUsername, visibility;
+  final String joinPolicy, defaultRole;
 }
 
 class SocialSnapshot {

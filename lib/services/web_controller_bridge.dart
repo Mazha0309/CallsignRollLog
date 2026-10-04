@@ -16,8 +16,7 @@ bool isControllerTabRoute() {
 }
 
 /// 捕获当前 URL 的主控屏标签页参数。
-/// 必须在 usePathUrlStrategy() 之前调用：Flutter 的 PathUrlStrategy 初始化时
-/// 会把 URL 规范化（replaceState），随后 query 就丢了。
+/// 在启动时捕获，独立显示窗口不跟随主窗口之后的页面切换。
 ({bool isController, String? sessionId}) controllerTabRouteSnapshot() {
   final uri = Uri.parse(web.window.location.href);
   return (

@@ -31,6 +31,8 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
+  final _settingsPanelKey = GlobalKey<SettingsPanelState>();
+  late final VoidCallback _disposeUrlSync;
   ServerProvider? _serverProvider;
   int _observedAuthenticationNoticeRevision = 0;
 
@@ -39,6 +41,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   /// 首帧完成前路由回调只改字段，不调用 setState。
   bool _syncReady = false;
+  Future<void>? _urlSessionRestore;
 
   static const _destinations = <_AppDestination>[
     _AppDestination(_AppSection.workbench, Icons.radio_outlined, Icons.radio),
@@ -51,7 +54,13 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    UrlSync.init(onRouteChanged: _onRouteChanged);
+    _disposeUrlSync = UrlSync.init(
+      onRouteChanged: _onRouteChanged,
+      onBackWithinPage: () =>
+          mounted &&
+          _selectedIndex == 3 &&
+          (_settingsPanelKey.currentState?.popCategory() ?? false),
+    );
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _syncReady = true;
       _initSession();
@@ -107,7 +116,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final index = homeIndexForPage(route.page);
     final currentSessionId = context.read<SessionProvider>().currentSessionId;
     if (route.session != null && route.session != currentSessionId) {
-      _restoreSessionFromUrl(route.session!);
+      _urlSessionRestore = _restoreSessionFromUrl(route.session!);
     }
     if (index == _selectedIndex && route.session == null) return;
     if (_syncReady) {
@@ -122,7 +131,10 @@ class _HomeScreenState extends State<HomeScreen> {
     final sessions = context.read<SessionProvider>();
     final logs = context.read<LogProvider>();
     try {
+      await sessions.ready;
+      if (!mounted) return;
       await logs.reloadForSession(sessionId, propagateErrors: true);
+      if (!mounted) return;
       await sessions.switchToSession(sessionId);
     } catch (e) {
       debugPrint('[HomeScreen] URL session restore failed: $e');
@@ -131,6 +143,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void dispose() {
+    _disposeUrlSync();
     _serverProvider?.removeListener(_handleServerStateChanged);
     ControllerWindowService.closeAll().catchError((Object error) {
       debugPrint('[ControllerWindow] close failed: $error');
@@ -142,6 +155,9 @@ class _HomeScreenState extends State<HomeScreen> {
     final sp = context.read<SessionProvider>();
     final lp = context.read<LogProvider>();
     await sp.ready;
+    // Initial query links survive bootstrap now. Do not reload the previously
+    // selected session over the session being restored from the link.
+    await _urlSessionRestore;
     if (!mounted) return;
     if (!_restoredFromUrl && sp.currentSessionId == null) {
       setState(() => _selectedIndex = 1);
@@ -161,8 +177,9 @@ class _HomeScreenState extends State<HomeScreen> {
         SnackBar(content: Text(context.l10n.createOrJoinSessionFirst)),
       );
     }
-    if (destination == _selectedIndex) return;
-    setState(() => _selectedIndex = destination);
+    if (destination != _selectedIndex) {
+      setState(() => _selectedIndex = destination);
+    }
     UrlSync.push(
       pageForHomeIndex(destination),
       destination == 0 ? sessionProvider.currentSessionId : null,
@@ -170,6 +187,10 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<bool> _handleSystemBack() async {
+    if (_selectedIndex == 3 &&
+        (_settingsPanelKey.currentState?.popCategory() ?? false)) {
+      return true;
+    }
     if (FocusManager.instance.primaryFocus?.hasFocus ?? false) {
       FocusManager.instance.primaryFocus?.unfocus();
       return true;
@@ -201,7 +222,7 @@ class _HomeScreenState extends State<HomeScreen> {
         },
       ),
       const DataWorkspacePage(),
-      const SettingsPage(),
+      SettingsPage(panelKey: _settingsPanelKey, handlesSystemBack: false),
     ];
     return PopScope<Object?>(
       canPop: false,
@@ -876,7 +897,7 @@ class AddRecordPage extends StatelessWidget {
     );
     return LayoutBuilder(
       builder: (context, constraints) => SingleChildScrollView(
-        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.manual,
         padding: EdgeInsets.fromLTRB(
           constraints.maxWidth < 600 ? 12 : 20,
           12,
@@ -981,14 +1002,17 @@ class AddRecordPage extends StatelessWidget {
 }
 
 class SettingsPage extends StatelessWidget {
-  const SettingsPage({super.key});
+  const SettingsPage({super.key, this.panelKey, this.handlesSystemBack = true});
+
+  final GlobalKey<SettingsPanelState>? panelKey;
+  final bool handlesSystemBack;
 
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
         final isNarrow = constraints.maxWidth < 600;
-        return SingleChildScrollView(
+        return Padding(
           padding: EdgeInsets.symmetric(
             horizontal: isNarrow ? 8 : 24,
             vertical: isNarrow ? 12 : 24,
@@ -996,7 +1020,10 @@ class SettingsPage extends StatelessWidget {
           child: Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 1120),
-              child: const SettingsPanel(),
+              child: SettingsPanel(
+                key: panelKey,
+                handlesSystemBack: handlesSystemBack,
+              ),
             ),
           ),
         );

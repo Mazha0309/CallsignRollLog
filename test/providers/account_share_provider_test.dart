@@ -34,6 +34,61 @@ ServerApi apiWith(Future<http.Response> Function(http.Request) handler) =>
                 const ApiUserDto(id: 'user', username: 'user', role: 'user'))));
 
 void main() {
+  test('user search encodes the query and parses relationship metadata',
+      () async {
+    final server = FakeServer(apiWith((request) async {
+      if (request.url.path.endsWith('/social')) return snapshot('friend');
+      expect(request.url.path, '/api/v1/social/users');
+      expect(request.url.queryParameters['query'], 'BA & 1');
+      expect(request.method, 'GET');
+      return http.Response(
+          jsonEncode({
+            'items': [
+              {
+                'userId': 'alice',
+                'username': 'BA & 1',
+                'relationship': 'incoming',
+                'requestId': 'pending-1'
+              }
+            ],
+            'hasMore': true
+          }),
+          200);
+    }))
+      ..id = 'bob';
+    final provider = AccountShareProvider();
+    addTearDown(provider.dispose);
+    addTearDown(server.dispose);
+    provider.updateServer(server);
+    await Future<void>.delayed(Duration.zero);
+    final result = await provider.searchUsers('  BA & 1  ');
+    expect(result.items.single.relationship, 'incoming');
+    expect(result.items.single.requestId, 'pending-1');
+    expect(result.hasMore, isTrue);
+    await expectLater(provider.searchUsers(' B '), throwsArgumentError);
+  });
+  test('search response cannot be returned to a different account', () async {
+    final response = Completer<http.Response>();
+    final started = Completer<void>();
+    final server = FakeServer(apiWith((request) async {
+      if (request.url.path.endsWith('/social')) return snapshot('friend');
+      started.complete();
+      return response.future;
+    }))
+      ..id = 'bob';
+    final provider = AccountShareProvider();
+    addTearDown(provider.dispose);
+    addTearDown(server.dispose);
+    provider.updateServer(server);
+    await Future<void>.delayed(Duration.zero);
+    final search = provider.searchUsers('BA');
+    final assertion = expectLater(search, throwsStateError);
+    await started.future;
+    server.id = 'carol';
+    provider.updateServer(server);
+    response.complete(http.Response('{"items":[],"hasMore":false}', 200));
+    await assertion;
+  });
   testWidgets(
       'WebSocket invalidations during a load are replayed without polling',
       (tester) async {

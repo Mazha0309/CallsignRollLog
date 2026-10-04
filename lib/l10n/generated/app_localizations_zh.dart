@@ -9,6 +9,161 @@ class AppLocalizationsZh extends AppLocalizations {
   AppLocalizationsZh([String locale = 'zh']) : super(locale);
 
   @override
+  String get shareSessionsTitle => '共享会话';
+
+  @override
+  String get shareSelected => '多选会话';
+
+  @override
+  String get shareAll => '持续共享全部';
+
+  @override
+  String get shareAllHint => '包含当前和以后新建的所有本人会话。新建或离线修改的本地会话完成云同步后，对方即可看到。';
+
+  @override
+  String get shareSelectedHint => '只共享勾选的本人会话；不会自动包含以后新建的会话，也不会转共享别人的记录。';
+
+  @override
+  String get shareViewOnly => '仅查看';
+
+  @override
+  String get shareEditLogs => '允许新增、修改记录';
+
+  @override
+  String get shareDeleteLogs => '另外允许删除记录';
+
+  @override
+  String get sharePermissionHint => '删除整个会话、结束会话和转授权仍由所有者控制；已结束的会话只能查看。';
+
+  @override
+  String get shareRecipientHint => '选择好友，或输入同一服务器上的用户名';
+
+  @override
+  String get shareSend => '发送共享邀请';
+
+  @override
+  String get shareManage => '已发出的共享';
+
+  @override
+  String get shareRevoke => '撤销共享';
+
+  @override
+  String get shareRevokeHint => '撤销后，对方将无法继续通过这项授权查看或操作你的会话。已加入的独立协作不受影响。';
+
+  @override
+  String get shareSaved => '共享设置已保存';
+
+  @override
+  String get shareSyncFirst => '请先在个人云同步中确认配对或解决冲突，再重试共享。不会自动覆盖云端数据。';
+
+  @override
+  String get shareSyncLocal => '同步本机记录';
+
+  @override
+  String get shareNeedsSelection => '请选择接收人，并至少勾选一个会话；也可以选择持续共享全部。';
+
+  @override
+  String get shareAccessChanged => '账号或共享权限已变化，请关闭后重新打开。';
+
+  @override
+  String get shareConflict => '记录已被其他人修改，请刷新后重新编辑，避免覆盖对方的修改。';
+
+  @override
+  String get shareLoadFailed => '共享数据加载失败，请检查网络后重试。';
+
+  @override
+  String get shareOperationFailed => '操作未完成，请检查连接和当前权限后重试。';
+
+  @override
+  String get shareExisting => '已向该用户发出共享，请在下面的共享管理中修改。';
+
+  @override
+  String get shareAddRecord => '新增记录';
+
+  @override
+  String get shareRecordsHint => '正在浏览共享记录，不会切换你当前的记录会话。';
+
+  @override
+  String get shareUpgradeRequired => '请先升级服务器以使用多选共享与操作授权。';
+
+  @override
+  String get shareSelectVisible => '全选搜索结果';
+
+  @override
+  String get shareClearSelection => '清空选择';
+
+  @override
+  String get socialSearch => '搜索';
+
+  @override
+  String get socialSearchHint => '输入用户名或注册呼号';
+
+  @override
+  String get socialSearchScope => '仅搜索当前服务器上的用户，不会搜索或公开个人记录。';
+
+  @override
+  String get socialSearchStart => '输入至少 2 个字符，搜索后选择要添加的人。';
+
+  @override
+  String get socialSearchEmpty => '没有找到匹配的用户，请确认对方在同一服务器注册。';
+
+  @override
+  String get socialSearchMore => '结果较多，请输入更完整的用户名。';
+
+  @override
+  String get socialSearchFailed => '搜索失败，请检查连接后重试。';
+
+  @override
+  String get socialSearchUpgrade => '此服务器尚不支持用户搜索，请先升级服务端。';
+
+  @override
+  String get socialSearchRateLimited => '搜索太频繁，请稍后再试。';
+
+  @override
+  String get socialAlreadyFriend => '已是好友';
+
+  @override
+  String get socialRequestSent => '申请已发送';
+
+  @override
+  String get socialRequestIncoming => '对方已申请加你为好友';
+
+  @override
+  String get socialRequestClosed => '申请已结束';
+
+  @override
+  String get socialJoinMode => '加入方式';
+
+  @override
+  String get socialJoinInviteOnly => '仅邀请';
+
+  @override
+  String get socialJoinApproval => '好友申请，审批后加入';
+
+  @override
+  String get socialJoinDirect => '好友直接加入';
+
+  @override
+  String get socialDirectRole => '直接加入的新成员权限';
+
+  @override
+  String get socialDirectJoinWarning =>
+      '开启后，同一服务器上的好友无需审批即可加入，并查看这个会话已有和新增的全部记录。仅影响此会话，其他会话仍然私有。';
+
+  @override
+  String get socialDirectJoinExistingHint =>
+      '此权限只适用于之后直接加入的成员，已有成员的权限不变。被移出的成员需要重新邀请或审批。';
+
+  @override
+  String get socialDirectJoinConfirm => '确认开放';
+
+  @override
+  String get socialDirectJoin => '直接加入';
+
+  @override
+  String get socialDirectJoinRemoved => '你已被移出此会话，请联系负责人重新邀请。';
+
+  @override
   String get detailsType => '记录方式';
 
   @override
@@ -39,7 +194,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get sessionPeopleTitle => '参与者与邀请';
 
   @override
-  String get sessionPeopleHint => '好友不等于会话成员。邀请被接受或申请获批后，对方才能查看此会话记录；公开页面单独管理。';
+  String get sessionPeopleHint => '在这里选择谁可以加入、处理邀请和申请。好友默认不开放记录；公开页面单独管理。';
 
   @override
   String get sessionPendingRequests => '本会话的邀请与申请';
@@ -191,10 +346,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get socialDiscoverable => '好友可见，可申请加入';
 
   @override
-  String get socialVisibilityHint => '好友只能看到会话标题，获准加入后才能查看记录。';
+  String get socialVisibilityHint => '好友可见的会话会出现在这里。加入方式由负责人设置，成为成员后才能查看记录。';
 
   @override
-  String get socialNoFriends => '还没有好友，输入搭档的用户名发送申请。';
+  String get socialNoFriends => '还没有好友，搜索搭档的用户名或注册呼号来添加。';
 
   @override
   String get socialNoMessages => '暂无邀请或申请';

@@ -9,6 +9,183 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
+  String get shareSessionsTitle => 'Share sessions';
+
+  @override
+  String get shareSelected => 'Select sessions';
+
+  @override
+  String get shareAll => 'Share all, including future sessions';
+
+  @override
+  String get shareAllHint =>
+      'Includes all your current and future sessions. New local sessions and offline changes become available after cloud sync.';
+
+  @override
+  String get shareSelectedHint =>
+      'Only the sessions you select are shared. Future sessions and records shared by others are excluded.';
+
+  @override
+  String get shareViewOnly => 'View only';
+
+  @override
+  String get shareEditLogs => 'Allow adding and editing records';
+
+  @override
+  String get shareDeleteLogs => 'Also allow deleting records';
+
+  @override
+  String get sharePermissionHint =>
+      'Only the owner can delete or close a session or grant access to others. Closed sessions are view-only.';
+
+  @override
+  String get shareRecipientHint =>
+      'Choose a friend or enter a username on this server';
+
+  @override
+  String get shareSend => 'Send sharing invitation';
+
+  @override
+  String get shareManage => 'Outgoing shares';
+
+  @override
+  String get shareRevoke => 'Revoke sharing';
+
+  @override
+  String get shareRevokeHint =>
+      'This authorization will no longer allow viewing or editing your sessions. Independent collaboration memberships are unaffected.';
+
+  @override
+  String get shareSaved => 'Sharing settings saved';
+
+  @override
+  String get shareSyncFirst =>
+      'Confirm pairing or resolve conflicts in Personal cloud sync, then retry. Cloud data will not be overwritten automatically.';
+
+  @override
+  String get shareSyncLocal => 'Sync local records';
+
+  @override
+  String get shareNeedsSelection =>
+      'Choose a recipient and at least one session, or choose ongoing sharing of all sessions.';
+
+  @override
+  String get shareAccessChanged =>
+      'The account or share permissions changed. Close and reopen this view.';
+
+  @override
+  String get shareConflict =>
+      'Someone changed these records. Refresh before editing again to avoid overwriting their changes.';
+
+  @override
+  String get shareLoadFailed =>
+      'Could not load shared data. Check your connection and retry.';
+
+  @override
+  String get shareOperationFailed =>
+      'The operation did not complete. Check your connection and permissions, then retry.';
+
+  @override
+  String get shareExisting =>
+      'You already share with this user. Edit the existing grant below.';
+
+  @override
+  String get shareAddRecord => 'Add record';
+
+  @override
+  String get shareRecordsHint =>
+      'Viewing shared records does not switch your current recording session.';
+
+  @override
+  String get shareUpgradeRequired =>
+      'Update your server to use batch sharing and record permissions.';
+
+  @override
+  String get shareSelectVisible => 'Select search results';
+
+  @override
+  String get shareClearSelection => 'Clear selection';
+
+  @override
+  String get socialSearch => 'Search';
+
+  @override
+  String get socialSearchHint => 'Username or registered callsign';
+
+  @override
+  String get socialSearchScope =>
+      'Search users on your current server only. Personal records are not searched or made public.';
+
+  @override
+  String get socialSearchStart =>
+      'Enter at least 2 characters, then search and choose a person to add.';
+
+  @override
+  String get socialSearchEmpty =>
+      'No matching users. Check that your partner registered on the same server.';
+
+  @override
+  String get socialSearchMore =>
+      'More users match. Enter a more specific username.';
+
+  @override
+  String get socialSearchFailed =>
+      'Search failed. Check your connection and retry.';
+
+  @override
+  String get socialSearchUpgrade =>
+      'This server does not support user search yet. Update the server first.';
+
+  @override
+  String get socialSearchRateLimited =>
+      'Too many searches. Please try again shortly.';
+
+  @override
+  String get socialAlreadyFriend => 'Already friends';
+
+  @override
+  String get socialRequestSent => 'Request sent';
+
+  @override
+  String get socialRequestIncoming => 'Wants to be your friend';
+
+  @override
+  String get socialRequestClosed => 'Request closed';
+
+  @override
+  String get socialJoinMode => 'How people join';
+
+  @override
+  String get socialJoinInviteOnly => 'Invite only';
+
+  @override
+  String get socialJoinApproval => 'Friends request approval';
+
+  @override
+  String get socialJoinDirect => 'Friends join directly';
+
+  @override
+  String get socialDirectRole => 'Role for new direct joins';
+
+  @override
+  String get socialDirectJoinWarning =>
+      'Friends on this server can join without approval and see all existing and new records in this session. This affects only this session; your other sessions stay private.';
+
+  @override
+  String get socialDirectJoinExistingHint =>
+      'This role applies only to future direct joins. Existing members keep their roles. Removed members need a new invitation or approval.';
+
+  @override
+  String get socialDirectJoinConfirm => 'Allow direct joins';
+
+  @override
+  String get socialDirectJoin => 'Join directly';
+
+  @override
+  String get socialDirectJoinRemoved =>
+      'You were removed from this session. Ask the owner for a new invitation.';
+
+  @override
   String get detailsType => 'Recording mode';
 
   @override
@@ -40,7 +217,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sessionPeopleHint =>
-      'Friends are not automatically session members. Records become available only after an invitation is accepted or a request is approved. Public pages are managed separately.';
+      'Choose who can join and manage invitations and requests here. Records are not shared with friends by default. Public pages are managed separately.';
 
   @override
   String get sessionPendingRequests =>
@@ -206,11 +383,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get socialVisibilityHint =>
-      'Friends see the session title. Records are available only after approval.';
+      'Discoverable friend sessions appear here. The owner chooses how people join; records are available to members only.';
 
   @override
   String get socialNoFriends =>
-      'No friends yet. Send a request using your partner\'s username.';
+      'No friends yet. Search for your partner\'s username or registered callsign to add them.';
 
   @override
   String get socialNoMessages => 'No invitations or requests';

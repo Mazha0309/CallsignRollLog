@@ -349,6 +349,13 @@ final class ServerApi {
         (json) => SocialSnapshot.fromJson(_jsonObject(json, 'social')));
   }
 
+  Future<SocialUserSearchPage> searchSocialUsers(String query) async {
+    final response = await _authorizedRequest('GET', '/social/users',
+        queryParameters: {'query': query.trim()});
+    return _parseResponse(response,
+        (json) => SocialUserSearchPage.fromJson(_jsonObject(json, 'users')));
+  }
+
   Future<void> socialMutation(
     String method,
     String path, {
@@ -371,6 +378,51 @@ final class ServerApi {
       final values = _jsonArray(object['items'], 'items');
       return List.unmodifiable(values.map(AccountShareGrantDto.fromJson));
     });
+  }
+
+  Future<List<ShareSessionRef>> listShareCandidates() async {
+    final items = <ShareSessionRef>[];
+    for (var page = 1;; page++) {
+      final response = await _authorizedRequest(
+          'GET', '/account/session-catalog',
+          queryParameters: {'page': '$page', 'pageSize': '100'});
+      final object =
+          _parseResponse(response, (json) => _jsonObject(json, 'catalog'));
+      for (final raw in _jsonArray(object['items'], 'items')) {
+        final row = _jsonObject(raw, 'session');
+        if (row['source'] == 'personal' || row['role'] == 'owner') {
+          items.add(ShareSessionRef.fromJson(row));
+        }
+      }
+      if (page >= (object['totalPages'] as num? ?? 0)) break;
+    }
+    return items;
+  }
+
+  Future<void> accountShareMutation(
+    String method,
+    String path, {
+    required Map<String, Object?> body,
+    required String idempotencyKey,
+  }) async {
+    final response = await _authorizedRequest(method, '/account$path',
+        body: body, headers: _idempotencyHeaders(idempotencyKey));
+    _throwForError(response);
+  }
+
+  Future<SharedRecordsPage> sharedRecordsPage(SharedSessionDto session,
+      {int page = 1, String query = ''}) async {
+    final response = await _authorizedRequest('GET',
+        '/account/shared-sessions/${_segment(session.source)}/${_segment(session.sessionId)}/logs',
+        queryParameters: {
+          'page': '$page',
+          'pageSize': '50',
+          'sort': 'timeDesc',
+          if (session.grantId.isNotEmpty) 'grantId': session.grantId,
+          if (query.isNotEmpty) 'q': query
+        });
+    return _parseResponse(response,
+        (json) => SharedRecordsPage.fromJson(_jsonObject(json, 'records')));
   }
 
   Future<AccountShareGrantDto> createSessionShare({

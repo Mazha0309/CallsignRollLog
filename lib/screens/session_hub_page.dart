@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:openlogtool/utils/app_snack_bar.dart';
 import 'package:flutter/material.dart';
+import 'package:openlogtool/widgets/session_sharing_dialog.dart';
 import 'package:openlogtool/l10n/l10n.dart';
 import 'package:openlogtool/models/controller_display.dart';
 import 'package:openlogtool/providers/account_share_provider.dart';
@@ -73,6 +74,77 @@ class _EnableCollaborationButtonState
         icon: const Icon(Icons.group_add_outlined),
         label: Text(context.l10n.hubEnableCollaboration),
       );
+}
+
+class _CurrentSessionInviteButton extends StatefulWidget {
+  const _CurrentSessionInviteButton({
+    super.key,
+    required this.sessionId,
+    required this.publish,
+    required this.invite,
+  });
+
+  final String sessionId;
+  final Future<bool> Function() publish;
+  final Future<void> Function() invite;
+
+  @override
+  State<_CurrentSessionInviteButton> createState() =>
+      _CurrentSessionInviteButtonState();
+}
+
+class _CurrentSessionInviteButtonState
+    extends State<_CurrentSessionInviteButton> {
+  bool _working = false;
+
+  Future<void> _invite() async {
+    if (_working) return;
+    final server = context.read<ServerProvider>();
+    final sessions = context.read<SessionProvider>();
+    final collaboration = context.read<CollaborationProvider>();
+    final sessionId = widget.sessionId;
+    final revision = server.contextRevision;
+    final origin = server.serverUrl;
+    final accountId = server.accountId;
+    bool isCurrent() =>
+        mounted &&
+        server.isLoggedIn &&
+        server.contextRevision == revision &&
+        server.serverUrl == origin &&
+        server.accountId == accountId &&
+        sessions.currentSession?.sessionId == sessionId &&
+        sessions.currentSession?.status == 'active';
+    setState(() => _working = true);
+    try {
+      if (collaboration.binding == null && !await widget.publish()) return;
+      if (!isCurrent() ||
+          collaboration.binding?.sessionId != sessionId ||
+          !collaboration.isOwner) {
+        return;
+      }
+      await widget.invite();
+    } catch (error) {
+      if (mounted && isCurrent()) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(context.l10n.operationFailed('$error'))));
+      }
+    } finally {
+      if (mounted) setState(() => _working = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final collaboration = context.watch<CollaborationProvider>();
+    final social = context.watch<AccountShareProvider>();
+    return FilledButton.tonalIcon(
+      key: const Key('invite-current-session-friend'),
+      onPressed:
+          _working || collaboration.isBusy || social.busy ? null : _invite,
+      icon: const Icon(Icons.person_add_outlined),
+      label: Text(context.l10n.socialInvite),
+    );
+  }
 }
 
 /// 本地记录为主入口，同步、好友及协作按需启用。
@@ -327,7 +399,8 @@ class SessionHubPage extends StatelessWidget {
             label: Text(context.l10n.socialTitle),
           ),
         if (context.watch<AccountShareProvider>().supportsLegacySharing &&
-            (!context.watch<AccountShareProvider>().supportsFriends ||
+            (context.watch<AccountShareProvider>().supportsBatchSharing ||
+                !context.watch<AccountShareProvider>().supportsFriends ||
                 context.watch<AccountShareProvider>().inbox.isNotEmpty ||
                 context
                     .watch<AccountShareProvider>()
@@ -344,9 +417,12 @@ class SessionHubPage extends StatelessWidget {
               ),
               child: const Icon(Icons.share_outlined),
             ),
-            label: Text(context.watch<AccountShareProvider>().supportsFriends
-                ? context.l10n.socialLegacy
-                : context.l10n.accountSharing),
+            label:
+                Text(context.watch<AccountShareProvider>().supportsBatchSharing
+                    ? context.l10n.shareSessionsTitle
+                    : context.watch<AccountShareProvider>().supportsFriends
+                        ? context.l10n.socialLegacy
+                        : context.l10n.accountSharing),
           ),
         OutlinedButton.icon(
           key: const Key('join-collaboration'),
@@ -361,6 +437,7 @@ class SessionHubPage extends StatelessWidget {
         ),
         if (session?.status == 'active' &&
             collaboration.binding == null &&
+            !context.watch<AccountShareProvider>().supportsFriends &&
             (server.serverInfo?.features.contains('sessionPublishing') ??
                 false))
           _EnableCollaborationButton(
@@ -461,17 +538,24 @@ class SessionHubPage extends StatelessWidget {
     required SettingsProvider settings,
   }) {
     final colors = Theme.of(context).colorScheme;
+    final server = context.watch<ServerProvider>();
+    final social = context.watch<AccountShareProvider>();
     final collaborationSession = collaboration.binding?.sessionId == sessionId;
+    final showInvite = server.isLoggedIn &&
+        social.supportsFriends &&
+        sessionStatus == 'active' &&
+        !collaboration.canonicalSessionClosed &&
+        ((collaborationSession && collaboration.isOwner) ||
+            (collaboration.binding == null &&
+                (server.serverInfo?.features.contains('sessionPublishing') ??
+                    false)));
     final canRecord = sessionStatus == 'active' &&
         !context.watch<LogProvider>().currentSessionReadOnly;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        if (!collaborationSession) ...[
-          Text(context.l10n.hubLocalHint),
-          const SizedBox(height: 16),
-        ],
         Wrap(
+          key: const Key('current-session-actions'),
           spacing: 8,
           runSpacing: 8,
           children: [
@@ -484,6 +568,26 @@ class SessionHubPage extends StatelessWidget {
                 label: Text(canRecord
                     ? context.l10n.hubContinueRecording
                     : context.l10n.hubViewRecords),
+              ),
+            if (showInvite)
+              _CurrentSessionInviteButton(
+                key: ValueKey('current-session-invite-$sessionId'),
+                sessionId: sessionId,
+                publish: () => confirmAndPublishCurrentSession(context),
+                invite: () => _inviteCurrentSession(context),
+              ),
+            if (collaborationSession)
+              OutlinedButton.icon(
+                key: const Key('open-collaboration-management'),
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute<void>(
+                    builder: (_) =>
+                        const CollaborationScreen(focusParticipants: true),
+                  ),
+                ),
+                icon: const Icon(Icons.group_outlined),
+                label: Text(context.l10n.manageCollaboration),
               ),
             if (!collaborationSession && sessionStatus == 'active')
               OutlinedButton.icon(
@@ -522,31 +626,6 @@ class SessionHubPage extends StatelessWidget {
                     : null,
                 icon: const Icon(Icons.play_circle_outline),
                 label: Text(context.l10n.reopenSession),
-              ),
-            if (collaborationSession)
-              OutlinedButton.icon(
-                key: const Key('open-collaboration-management'),
-                onPressed: () => Navigator.push(
-                  context,
-                  MaterialPageRoute<void>(
-                    builder: (_) =>
-                        const CollaborationScreen(focusParticipants: true),
-                  ),
-                ),
-                icon: const Icon(Icons.group_outlined),
-                label: Text(context.l10n.manageCollaboration),
-              ),
-            if (collaborationSession &&
-                collaboration.isOwner &&
-                sessionStatus == 'active' &&
-                context.watch<AccountShareProvider>().supportsFriends)
-              FilledButton.tonalIcon(
-                key: const Key('invite-current-session-friend'),
-                onPressed: collaboration.isBusy
-                    ? null
-                    : () => _inviteCurrentSession(context),
-                icon: const Icon(Icons.person_add_outlined),
-                label: Text(context.l10n.socialInvite),
               ),
             if (collaborationSession &&
                 context.watch<ServerProvider>().isLoggedIn)
@@ -588,6 +667,14 @@ class SessionHubPage extends StatelessWidget {
               ),
           ],
         ),
+        if (!collaborationSession) ...[
+          const SizedBox(height: 16),
+          Text(context.l10n.hubLocalHint,
+              style: Theme.of(context)
+                  .textTheme
+                  .bodySmall
+                  ?.copyWith(color: colors.onSurfaceVariant)),
+        ],
         SessionDetailsPanel(
           key: const Key('current-session-details'),
           session: context.watch<SessionProvider>().currentSession!,
@@ -675,6 +762,7 @@ class SessionHubPage extends StatelessWidget {
 
   static Future<void> _openAccountSharing(BuildContext context) async {
     final sharing = context.read<AccountShareProvider>();
+    if (sharing.supportsBatchSharing) return showSessionSharingDialog(context);
     await sharing.refresh();
     if (!context.mounted) return;
     final username = TextEditingController();
