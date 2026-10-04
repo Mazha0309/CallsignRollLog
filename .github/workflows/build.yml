@@ -686,7 +686,9 @@ jobs:
           deb="dist/OpenLogTool-$VERSION_NAME-Linux-x86_64.deb"
           dpkg-deb --root-owner-group --build pkgdeb "$deb"
           dpkg-deb --info "$deb"
-          dpkg-deb --contents "$deb" | grep -Fq './opt/openlogtool/openlogtool'
+          # Read the whole listing: grep -q can close the pipe early and make
+          # dpkg-deb/tar fail with a broken pipe under pipefail.
+          dpkg-deb --contents "$deb" | grep -F './opt/openlogtool/openlogtool'
 
       - name: Package .rpm
         env:
