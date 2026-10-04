@@ -38,10 +38,7 @@ class _DataWorkspacePageState extends State<DataWorkspacePage> {
             index: _selected.index,
             children: [
               const ExportPanel(embedded: true),
-              const AppPageFrame(
-                scrollKey: PageStorageKey('lookup-libraries-page'),
-                child: DictionaryManager(embedded: true),
-              ),
+              const DictionaryManager(embedded: true),
               AppPageFrame(
                 scrollKey: const PageStorageKey('local-database-page'),
                 child: LayoutBuilder(
@@ -66,63 +63,43 @@ class _DataWorkspacePageState extends State<DataWorkspacePage> {
   }
 
   Widget _buildNavigation(BuildContext context, int conflictCount) {
-    final colors = Theme.of(context).colorScheme;
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: colors.surface,
-        border: Border(bottom: BorderSide(color: colors.outlineVariant)),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpace.sm,
-          vertical: AppSpace.xs,
+    return AppSectionTabs<_DataWorkspaceView>(
+      key: const Key('data-workspace-selector'),
+      segments: [
+        ButtonSegment(
+          value: _DataWorkspaceView.records,
+          icon: const Icon(Icons.swap_vert_outlined),
+          label: Text(context.l10n.dataRecordsExportTab),
         ),
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(
-              maxWidth: AppDimensions.standardContentWidth,
-            ),
-            child: AppSectionTabs<_DataWorkspaceView>(
-              key: const Key('data-workspace-selector'),
-              segments: [
-                ButtonSegment(
-                  value: _DataWorkspaceView.records,
-                  icon: const Icon(Icons.swap_vert_outlined),
-                  label: Text(context.l10n.dataRecordsExportTab),
-                ),
-                ButtonSegment(
-                  value: _DataWorkspaceView.libraries,
-                  icon: const Icon(Icons.menu_book_outlined),
-                  label: Text(context.l10n.dataLookupLibrariesTab),
-                ),
-                ButtonSegment(
-                  value: _DataWorkspaceView.database,
-                  icon: const Icon(Icons.storage_outlined),
-                  label: Text(context.l10n.dataLocalDatabaseTab),
-                ),
-                ButtonSegment(
-                  value: _DataWorkspaceView.syncConflicts,
-                  icon: const Icon(Icons.rule_folder_outlined),
-                  label: Text(
-                    conflictCount == 0
-                        ? context.l10n.dataSyncConflictsTab
-                        : '${context.l10n.dataSyncConflictsTab} '
-                            '($conflictCount)',
-                  ),
-                ),
-              ],
-              selected: {_selected},
-              onSelectionChanged: (selection) {
-                if (selection.isEmpty || selection.first == _selected) {
-                  return;
-                }
-                FocusManager.instance.primaryFocus?.unfocus();
-                setState(() => _selected = selection.first);
-              },
-            ),
+        ButtonSegment(
+          value: _DataWorkspaceView.libraries,
+          icon: const Icon(Icons.menu_book_outlined),
+          label: Text(context.l10n.dataLookupLibrariesTab),
+        ),
+        ButtonSegment(
+          value: _DataWorkspaceView.database,
+          icon: const Icon(Icons.storage_outlined),
+          label: Text(context.l10n.dataLocalDatabaseTab),
+        ),
+        ButtonSegment(
+          value: _DataWorkspaceView.syncConflicts,
+          icon: const Icon(Icons.rule_folder_outlined),
+          label: Text(
+            conflictCount == 0
+                ? context.l10n.dataSyncConflictsTab
+                : '${context.l10n.dataSyncConflictsTab} '
+                    '($conflictCount)',
           ),
         ),
-      ),
+      ],
+      selected: {_selected},
+      onSelectionChanged: (selection) {
+        if (selection.isEmpty || selection.first == _selected) {
+          return;
+        }
+        FocusManager.instance.primaryFocus?.unfocus();
+        setState(() => _selected = selection.first);
+      },
     );
   }
 }

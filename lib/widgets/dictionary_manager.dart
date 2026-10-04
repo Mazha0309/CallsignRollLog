@@ -14,6 +14,7 @@ import 'package:openlogtool/services/ai_recognition/errors.dart';
 import 'package:openlogtool/services/ai_recognition/providers.dart';
 import 'package:openlogtool/services/text_assistant_tasks.dart';
 import 'package:openlogtool/src/bridge/rust_api.dart';
+import 'package:openlogtool/theme/app_theme.dart';
 import 'package:openlogtool/widgets/settings/settings_ui.dart';
 import 'package:provider/provider.dart';
 
@@ -25,6 +26,7 @@ int dictionaryGridColumnCount(double width) => width >= 760 ? 2 : 1;
 int dictionaryPageSize(double width) =>
     width >= _wideDictionaryBreakpoint ? 20 : 10;
 
+/// Owns its scroll panes and must be placed in a bounded-height viewport.
 class DictionaryManager extends StatefulWidget {
   const DictionaryManager({super.key, this.embedded = false});
 
@@ -54,6 +56,11 @@ class _DictionaryManagerState extends State<DictionaryManager> {
   final Map<String, String> _queries = <String, String>{};
   final Map<String, int> _pages = <String, int>{};
   final Set<String> _busyLibraries = <String>{};
+  final _navigationScroll = ScrollController();
+  final _libraryScroll = {
+    for (final type in ['device', 'antenna', 'callsign', 'qth'])
+      type: ScrollController(),
+  };
   bool _importing = false;
   bool _exporting = false;
   bool _aiBusy = false;
@@ -63,6 +70,10 @@ class _DictionaryManagerState extends State<DictionaryManager> {
 
   @override
   void dispose() {
+    _navigationScroll.dispose();
+    for (final controller in _libraryScroll.values) {
+      controller.dispose();
+    }
     for (final controller in _addControllers.values) {
       controller.dispose();
     }
@@ -767,10 +778,13 @@ class _DictionaryManagerState extends State<DictionaryManager> {
               : () => setState(() => _pages[library.type] = currentPage - 1),
           icon: const Icon(Icons.chevron_left),
         ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8),
-          child: Text(
-            context.l10n.libraryPageStatus(currentPage + 1, totalPages),
+        Flexible(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: Text(
+              context.l10n.libraryPageStatus(currentPage + 1, totalPages),
+              textAlign: TextAlign.center,
+            ),
           ),
         ),
         IconButton(
@@ -886,47 +900,98 @@ class _DictionaryManagerState extends State<DictionaryManager> {
       (library) => library.type == _selectedType,
       orElse: () => libraries.first,
     );
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        _buildHeader(),
-        const SizedBox(height: 16),
-        LayoutBuilder(
-          builder: (context, constraints) {
-            final isWide = constraints.maxWidth >= _wideDictionaryBreakpoint;
-            if (!isWide) {
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  _buildPhoneCategories(libraries),
-                  const SizedBox(height: 12),
-                  _buildWorkspace(
-                    selected,
-                    isWide: false,
-                  ),
-                ],
-              );
-            }
-            const gap = 16.0;
-            return Row(
-              key: const Key('library-wide-workspace'),
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildWideCategories(libraries),
-                const SizedBox(width: gap),
-                Expanded(
-                  child: _buildWorkspace(
-                    selected,
-                    isWide: true,
-                  ),
-                ),
-              ],
-            );
-          },
-        ),
-      ],
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final compact = constraints.maxWidth < AppBreakpoints.compact;
+        return Padding(
+          padding: EdgeInsets.fromLTRB(
+            compact ? AppSpace.sm : AppSpace.lg,
+            compact ? AppSpace.md : AppSpace.lg,
+            compact ? AppSpace.sm : AppSpace.lg,
+            AppSpace.lg,
+          ),
+          child: Align(
+            alignment: Alignment.topCenter,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(
+                maxWidth: AppDimensions.standardContentWidth,
+              ),
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final isWide =
+                      constraints.maxWidth >= _wideDictionaryBreakpoint;
+                  if (!isWide) {
+                    return _scrollPane(
+                      name: selected.type,
+                      controller: _libraryScroll[selected.type]!,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          _buildHeader(),
+                          const SizedBox(height: AppSpace.md),
+                          _buildPhoneCategories(libraries),
+                          const SizedBox(height: 12),
+                          _buildWorkspace(
+                            selected,
+                            isWide: false,
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+                  return Row(
+                    key: const Key('library-wide-workspace'),
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      SizedBox(
+                        width: 236,
+                        child: _scrollPane(
+                          name: 'navigation',
+                          controller: _navigationScroll,
+                          child: _buildWideCategories(libraries),
+                        ),
+                      ),
+                      const SizedBox(width: AppSpace.md),
+                      Expanded(
+                        child: _scrollPane(
+                          name: selected.type,
+                          controller: _libraryScroll[selected.type]!,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              _buildHeader(),
+                              const SizedBox(height: AppSpace.md),
+                              _buildWorkspace(selected, isWide: true),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
+
+  Widget _scrollPane({
+    required String name,
+    required ScrollController controller,
+    required Widget child,
+  }) =>
+      Scrollbar(
+        controller: controller,
+        child: SingleChildScrollView(
+          key: PageStorageKey('library-$name-scroll'),
+          controller: controller,
+          primary: false,
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.manual,
+          child: child,
+        ),
+      );
 }
 
 class _LibraryDefinition {

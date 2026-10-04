@@ -10,6 +10,7 @@ import 'package:openlogtool/screens/collaboration_screen.dart';
 import 'package:openlogtool/services/server_api.dart';
 import 'package:openlogtool/theme/app_theme.dart';
 import 'package:openlogtool/widgets/friend_search_dialog.dart';
+import 'package:openlogtool/widgets/app_section_tabs.dart';
 import 'package:openlogtool/widgets/session_friend_actions.dart';
 import 'package:openlogtool/widgets/session_join_policy_control.dart';
 import 'package:openlogtool/widgets/settings/settings_ui.dart';
@@ -264,16 +265,19 @@ class _SocialScreenState extends State<SocialScreen> {
                         provider.loading || disabled ? null : provider.refresh,
                     icon: const Icon(Icons.refresh)),
               ],
-              bottom: TabBar(tabs: [
-                Tab(text: l.socialFriends),
-                Tab(
-                    child: RequestBadge(
+              bottom: AppSectionTabBar(tabs: [
+                AppSectionTab(
+                    icon: const Icon(Icons.people_outline),
+                    label: Text(l.socialFriends)),
+                AppSectionTab(
+                    icon: RequestBadge(
                         key: const Key('social-requests-badge'),
                         count: provider.pendingInboundCount,
-                        child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 10),
-                            child: Text(l.socialMessages)))),
-                Tab(text: l.socialSessions)
+                        child: const Icon(Icons.mail_outline)),
+                    label: Text(l.socialMessages)),
+                AppSectionTab(
+                    icon: const Icon(Icons.forum_outlined),
+                    label: Text(l.socialSessions))
               ])),
           body: !provider.supportsFriends
               ? Center(

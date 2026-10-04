@@ -131,34 +131,36 @@ class _CollaborationScreenState extends State<CollaborationScreen> {
           final selectedView = availableViews.contains(_selectedView)
               ? _selectedView
               : _CollaborationView.overview;
-          return AppPageFrame(
-            scrollKey: const PageStorageKey('collaboration-management-page'),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                _buildViewSelector(
-                  collaboration,
-                  availableViews,
-                  selectedView,
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _buildViewSelector(
+                collaboration,
+                availableViews,
+                selectedView,
+              ),
+              Expanded(
+                child: AppPageFrame(
+                  scrollKey:
+                      const PageStorageKey('collaboration-management-page'),
+                  child: switch (selectedView) {
+                    _CollaborationView.overview => _buildOverviewView(
+                        collaboration,
+                        server,
+                        sessions,
+                      ),
+                    _CollaborationView.synchronization =>
+                      _buildSynchronizationView(collaboration),
+                    _CollaborationView.access => _buildAccessView(
+                        collaboration,
+                        server,
+                        showOwnerAccess: showOwnerAccess,
+                        preparingOwnerAccess: hasKnownOwnerAccess,
+                      ),
+                  },
                 ),
-                const SizedBox(height: AppSpace.md),
-                switch (selectedView) {
-                  _CollaborationView.overview => _buildOverviewView(
-                      collaboration,
-                      server,
-                      sessions,
-                    ),
-                  _CollaborationView.synchronization =>
-                    _buildSynchronizationView(collaboration),
-                  _CollaborationView.access => _buildAccessView(
-                      collaboration,
-                      server,
-                      showOwnerAccess: showOwnerAccess,
-                      preparingOwnerAccess: hasKnownOwnerAccess,
-                    ),
-                },
-              ],
-            ),
+              ),
+            ],
           );
         },
       ),
