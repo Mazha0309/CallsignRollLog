@@ -1135,7 +1135,8 @@ class _HubCollaborationProvider extends CollaborationProvider {
           lastSeenHeadSeq: 0,
           revokedAt: null);
   @override
-  Future<void> publishCurrentSession() async {
+  Future<void> publishCurrentSession(
+      {bool promotePersonalShare = false}) async {
     publishCalls++;
     collaborative = true;
     notifyListeners();

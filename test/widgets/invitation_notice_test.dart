@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:openlogtool/l10n/l10n.dart';
 import 'package:openlogtool/models/account_share_dto.dart';
+import 'package:openlogtool/models/social_dto.dart';
 import 'package:openlogtool/providers/account_share_provider.dart';
 import 'package:openlogtool/widgets/invitation_notice.dart';
 import 'package:openlogtool/widgets/share_invitations_panel.dart';
@@ -17,6 +18,13 @@ AccountShareGrantDto invite(String id) => AccountShareGrantDto(
     );
 
 class Invitations extends AccountShareProvider {
+  SocialSnapshot socialData = const SocialSnapshot();
+  @override
+  SocialSnapshot get social => socialData;
+  @override
+  bool get supportsFriends => true;
+  @override
+  String? get accountId => 'bob';
   String scope = 'one';
   List<AccountShareGrantDto> received = [];
   final actions = <String>[];
@@ -64,6 +72,42 @@ Widget app(Invitations provider, Widget child,
     );
 
 void main() {
+  testWidgets('session applications remain prominent beside shared invitations',
+      (tester) async {
+    final provider = Invitations()..receive('share');
+    addTearDown(provider.dispose);
+    provider.socialData = SocialSnapshot(sessionRequests: [
+      SocialRequest.fromJson({
+        'id': 'application',
+        'senderId': 'alice',
+        'senderUsername': 'Alice',
+        'recipientId': 'bob',
+        'recipientUsername': 'Bob',
+        'status': 'pending',
+        'kind': 'application',
+        'sessionId': 's1'
+      }),
+      SocialRequest.fromJson({
+        'id': 'outgoing',
+        'senderId': 'bob',
+        'senderUsername': 'Bob',
+        'recipientId': 'alice',
+        'recipientUsername': 'Alice',
+        'status': 'pending',
+        'kind': 'application',
+        'sessionId': 's2'
+      }),
+    ]);
+    var opened = 0;
+    await tester.pumpWidget(app(provider,
+        InvitationNotice(onOpen: () {}, onOpenRequests: () => opened++)));
+    await tester.pumpAndSettle();
+    expect(provider.pendingInboundKeys, hasLength(2));
+    expect(provider.pendingSessionApplications('s1'), 1);
+    expect(provider.pendingSessionApplications('s2'), 0);
+    await tester.tap(find.byKey(const Key('view-incoming-requests')));
+    expect(opened, 1);
+  });
   testWidgets(
       'a queued invitation toast never closes another message or survives an account switch',
       (tester) async {

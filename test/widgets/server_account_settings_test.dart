@@ -17,6 +17,40 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
+  testWidgets('connection links only prefill the phone form and preserve edits',
+      (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    tester.view.physicalSize = const Size(320, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final server = _AuthTestServer();
+    addTearDown(server.dispose);
+    final oldUrl = server.serverUrl;
+    await tester.pumpWidget(ChangeNotifierProvider<ServerProvider>.value(
+        value: server,
+        child: const MaterialApp(
+            locale: Locale('zh', 'CN'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Scaffold(
+                body: SingleChildScrollView(
+                    child: ServerAccountSettings(
+                        cardPadding: 16,
+                        initialConnectionInput: 'https://new.example/'))))));
+    await tester.pumpAndSettle();
+    final field = find.byKey(const Key('server-url-field'));
+    expect(tester.widget<TextField>(field).controller!.text,
+        'https://new.example/');
+    expect(server.serverUrl, oldUrl);
+    expect(server.loginCalls, 0);
+    await tester.enterText(field, 'https://edited.example/');
+    server.emitChange();
+    await tester.pumpAndSettle();
+    expect(tester.widget<TextField>(field).controller!.text,
+        'https://edited.example/');
+    expect(tester.takeException(), isNull);
+  });
   testWidgets(
       'username Next focuses password and desktop Enter submits only once',
       (tester) async {

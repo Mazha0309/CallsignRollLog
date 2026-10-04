@@ -46,3 +46,16 @@ String serverUrlFromConnectionInput(String value) {
               path: uri.path.substring(0, entry.start), query: '', fragment: '')
           .toString());
 }
+
+/// Only addresses, never credentials or executable/custom URL schemes.
+String? validatedServerConnectionInput(String value) {
+  if (value.length > 4096) return null;
+  final uri = Uri.tryParse(value.trim());
+  if (uri == null ||
+      !['https', 'http'].contains(uri.scheme) ||
+      uri.host.isEmpty ||
+      uri.userInfo.isNotEmpty) {
+    return null;
+  }
+  return serverUrlFromConnectionInput(value);
+}

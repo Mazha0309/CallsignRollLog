@@ -7,8 +7,12 @@ import 'package:openlogtool/providers/account_share_provider.dart';
 /// newly received requests. WebSocket refreshes do not repeat the same toast.
 class InvitationNotice extends StatefulWidget {
   const InvitationNotice(
-      {super.key, required this.onOpen, this.keyboardVisible = false});
+      {super.key,
+      required this.onOpen,
+      this.onOpenRequests,
+      this.keyboardVisible = false});
   final VoidCallback onOpen;
+  final VoidCallback? onOpenRequests;
   // Read above Scaffold: its resized body removes the keyboard view insets.
   final bool keyboardVisible;
   @override
@@ -110,10 +114,16 @@ class _InvitationNoticeState extends State<InvitationNotice> {
       return const SizedBox.shrink();
     }
     final l = context.l10n;
-    final name = provider.inbox.firstOrNull?.grantorUsername;
+    final name = provider.inbox
+        .where((g) => g.status == 'pending')
+        .firstOrNull
+        ?.grantorUsername;
+    final request = provider.pendingSocialRequests.firstOrNull;
     final summary = name != null && name.isNotEmpty
         ? l.shareInvitationFrom(name)
-        : l.newInvitationNotice;
+        : request == null
+            ? l.newInvitationNotice
+            : '${request.senderUsername} · ${request.sessionId == null ? l.socialFriendRequest : request.kind == 'application' ? l.socialApplication : l.socialInvitation}';
     return Material(
       key: const Key('incoming-invitations-notice'),
       color: Theme.of(context).colorScheme.primaryContainer,
@@ -142,6 +152,17 @@ class _InvitationNoticeState extends State<InvitationNotice> {
                               key: const Key('view-incoming-invitations'),
                               onPressed: _open,
                               child: Text(l.viewInvitations)),
+                          if (provider.pendingShareCount > 0 &&
+                              request != null &&
+                              widget.onOpenRequests != null)
+                            TextButton.icon(
+                                key: const Key('view-incoming-requests'),
+                                onPressed: widget.onOpenRequests,
+                                icon: Icon(
+                                    Icons.notification_important_outlined,
+                                    color: Colors.red.shade700),
+                                label: Text(
+                                    '${l.socialMessages} (${provider.pendingSocialRequests.length})')),
                         ],
                       ))),
               IconButton(

@@ -60,11 +60,11 @@ Widget _app() => MultiProvider(
         ChangeNotifierProvider(create: (_) => SessionProvider()),
         ChangeNotifierProvider(create: (_) => SettingsProvider()),
       ],
-      child: MaterialApp(
-        locale: const Locale('zh', 'CN'),
+      child: const MaterialApp(
+        locale: Locale('zh', 'CN'),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
-        home: const Scaffold(
+        home: Scaffold(
           body: SingleChildScrollView(
             child: LogForm(),
           ),

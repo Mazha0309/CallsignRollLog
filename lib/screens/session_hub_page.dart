@@ -388,14 +388,19 @@ class SessionHubPage extends StatelessWidget {
             onPressed: () => Navigator.push<void>(
                 context,
                 MaterialPageRoute(
-                    builder: (_) =>
-                        SocialScreen(onSessionOpened: onSessionOpened))),
-            icon: Badge(
-                isLabelVisible:
-                    context.watch<AccountShareProvider>().pendingInboundCount >
-                        0,
-                label: Text(
-                    '${context.watch<AccountShareProvider>().pendingInboundCount}'),
+                    builder: (_) => SocialScreen(
+                        onSessionOpened: onSessionOpened,
+                        initialTab: context
+                                .read<AccountShareProvider>()
+                                .pendingSocialRequests
+                                .isNotEmpty
+                            ? 1
+                            : 0))),
+            icon: RequestBadge(
+                count: context
+                    .watch<AccountShareProvider>()
+                    .pendingSocialRequests
+                    .length,
                 child: const Icon(Icons.people_outline)),
             label: Text(context.l10n.socialTitle),
           ),

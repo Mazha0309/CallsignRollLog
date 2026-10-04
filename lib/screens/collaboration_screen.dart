@@ -11,11 +11,15 @@ import 'package:openlogtool/providers/collaboration_provider.dart';
 import 'package:openlogtool/providers/account_share_provider.dart';
 import 'package:openlogtool/providers/server_provider.dart';
 import 'package:openlogtool/providers/session_provider.dart';
+import 'package:openlogtool/providers/personal_cloud_provider.dart';
+import 'package:openlogtool/widgets/session_friend_actions.dart';
 import 'package:openlogtool/services/collaboration_sync.dart';
 import 'package:openlogtool/theme/app_theme.dart';
 import 'package:openlogtool/widgets/collaboration_conflict_center.dart';
 import 'package:openlogtool/widgets/collaboration_local_session_action.dart';
 import 'package:openlogtool/widgets/session_people_actions.dart';
+import 'package:openlogtool/widgets/app_section_tabs.dart';
+import 'package:openlogtool/widgets/share_invitation_badge.dart';
 import 'package:openlogtool/widgets/settings/settings_ui.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -168,42 +172,44 @@ class _CollaborationScreenState extends State<CollaborationScreen> {
   ) {
     final conflictCount = collaboration.conflictCount;
     final problemCount = collaboration.offlineRecords.length + conflictCount;
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: SegmentedButton<_CollaborationView>(
-        key: const Key('collaboration-view-selector'),
-        showSelectedIcon: false,
-        segments: [
-          if (availableViews.contains(_CollaborationView.overview))
-            ButtonSegment(
-              value: _CollaborationView.overview,
-              icon: const Icon(Icons.dashboard_outlined),
-              label: Text(context.l10n.collaborationOverviewTab),
+    return AppSectionTabs<_CollaborationView>(
+      key: const Key('collaboration-view-selector'),
+      segments: [
+        if (availableViews.contains(_CollaborationView.overview))
+          ButtonSegment(
+            value: _CollaborationView.overview,
+            icon: const Icon(Icons.dashboard_outlined),
+            label: Text(context.l10n.collaborationOverviewTab),
+          ),
+        if (availableViews.contains(_CollaborationView.synchronization))
+          ButtonSegment(
+            value: _CollaborationView.synchronization,
+            icon: const Icon(Icons.sync_outlined),
+            label: Text(
+              problemCount == 0
+                  ? context.l10n.collaborationSyncConflictsTab
+                  : '${context.l10n.collaborationSyncConflictsTab} '
+                      '($problemCount)',
             ),
-          if (availableViews.contains(_CollaborationView.synchronization))
-            ButtonSegment(
-              value: _CollaborationView.synchronization,
-              icon: const Icon(Icons.sync_outlined),
-              label: Text(
-                problemCount == 0
-                    ? context.l10n.collaborationSyncConflictsTab
-                    : '${context.l10n.collaborationSyncConflictsTab} '
-                        '($problemCount)',
-              ),
-            ),
-          if (availableViews.contains(_CollaborationView.access))
-            ButtonSegment(
-              value: _CollaborationView.access,
-              icon: const Icon(Icons.group_outlined),
-              label: Text(context.l10n.sessionPeopleTitle),
-            ),
-        ],
-        selected: {selectedView},
-        onSelectionChanged: (selection) {
-          if (selection.isEmpty) return;
-          setState(() => _selectedView = selection.first);
-        },
-      ),
+          ),
+        if (availableViews.contains(_CollaborationView.access))
+          ButtonSegment(
+            value: _CollaborationView.access,
+            icon: RequestBadge(
+                count: context
+                        .watch<AccountShareProvider?>()
+                        ?.pendingSessionApplications(
+                            collaboration.binding?.sessionId) ??
+                    0,
+                child: const Icon(Icons.group_outlined)),
+            label: Text(context.l10n.sessionPeopleTitle),
+          ),
+      ],
+      selected: {selectedView},
+      onSelectionChanged: (selection) {
+        if (selection.isEmpty) return;
+        setState(() => _selectedView = selection.first);
+      },
     );
   }
 
@@ -245,35 +251,32 @@ class _CollaborationScreenState extends State<CollaborationScreen> {
           _statusCard(collaboration),
           const SizedBox(height: 12),
         ],
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: SegmentedButton<_SynchronizationView>(
-            key: const Key('collaboration-sync-view-selector'),
-            showSelectedIcon: false,
-            segments: [
-              ButtonSegment(
-                value: _SynchronizationView.offlineRecords,
-                icon: const Icon(Icons.cloud_off_outlined),
-                label: Text(
-                  '${context.l10n.offlineReviewTitle} '
-                  '(${collaboration.offlineRecords.length})',
-                ),
+        AppSectionTabs<_SynchronizationView>(
+          key: const Key('collaboration-sync-view-selector'),
+          secondary: true,
+          segments: [
+            ButtonSegment(
+              value: _SynchronizationView.offlineRecords,
+              icon: const Icon(Icons.cloud_off_outlined),
+              label: Text(
+                '${context.l10n.offlineReviewTitle} '
+                '(${collaboration.offlineRecords.length})',
               ),
-              ButtonSegment(
-                value: _SynchronizationView.conflicts,
-                icon: const Icon(Icons.rule_folder_outlined),
-                label: Text(
-                  '${context.l10n.conflictCenterTitle} '
-                  '(${collaboration.conflictCount})',
-                ),
+            ),
+            ButtonSegment(
+              value: _SynchronizationView.conflicts,
+              icon: const Icon(Icons.rule_folder_outlined),
+              label: Text(
+                '${context.l10n.conflictCenterTitle} '
+                '(${collaboration.conflictCount})',
               ),
-            ],
-            selected: {selected},
-            onSelectionChanged: (selection) {
-              if (selection.isEmpty) return;
-              setState(() => _selectedSynchronizationView = selection.first);
-            },
-          ),
+            ),
+          ],
+          selected: {selected},
+          onSelectionChanged: (selection) {
+            if (selection.isEmpty) return;
+            setState(() => _selectedSynchronizationView = selection.first);
+          },
         ),
         const SizedBox(height: 12),
         if (selected == _SynchronizationView.offlineRecords)
@@ -348,44 +351,47 @@ class _CollaborationScreenState extends State<CollaborationScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: SegmentedButton<_AccessView>(
-            key: const Key('collaboration-access-view-selector'),
-            showSelectedIcon: false,
-            segments: [
+        AppSectionTabs<_AccessView>(
+          key: const Key('collaboration-access-view-selector'),
+          secondary: true,
+          segments: [
+            ButtonSegment(
+              value: _AccessView.members,
+              icon: RequestBadge(
+                  count: context
+                          .watch<AccountShareProvider?>()
+                          ?.pendingSessionApplications(
+                              collaboration.binding?.sessionId) ??
+                      0,
+                  child: const Icon(Icons.people_outline)),
+              label: Text(
+                '${context.l10n.membersTitle} '
+                '(${collaboration.members.length})',
+              ),
+            ),
+            if (collaboration.supportsInvites)
               ButtonSegment(
-                value: _AccessView.members,
-                icon: const Icon(Icons.people_outline),
+                value: _AccessView.invites,
+                icon: const Icon(Icons.mark_email_unread_outlined),
                 label: Text(
-                  '${context.l10n.membersTitle} '
-                  '(${collaboration.members.length})',
+                  '${context.l10n.legacyInviteCodes} '
+                  '(${collaboration.invites.length})',
                 ),
               ),
-              if (collaboration.supportsInvites)
-                ButtonSegment(
-                  value: _AccessView.invites,
-                  icon: const Icon(Icons.mark_email_unread_outlined),
-                  label: Text(
-                    '${context.l10n.legacyInviteCodes} '
-                    '(${collaboration.invites.length})',
-                  ),
-                ),
-              ButtonSegment(
-                value: _AccessView.publicShare,
-                icon: const Icon(Icons.public_outlined),
-                label: Text(
-                  '${context.l10n.publicShareManagement} '
-                  '(${collaboration.publicShares.length})',
-                ),
+            ButtonSegment(
+              value: _AccessView.publicShare,
+              icon: const Icon(Icons.public_outlined),
+              label: Text(
+                '${context.l10n.publicShareManagement} '
+                '(${collaboration.publicShares.length})',
               ),
-            ],
-            selected: {selected},
-            onSelectionChanged: (selection) {
-              if (selection.isEmpty) return;
-              setState(() => _selectedAccessView = selection.first);
-            },
-          ),
+            ),
+          ],
+          selected: {selected},
+          onSelectionChanged: (selection) {
+            if (selection.isEmpty) return;
+            setState(() => _selectedAccessView = selection.first);
+          },
         ),
         const SizedBox(height: 12),
         switch (selected) {
@@ -1063,7 +1069,21 @@ class _CollaborationScreenState extends State<CollaborationScreen> {
                 onPressed: collaboration.isBusy
                     ? null
                     : () => _run(
-                          collaboration.publishCurrentSession,
+                          () async {
+                            if (isLocal) {
+                              await confirmAndPublishCurrentSession(context);
+                            } else {
+                              final cloud =
+                                  context.read<PersonalCloudProvider?>();
+                              if (cloud == null) {
+                                await collaboration.publishCurrentSession();
+                              } else {
+                                await cloud.runWithPersonalSyncPaused(
+                                    collaboration.publishCurrentSession);
+                              }
+                            }
+                            return null;
+                          },
                           success: context.l10n.publishSessionSucceeded,
                         ),
                 icon: const Icon(Icons.cloud_upload),

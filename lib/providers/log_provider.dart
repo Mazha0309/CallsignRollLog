@@ -100,6 +100,7 @@ class LogProvider with ChangeNotifier {
   int _dataRevision = 0;
 
   List<old.LogEntry> get logs => _logs;
+  bool get hasReadAccess => true;
   int get logCount => _logs.length;
   int get dataRevision => _dataRevision;
   String? get currentSessionId => _currentSessionId;
@@ -175,6 +176,16 @@ class LogProvider with ChangeNotifier {
   }
 
   bool canMutateLog(old.LogEntry log) => mutationBlockReason(log) == null;
+
+  bool canDeleteLog(old.LogEntry log) => canMutateLog(log);
+
+  Future<void> deleteLogFromOriginal(old.LogEntry original) =>
+      deleteLogById(original.id);
+
+  /// Keep the editor's original row available to remote CAS implementations.
+  Future<void> updateLogFromOriginal(
+          old.LogEntry original, old.LogEntry replacement) =>
+      updateLogById(original.id, replacement);
 
   void _ensureWritable(String? sessionId) {
     if (sessionId != null &&

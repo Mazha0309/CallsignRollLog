@@ -194,6 +194,10 @@ jobs:
           set -euo pipefail
           test -s build/web/index.html
           test -s build/web/main.dart.js
+          test -s build/web/update.html
+          test -s build/web/update.js
+          cmp web/update.html build/web/update.html
+          cmp web/update.js build/web/update.js
           test -s build/web/pkg/openlogtool_core.js
           test -s build/web/pkg/openlogtool_core_bg.wasm
           grep -Fq 'shared:true' build/web/pkg/openlogtool_core.js
@@ -242,6 +246,8 @@ jobs:
             "$bundle_dir"
 
           tar -C "$RUNNER_TEMP" -czf "dist/$archive" "$bundle_name"
+          tar -tzf "dist/$archive" | grep -Fx "$bundle_name/web/update.html"
+          tar -tzf "dist/$archive" | grep -Fx "$bundle_name/web/update.js"
 
       - name: Upload WebClient artifact
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -1202,5 +1208,6 @@ jobs:
           tag_name: ${{ github.ref_name }}
           name: OpenLogTool ${{ github.ref_name }}
           generate_release_notes: true
+          prerelease: false
           fail_on_unmatched_files: true
           files: artifacts/*

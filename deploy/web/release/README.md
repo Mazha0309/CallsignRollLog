@@ -1,5 +1,7 @@
 # OpenLogTool WebClient
 
+升级后若浏览器仍显示旧版，请打开本部署地址下的 `update.html`，点击“保留本机数据并更新”。更新页及 `update.js` 随每个 Release 包一起提供，不会清除 IndexedDB、OPFS 或本机记录；不要使用浏览器的“清除站点数据”。
+
 This release bundle contains the prebuilt Flutter Web and Rust WASM assets.
 Docker only packages those assets into Nginx; it does not rebuild Flutter or
 Rust.

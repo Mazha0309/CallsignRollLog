@@ -24,3 +24,16 @@ class ShareInvitationBadge extends StatelessWidget {
     );
   }
 }
+
+class RequestBadge extends StatelessWidget {
+  const RequestBadge({super.key, required this.count, required this.child});
+  final int count;
+  final Widget child;
+  @override
+  Widget build(BuildContext context) => Badge.count(
+      count: count,
+      isLabelVisible: count > 0,
+      backgroundColor: Colors.red.shade700,
+      textColor: Colors.white,
+      child: child);
+}

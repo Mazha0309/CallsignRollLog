@@ -25,7 +25,8 @@ String buildSyncQuery(String page, String? session) {
 class SyncRoute {
   final String? page;
   final String? session;
-  const SyncRoute({this.page, this.session});
+  final String? server;
+  const SyncRoute({this.page, this.session, this.server});
 }
 
 SyncRoute parseSyncQuery(String query) {
@@ -33,6 +34,7 @@ SyncRoute parseSyncQuery(String query) {
   return SyncRoute(
     page: uri.queryParameters['page'],
     session: uri.queryParameters['session'],
+    server: uri.queryParameters['server'],
   );
 }
 

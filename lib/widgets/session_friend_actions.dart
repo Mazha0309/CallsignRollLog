@@ -5,6 +5,7 @@ import 'package:openlogtool/providers/account_share_provider.dart';
 import 'package:openlogtool/providers/collaboration_provider.dart';
 import 'package:openlogtool/providers/server_provider.dart';
 import 'package:openlogtool/providers/session_provider.dart';
+import 'package:openlogtool/providers/personal_cloud_provider.dart';
 import 'package:openlogtool/services/server_api.dart';
 
 String _serverScope(ServerProvider server) =>
@@ -55,7 +56,28 @@ Future<bool> confirmAndPublishCurrentSession(BuildContext context) async {
       sessions.currentSessionId != session.sessionId) {
     throw StateError(context.l10n.hubContextChanged);
   }
-  await collaboration.publishCurrentSession();
+  final sharing = context.read<AccountShareProvider>();
+  final isPersonallyShared = sharing.supportsPersonalPromotion &&
+      sharing.outgoing.any((g) =>
+          g.scopeMode == 'all' ||
+          g.selectedSessions.any((s) =>
+              s.source == 'personal' && s.sessionId == session.sessionId));
+  if (isPersonallyShared) {
+    final cloud = context.read<PersonalCloudProvider?>();
+    if (cloud == null) throw StateError('SHARE_SYNC_REQUIRED');
+    await cloud.syncNow();
+    if (_serverScope(server) != scope ||
+        sessions.currentSessionId != session.sessionId) {
+      throw StateError('ACCOUNT_CHANGED');
+    }
+    if (cloud.state != PersonalCloudSyncState.upToDate) {
+      throw StateError('SHARE_SYNC_REQUIRED');
+    }
+    await cloud.runWithPersonalSyncPaused(
+        () => collaboration.publishCurrentSession(promotePersonalShare: true));
+  } else {
+    await collaboration.publishCurrentSession();
+  }
   if (!context.mounted) return false;
   if (_serverScope(server) != scope ||
       sessions.currentSessionId != session.sessionId) {

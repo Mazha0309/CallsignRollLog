@@ -7,6 +7,7 @@ import 'package:flutter/foundation.dart';
 import 'package:openlogtool/models/personal_cloud_dto.dart';
 import 'package:openlogtool/models/personal_dictionary_snapshot_dto.dart';
 import 'package:openlogtool/providers/collaboration_provider.dart';
+import 'package:openlogtool/services/personal_promotion_state.dart';
 import 'package:openlogtool/providers/dictionary_provider.dart';
 import 'package:openlogtool/providers/log_provider.dart';
 import 'package:openlogtool/providers/server_provider.dart';
@@ -410,6 +411,17 @@ class PersonalCloudProvider with ChangeNotifier {
         () => _reconcile(automatic: false),
         automatic: false,
       );
+
+  /// Publication removes a personal session from the snapshot atomically on
+  /// the server. Do not upload an export taken between the local publish lease
+  /// and installation of the canonical collaboration replica.
+  Future<void> runWithPersonalSyncPaused(Future<void> Function() operation) {
+    final scope = _scope;
+    return _runExclusive(() async {
+      if (_disposed || scope != _scope) throw StateError('ACCOUNT_CHANGED');
+      await operation();
+    }, automatic: false);
+  }
 
   /// Explicitly replaces the account snapshot with this device's personal
   /// sessions. This is the only path allowed to resolve an initial mismatch in
@@ -1395,6 +1407,15 @@ class PersonalCloudProvider with ChangeNotifier {
   }
 
   Future<_LocalPersonalSnapshot> _readLocalSnapshot() async {
+    final instance = _server?.serverInfo?.serverInstanceId;
+    final account = _server?.accountId;
+    if (instance != null &&
+        account != null &&
+        await hasPendingPersonalPromotion(
+            await openKeyValueStore(), instance, account)) {
+      throw StateError(
+          'PERSONAL_PROMOTION_PENDING: 共享升级尚未完成，请到对应会话重试发布；个人云同步已暂停，原记录保留。');
+    }
     final raw = await _exporter();
     final decoded = jsonDecode(raw);
     if (decoded is! Map) {

@@ -11,6 +11,7 @@ import 'package:openlogtool/theme/app_theme.dart';
 import 'package:openlogtool/widgets/session_friend_actions.dart';
 import 'package:openlogtool/widgets/session_join_policy_control.dart';
 import 'package:openlogtool/widgets/settings/settings_ui.dart';
+import 'package:openlogtool/widgets/share_invitation_badge.dart';
 
 /// Owner actions scoped to one session, backed by the account-level WS snapshot.
 class SessionPeopleActions extends StatefulWidget {
@@ -193,7 +194,14 @@ class _SessionPeopleActionsState extends State<SessionPeopleActions> {
             ),
           ],
           const Divider(height: AppSpace.lg),
-          AppSectionLabel(l.sessionPendingRequests),
+          Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: RequestBadge(
+                  key: const Key('session-applications-badge'),
+                  count: social.pendingSessionApplications(widget.sessionId),
+                  child: Padding(
+                      padding: const EdgeInsetsDirectional.only(end: 12),
+                      child: AppSectionLabel(l.sessionPendingRequests)))),
           if (requests.isEmpty)
             Padding(
                 padding: const EdgeInsets.only(top: AppSpace.xxs),

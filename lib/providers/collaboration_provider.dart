@@ -20,6 +20,7 @@ import 'package:openlogtool/services/server_api.dart';
 import 'package:openlogtool/src/bridge/rust_api.dart';
 import 'package:openlogtool/utils/log_time.dart';
 import 'package:openlogtool/services/key_value_store.dart';
+import 'package:openlogtool/services/personal_promotion_state.dart';
 import 'package:openlogtool/services/app_logger.dart';
 
 enum CollaborationState {
@@ -2227,7 +2228,8 @@ class CollaborationProvider with ChangeNotifier {
     _safeNotify();
   }
 
-  Future<void> publishCurrentSession() async {
+  Future<void> publishCurrentSession(
+      {bool promotePersonalShare = false}) async {
     final sessions = _requireSessions();
     final logs = _requireLogs();
     final sessionId = sessions.currentSessionId;
@@ -2242,9 +2244,25 @@ class CollaborationProvider with ChangeNotifier {
       }
       final info = await _ensureServerCapabilities(
         context,
-        _publishFeatures,
+        {
+          ..._publishFeatures,
+          if (promotePersonalShare) 'personalSharePromotion'
+        },
       );
       _assertOperationCurrent(context);
+      // A failed publication can survive an app restart. Preserve the owner's
+      // explicit promotion decision so a retry cannot downgrade to the legacy
+      // path or reject canonical edits made after successful remote activation.
+      final promotionStore = await openKeyValueStore();
+      final promotionKey = personalPromotionKey(
+          info.serverInstanceId, context.accountId, sessionId);
+      promotePersonalShare =
+          promotePersonalShare || await promotionStore.getBool(promotionKey);
+      _assertOperationCurrent(context);
+      if (promotePersonalShare &&
+          !await promotionStore.setBool(promotionKey, true)) {
+        throw StateError('PROMOTION_STATE_STORAGE_FAILED');
+      }
       _state = CollaborationState.publishing;
       _failedOperation = null;
       _publishingSessionId = sessionId;
@@ -2278,6 +2296,10 @@ class CollaborationProvider with ChangeNotifier {
           title: publishSession['title']! as String,
           logs: bootstrapLogs,
         );
+        final personalRevision = promotePersonalShare
+            ? (await context.api.getPersonalCloudSnapshotMeta()).revision
+            : null;
+        _assertOperationCurrent(context);
 
         _setProgress('创建远端协作会话', 0.08);
         remoteTouched = true;
@@ -2309,10 +2331,18 @@ class CollaborationProvider with ChangeNotifier {
             sessionId: sessionId,
             expectedLogCount: bootstrapLogs.length,
             idempotencyKey: _uuidV4(),
+            personalSnapshotRevision: personalRevision,
           );
           _assertOperationCurrent(context);
         } else if (remoteSession.status != 'active') {
           throw StateError('REMOTE_SESSION_STATE_INVALID');
+        } else if (promotePersonalShare) {
+          await context.api.activateSession(
+              sessionId: sessionId,
+              expectedLogCount: bootstrapLogs.length,
+              idempotencyKey: _uuidV4(),
+              personalSnapshotRevision: personalRevision);
+          _assertOperationCurrent(context);
         }
 
         _setProgress('安装服务端规范快照', 0.9);
@@ -2325,12 +2355,19 @@ class CollaborationProvider with ChangeNotifier {
           ),
         );
         _assertOperationCurrent(context);
-        validatePublishedCollaborationSnapshot(
-          sessionId: sessionId,
-          title: prepared.title,
-          localLogs: bootstrapLogs,
-          snapshot: snapshot,
-        );
+        if (!promotePersonalShare) {
+          validatePublishedCollaborationSnapshot(
+            sessionId: sessionId,
+            title: prepared.title,
+            localLogs: bootstrapLogs,
+            snapshot: snapshot,
+          );
+        } else if (snapshot.session.sessionId != sessionId ||
+            snapshot.session.status != 'active' ||
+            snapshot.session.deletedAt != null ||
+            remoteMembership.role != SessionRole.owner) {
+          throw StateError('PUBLISH_REMOTE_CONTENT_MISMATCH');
+        }
         final bindingJson = await RustApi.installCollaborationSnapshot(
           requestJson: jsonEncode({
             'mode': 'publish',
@@ -2342,6 +2379,7 @@ class CollaborationProvider with ChangeNotifier {
           }),
         );
         snapshotInstalled = true;
+        if (promotePersonalShare) await promotionStore.remove(promotionKey);
         final installedBinding = LocalCollaborationBinding.fromJson(
           jsonDecode(bindingJson),
         );
@@ -2402,6 +2440,7 @@ class CollaborationProvider with ChangeNotifier {
               sessionId: sessionId,
             );
             safelyAborted = true;
+            if (promotePersonalShare) await promotionStore.remove(promotionKey);
           } catch (_) {
             // Conservatively retain the lease if local rollback cannot be
             // proven. The Session must remain read-only in that case.

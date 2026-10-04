@@ -54,6 +54,38 @@ void main() {
     );
   });
 
+  testWidgets(
+      'required errors clear when corrected and stay clear after saving',
+      (tester) async {
+    tester.view.physicalSize = const Size(1400, 1200);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final logs = _StaticLogProvider([]);
+    addTearDown(logs.dispose);
+    await tester.pumpWidget(_app(logs));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('save-log-record')));
+    await tester.pumpAndSettle();
+    final form = tester.state<FormState>(find.byType(Form));
+    expect(form.validate(), false);
+    await tester.enterText(
+        find.widgetWithText(TextFormField, '主控呼号 *'), 'BG5CRL');
+    await _enterCallsign(tester, 'BG5NEW');
+    await tester.pumpAndSettle();
+    final fields =
+        tester.stateList<FormFieldState<String>>(find.byType(TextFormField));
+    expect(fields.any((f) => f.hasError), false);
+    await tester.tap(find.byKey(const Key('save-log-record')));
+    await tester.pumpAndSettle();
+    expect(logs.addCalls, 1);
+    expect(
+        tester
+            .stateList<FormFieldState<String>>(find.byType(TextFormField))
+            .any((f) => f.hasError),
+        false);
+  });
+
   testWidgets('idle duplicate callsign is checked after 700 milliseconds',
       (tester) async {
     final logProvider = _StaticLogProvider([_oldLog()]);

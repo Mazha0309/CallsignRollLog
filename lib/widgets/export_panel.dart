@@ -209,18 +209,10 @@ class _ExportPanelState extends State<ExportPanel> {
     required Color color,
     required VoidCallback onPressed,
   }) {
-    return ElevatedButton.icon(
+    return FilledButton.tonalIcon(
       onPressed: onPressed,
       icon: Icon(icon, size: 18),
       label: Text(label),
-      style: ElevatedButton.styleFrom(
-        foregroundColor:
-            color.computeLuminance() > 0.5 ? Colors.black : Colors.white,
-        backgroundColor: color,
-        elevation: 0,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      ),
     );
   }
 
@@ -512,7 +504,7 @@ class _ExportPanelState extends State<ExportPanel> {
                 },
                 child: Text(context.l10n.cancel),
               ),
-              ElevatedButton(
+              FilledButton(
                 onPressed: () {
                   settings.exportPath = exportPathController.text;
                   settings.fileNameTemplate = fileNameController.text;

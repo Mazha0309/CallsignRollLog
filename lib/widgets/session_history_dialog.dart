@@ -12,7 +12,6 @@ import 'package:provider/provider.dart';
 import 'package:openlogtool/widgets/session_sharing_dialog.dart';
 import 'package:openlogtool/widgets/share_invitation_badge.dart';
 import 'package:openlogtool/widgets/share_invitations_panel.dart';
-import 'package:openlogtool/widgets/shared_session_records_dialog.dart';
 
 typedef SessionHistoryLoader = Future<List<Session>> Function();
 typedef SessionHistoryAction = Future<void> Function(Session session);
@@ -265,7 +264,10 @@ class _SessionHistoryPanelState extends State<SessionHistoryPanel> {
     final sharing = context.read<AccountShareProvider>();
     final shared = entry.sharedSession ??
         sharing.sharedSessionById(entry.session.sessionId);
-    if (shared != null) await showSharedSessionRecords(context, shared);
+    if (shared != null) {
+      sharing.openSharedSession(shared);
+      widget.onSessionOpened?.call();
+    }
   }
 
   Future<void> _open(Session session) async {
@@ -278,6 +280,7 @@ class _SessionHistoryPanelState extends State<SessionHistoryPanel> {
       await logs.reloadForSession(session.sessionId, propagateErrors: true);
       await sessions.switchToSession(session.sessionId);
       if (!mounted) return;
+      context.read<AccountShareProvider?>()?.closeSharedSession();
       ScaffoldMessenger.of(context).showLoggedSnackBar(
         SnackBar(
           content: Text(context.l10n.historySessionSwitched(session.title)),
@@ -792,60 +795,65 @@ class _SessionHistoryPanelState extends State<SessionHistoryPanel> {
             ],
             icon: const Icon(Icons.more_vert),
           );
-    final copy = Row(
+    final copy = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(
-          entry.isShared
-              ? Icons.share_outlined
-              : entry.hasCollaborationBinding
-                  ? Icons.groups_outlined
-                  : session.status == 'active'
-                      ? Icons.radio_button_checked
-                      : Icons.lock_clock_outlined,
-          color: session.status == 'active'
-              ? Theme.of(context).colorScheme.primary
-              : Theme.of(context).colorScheme.onSurfaceVariant,
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      session.title,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w700,
-                          ),
-                    ),
-                  ),
-                  if (entry.isShared)
-                    Padding(
-                      padding: const EdgeInsets.only(left: 8),
-                      child: Chip(
-                        key: Key('session-share-badge-${session.sessionId}'),
-                        label: Text(context.l10n.sharedSessionBadge),
-                        visualDensity: VisualDensity.compact,
-                      ),
-                    ),
-                ],
-              ),
-              const SizedBox(height: 3),
-              Text(
-                '$createdLabel · ${_statusLabel(session.status)} · '
-                '${entry.isShared ? context.l10n.sharedSessionFrom(entry.sharedGrantorUsername ?? '') : entry.hasCollaborationBinding ? context.l10n.manageCollaboration : context.l10n.localSession}',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-              ),
-            ],
+        Row(children: [
+          Icon(
+            key: Key('session-type-icon-${session.sessionId}'),
+            entry.isShared
+                ? Icons.share_outlined
+                : entry.hasCollaborationBinding
+                    ? Icons.groups_outlined
+                    : session.status == 'active'
+                        ? Icons.radio_button_checked
+                        : Icons.lock_clock_outlined,
+            color: session.status == 'active'
+                ? Theme.of(context).colorScheme.primary
+                : Theme.of(context).colorScheme.onSurfaceVariant,
           ),
-        ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              session.title,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+            ),
+          ),
+          if (entry.isShared)
+            Padding(
+              padding: const EdgeInsets.only(left: 8),
+              child: DecoratedBox(
+                key: Key('session-share-badge-${session.sessionId}'),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.secondaryContainer,
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                  child: Text(context.l10n.sharedSessionBadge,
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onSecondaryContainer)),
+                ),
+              ),
+            ),
+        ]),
+        const SizedBox(height: 3),
+        Padding(
+            padding: const EdgeInsets.only(left: 36),
+            child: Text(
+              '$createdLabel · ${_statusLabel(session.status)} · '
+              '${entry.isShared ? context.l10n.sharedSessionFrom(entry.sharedGrantorUsername ?? '') : entry.hasCollaborationBinding ? context.l10n.manageCollaboration : context.l10n.localSession}',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+            )),
       ],
     );
     return Card(

@@ -535,11 +535,16 @@ final class ServerApi {
     required String sessionId,
     required int expectedLogCount,
     required String idempotencyKey,
+    int? personalSnapshotRevision,
   }) async {
     final response = await _authorizedRequest(
       'POST',
       '/sessions/${_segment(sessionId)}/activate',
-      body: {'expectedLogCount': expectedLogCount},
+      body: {
+        'expectedLogCount': expectedLogCount,
+        if (personalSnapshotRevision != null)
+          'personalSnapshotRevision': personalSnapshotRevision
+      },
       headers: _idempotencyHeaders(idempotencyKey),
     );
     return _parseResponse(response, ActivateSessionResultDto.fromJson);

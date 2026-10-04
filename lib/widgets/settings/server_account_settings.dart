@@ -11,15 +11,18 @@ import 'package:openlogtool/utils/app_snack_bar.dart';
 import 'package:openlogtool/utils/server_connection_error.dart';
 import 'package:openlogtool/utils/server_url.dart';
 import 'package:openlogtool/widgets/settings/settings_ui.dart';
+import 'package:openlogtool/widgets/server_qr_scanner.dart';
 import 'package:provider/provider.dart';
 
 class ServerAccountSettings extends StatefulWidget {
   const ServerAccountSettings({
     required this.cardPadding,
+    this.initialConnectionInput,
     super.key,
   });
 
   final double cardPadding;
+  final String? initialConnectionInput;
 
   @override
   State<ServerAccountSettings> createState() => _ServerAccountSettingsState();
@@ -38,7 +41,9 @@ class _ServerAccountSettingsState extends State<ServerAccountSettings> {
     // Keep a user's in-progress edit untouched.
     final provider = Provider.of<ServerProvider>(context);
     if (!_initializedUrl) {
-      _serverUrlController.text = provider.serverUrl;
+      _serverUrlController.text =
+          widget.initialConnectionInput ?? provider.serverUrl;
+      _urlEdited = widget.initialConnectionInput != null;
       _initializedUrl = true;
     } else if (!_urlEdited && _serverUrlController.text != provider.serverUrl) {
       _serverUrlController.text = provider.serverUrl;
@@ -56,6 +61,7 @@ class _ServerAccountSettingsState extends State<ServerAccountSettings> {
     return Consumer<ServerProvider>(
       builder: (context, server, _) {
         final l10n = context.l10n;
+        final zh = Localizations.localeOf(context).languageCode == 'zh';
         return SettingsSectionCard(
           key: const Key('server-account-settings'),
           icon: Icons.cloud_outlined,
@@ -66,6 +72,17 @@ class _ServerAccountSettingsState extends State<ServerAccountSettings> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              Text(zh
+                  ? '服务器是可选的。连接后才能使用好友与共享，不影响本机离线记录。'
+                  : 'A server is optional. Connect for friends and sharing; local offline recording remains available.'),
+              const SizedBox(height: 16),
+              if (widget.initialConnectionInput != null) ...[
+                AppNotice(
+                    message: zh
+                        ? '从连接链接带入了下方地址，请核对后确认连接。尚未切换服务器或发送登录凭据。'
+                        : 'This address came from a connection link. Review it before connecting. No server change or credentials have been sent.'),
+                const SizedBox(height: 12),
+              ],
               TextField(
                 key: const Key('server-url-field'),
                 controller: _serverUrlController,
@@ -85,9 +102,61 @@ class _ServerAccountSettingsState extends State<ServerAccountSettings> {
                     : (_) => unawaited(_saveAndCheck(server)),
               ),
               const SizedBox(height: 12),
+              Wrap(spacing: 8, runSpacing: 8, children: [
+                if (serverCameraScanSupported)
+                  OutlinedButton.icon(
+                      key: const Key('server-scan-button'),
+                      icon: const Icon(Icons.qr_code_scanner),
+                      label: Text(zh ? '扫一扫' : 'Scan QR'),
+                      onPressed: server.isBusy
+                          ? null
+                          : () async {
+                              final result = await Navigator.push<String>(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (_) => const ServerQrScanner()));
+                              if (mounted && result != null) {
+                                setState(() {
+                                  _serverUrlController.text = result;
+                                  _urlEdited = true;
+                                });
+                              }
+                            }),
+                TextButton.icon(
+                    key: const Key('server-paste-button'),
+                    icon: const Icon(Icons.content_paste),
+                    label: Text(zh ? '粘贴连接地址' : 'Paste address'),
+                    onPressed: server.isBusy
+                        ? null
+                        : () async {
+                            try {
+                              final data =
+                                  await Clipboard.getData(Clipboard.kTextPlain);
+                              if (!mounted) return;
+                              final value = validatedServerConnectionInput(
+                                  data?.text ?? '');
+                              if (value == null) {
+                                throw const FormatException(
+                                    'Invalid connection address');
+                              }
+                              setState(() {
+                                _serverUrlController.text = value;
+                                _urlEdited = true;
+                              });
+                            } catch (_) {
+                              if (context.mounted) {
+                                context.showLoggedSnackBar(SnackBar(
+                                    content: Text(zh
+                                        ? '无法读取有效地址，请手动粘贴服务器地址或连接链接。'
+                                        : 'No valid address found. Paste the server URL or connection link manually.')));
+                              }
+                            }
+                          }),
+              ]),
+              const SizedBox(height: 8),
               SizedBox(
                 width: double.infinity,
-                child: OutlinedButton.icon(
+                child: FilledButton.icon(
                   key: const Key('server-check-button'),
                   icon: server.isBusy
                       ? const SizedBox.square(
@@ -95,7 +164,7 @@ class _ServerAccountSettingsState extends State<ServerAccountSettings> {
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
                       : const Icon(Icons.wifi_tethering, size: 16),
-                  label: Text(l10n.serverSaveAndCheck),
+                  label: Text(zh ? '确认地址并连接' : 'Confirm address and connect'),
                   onPressed: server.isBusy ? null : () => _saveAndCheck(server),
                 ),
               ),
@@ -114,14 +183,18 @@ class _ServerAccountSettingsState extends State<ServerAccountSettings> {
                         }
                       },
                     )),
-                const SizedBox(height: 8),
-                SelectableText(
-                  l10n.serverInstanceDetails(
-                    server.serverInfo!.serverInstanceId,
-                    server.serverInfo!.features.join(', '),
-                  ),
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
+                ExpansionTile(
+                    key: const Key('server-advanced-details'),
+                    title: Text(zh ? '连接详情' : 'Connection details'),
+                    children: [
+                      SelectableText(
+                        l10n.serverInstanceDetails(
+                          server.serverInfo!.serverInstanceId,
+                          server.serverInfo!.features.join(', '),
+                        ),
+                        style: Theme.of(context).textTheme.bodySmall,
+                      )
+                    ]),
               ],
               if (server.tokenStorageStatus.isDegraded) ...[
                 const SizedBox(height: 12),
@@ -195,15 +268,6 @@ class _ServerAccountSettingsState extends State<ServerAccountSettings> {
       children: [
         Row(
           children: [
-            CircleAvatar(
-              radius: 20,
-              child: Text(
-                (server.username?.isNotEmpty ?? false)
-                    ? server.username![0].toUpperCase()
-                    : '?',
-              ),
-            ),
-            const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -232,44 +296,86 @@ class _ServerAccountSettingsState extends State<ServerAccountSettings> {
           ],
         ),
         const SizedBox(height: 12),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: [
-            OutlinedButton.icon(
-              key: const Key('account-change-username-button'),
-              icon: const Icon(Icons.badge_outlined, size: 18),
-              label: Text(l10n.accountChangeUsername),
-              onPressed:
-                  server.isBusy ? null : () => _showUsernameDialog(server),
-            ),
-            OutlinedButton.icon(
-              key: const Key('account-change-password-button'),
-              icon: const Icon(Icons.password_outlined, size: 18),
-              label: Text(l10n.accountChangePassword),
-              onPressed:
-                  server.isBusy ? null : () => _showPasswordDialog(server),
-            ),
-            OutlinedButton.icon(
-              key: const Key('account-device-sessions-button'),
-              icon: const Icon(Icons.devices_outlined, size: 18),
-              label: Text(l10n.accountDeviceSessions),
-              onPressed: server.isBusy
-                  ? null
-                  : () => showDialog<void>(
-                        context: context,
-                        builder: (_) => DeviceSessionsDialog(provider: server),
-                      ),
-            ),
-          ],
-        ),
+        ExpansionTile(
+            key: const Key('account-advanced-settings'),
+            title: Text(Localizations.localeOf(context).languageCode == 'zh'
+                ? '账号管理与登录设备'
+                : 'Account and sign-in devices'),
+            children: [
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  OutlinedButton.icon(
+                    key: const Key('account-change-username-button'),
+                    icon: const Icon(Icons.badge_outlined, size: 18),
+                    label: Text(l10n.accountChangeUsername),
+                    onPressed: server.isBusy
+                        ? null
+                        : () => _showUsernameDialog(server),
+                  ),
+                  OutlinedButton.icon(
+                    key: const Key('account-change-password-button'),
+                    icon: const Icon(Icons.password_outlined, size: 18),
+                    label: Text(l10n.accountChangePassword),
+                    onPressed: server.isBusy
+                        ? null
+                        : () => _showPasswordDialog(server),
+                  ),
+                  OutlinedButton.icon(
+                    key: const Key('account-device-sessions-button'),
+                    icon: const Icon(Icons.devices_outlined, size: 18),
+                    label: Text(l10n.accountDeviceSessions),
+                    onPressed: server.isBusy
+                        ? null
+                        : () => showDialog<void>(
+                              context: context,
+                              builder: (_) =>
+                                  DeviceSessionsDialog(provider: server),
+                            ),
+                  ),
+                ],
+              )
+            ]),
       ],
     );
   }
 
   Future<void> _saveAndCheck(ServerProvider server) async {
     final candidateUrl =
-        serverUrlFromConnectionInput(_serverUrlController.text);
+        validatedServerConnectionInput(_serverUrlController.text);
+    if (candidateUrl == null) {
+      context.showLoggedSnackBar(SnackBar(
+          content: Text(Localizations.localeOf(context).languageCode == 'zh'
+              ? '请输入完整的 HTTP 或 HTTPS 服务器地址，不要包含账号密码。'
+              : 'Enter a full HTTP(S) server address without credentials.')));
+      return;
+    }
+    if (server.isLoggedIn &&
+        normalizeServerUrl(candidateUrl) !=
+            normalizeServerUrl(server.serverUrl)) {
+      final revision = server.contextRevision;
+      final zh = Localizations.localeOf(context).languageCode == 'zh';
+      final confirmed = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+                title: Text(zh ? '切换服务器？' : 'Switch server?'),
+                content: Text(zh
+                    ? '将连接到 $candidateUrl。当前登录会退出，原服务器的登录凭据不会发送到新地址；本机记录保留。'
+                    : 'Connect to $candidateUrl? The current account will be signed out. Its credentials will not be sent to the new server; local records are kept.'),
+                actions: [
+                  TextButton(
+                      onPressed: () => Navigator.pop(context, false),
+                      child: Text(context.l10n.cancel)),
+                  FilledButton(
+                      onPressed: () => Navigator.pop(context, true),
+                      child: Text(context.l10n.confirm))
+                ],
+              ));
+      if (confirmed != true || !mounted || server.contextRevision != revision) {
+        return;
+      }
+    }
     try {
       final info = await server.saveAndCheckServerUrl(candidateUrl);
       if (!mounted) return;

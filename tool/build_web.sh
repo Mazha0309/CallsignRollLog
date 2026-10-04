@@ -71,6 +71,10 @@ rm -rf build/web
 flutter build web --release --no-wasm-dry-run "$@"
 
 test -s build/web/index.html
+test -s build/web/update.html
+test -s build/web/update.js
+cmp web/update.html build/web/update.html
+cmp web/update.js build/web/update.js
 test -s build/web/pkg/openlogtool_core.js
 test -s build/web/pkg/openlogtool_core_bg.wasm
 

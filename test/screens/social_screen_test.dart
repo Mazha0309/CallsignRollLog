@@ -389,7 +389,7 @@ void main() {
       ]);
     final collaboration = FakeCollaboration();
     await pumpSocial(tester, social, collaboration);
-    await tester.tap(find.text('消息 (1)'));
+    await tester.tap(find.text('消息'));
     await tester.pumpAndSettle();
     expect(find.textContaining('BA1ABC'), findsOneWidget);
     await tester.tap(find.text('接受'));
@@ -425,7 +425,7 @@ void main() {
     };
     final collaboration = FakeCollaboration()..failOpen = true;
     await pumpSocial(tester, social, collaboration);
-    await tester.tap(find.text('消息 (1)'));
+    await tester.tap(find.text('消息'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('接受'));
     await tester.pumpAndSettle();

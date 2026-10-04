@@ -267,8 +267,12 @@ class _SocialScreenState extends State<SocialScreen> {
               bottom: TabBar(tabs: [
                 Tab(text: l.socialFriends),
                 Tab(
-                    text:
-                        '${l.socialMessages}${provider.pendingInboundCount > 0 ? ' (${provider.pendingInboundCount})' : ''}'),
+                    child: RequestBadge(
+                        key: const Key('social-requests-badge'),
+                        count: provider.pendingInboundCount,
+                        child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 10),
+                            child: Text(l.socialMessages)))),
                 Tab(text: l.socialSessions)
               ])),
           body: !provider.supportsFriends
@@ -306,9 +310,6 @@ class _SocialScreenState extends State<SocialScreen> {
                                 for (final friend in data.friends)
                                   ListTile(
                                       contentPadding: EdgeInsets.zero,
-                                      leading: const AppIconBadge(
-                                          icon: Icons.person_outline,
-                                          size: AppIconBadgeSize.action),
                                       title: Text(friend.username),
                                       trailing: PopupMenuButton<String>(
                                           enabled: !disabled,
@@ -354,10 +355,19 @@ class _SocialScreenState extends State<SocialScreen> {
                         AppNotice(
                             message: l.socialNoMessages,
                             icon: Icons.inbox_outlined),
-                      for (final request in [
-                        ...data.friendRequests,
-                        ...data.sessionRequests
-                      ])
+                      for (final request
+                          in ([...data.friendRequests, ...data.sessionRequests]
+                            ..sort((a, b) {
+                              final ap = a.status == 'pending' &&
+                                  a.recipientId == provider.accountId;
+                              final bp = b.status == 'pending' &&
+                                  b.recipientId == provider.accountId;
+                              return ap == bp
+                                  ? 0
+                                  : ap
+                                      ? -1
+                                      : 1;
+                            })))
                         _requestCard(request, provider, disabled),
                       if (provider.supportsBatchSharing)
                         Align(

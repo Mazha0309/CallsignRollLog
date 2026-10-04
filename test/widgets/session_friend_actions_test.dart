@@ -234,7 +234,8 @@ class _Social extends AccountShareProvider {
 class _Collaboration extends CollaborationProvider {
   int publishCalls = 0;
   @override
-  Future<void> publishCurrentSession() async {
+  Future<void> publishCurrentSession(
+      {bool promotePersonalShare = false}) async {
     publishCalls++;
   }
 }

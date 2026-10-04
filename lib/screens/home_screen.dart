@@ -24,6 +24,11 @@ import 'package:openlogtool/utils/app_snack_bar.dart';
 import 'package:openlogtool/widgets/invitation_notice.dart';
 import 'package:openlogtool/widgets/share_invitations_panel.dart';
 import 'package:openlogtool/widgets/session_sharing_dialog.dart';
+import 'package:openlogtool/models/account_share_dto.dart';
+import 'package:openlogtool/providers/shared_workbench_provider.dart';
+import 'package:openlogtool/src/bridge/models/session.dart';
+import 'package:openlogtool/utils/server_url.dart';
+import 'package:openlogtool/widgets/settings/server_account_settings.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -37,6 +42,9 @@ class _HomeScreenState extends State<HomeScreen> {
   final _settingsPanelKey = GlobalKey<SettingsPanelState>();
   late final VoidCallback _disposeUrlSync;
   ServerProvider? _serverProvider;
+  SessionProvider? _sessionsProvider;
+  String? _observedLocalSession;
+  String? _handledConnectionLink;
   int _observedAuthenticationNoticeRevision = 0;
 
   /// 启动时 URL 已指定页面：优先恢复 URL，而不是跳转 sessions。
@@ -73,11 +81,24 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    final sessions = context.read<SessionProvider>();
+    if (!identical(sessions, _sessionsProvider)) {
+      _sessionsProvider?.removeListener(_handleLocalSessionChanged);
+      _sessionsProvider = sessions..addListener(_handleLocalSessionChanged);
+      _observedLocalSession = sessions.currentSessionId;
+    }
     final server = context.read<ServerProvider>();
     if (identical(server, _serverProvider)) return;
     _serverProvider?.removeListener(_handleServerStateChanged);
     _serverProvider = server..addListener(_handleServerStateChanged);
     _handleServerStateChanged();
+  }
+
+  void _handleLocalSessionChanged() {
+    final next = _sessionsProvider?.currentSessionId;
+    if (next == _observedLocalSession) return;
+    _observedLocalSession = next;
+    context.read<AccountShareProvider?>()?.closeSharedSession();
   }
 
   void _handleServerStateChanged() {
@@ -115,9 +136,31 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _onRouteChanged(SyncRoute route) {
     if (!mounted) return;
+    final serverLink = validatedServerConnectionInput(route.server ?? '');
+    if (serverLink != null && serverLink != _handledConnectionLink) {
+      _handledConnectionLink = serverLink;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        Navigator.push<void>(
+            context,
+            MaterialPageRoute(
+                builder: (context) => Scaffold(
+                      appBar:
+                          AppBar(title: Text(context.l10n.serverSettingsTitle)),
+                      body: SingleChildScrollView(
+                          padding: const EdgeInsets.all(16),
+                          child: ServerAccountSettings(
+                              cardPadding: 16,
+                              initialConnectionInput: serverLink)),
+                    )));
+      });
+    }
     if (route.page != null) _restoredFromUrl = true;
     final index = homeIndexForPage(route.page);
     final currentSessionId = context.read<SessionProvider>().currentSessionId;
+    if (route.session != null) {
+      context.read<AccountShareProvider?>()?.closeSharedSession();
+    }
     if (route.session != null && route.session != currentSessionId) {
       _urlSessionRestore = _restoreSessionFromUrl(route.session!);
     }
@@ -148,6 +191,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void dispose() {
     _disposeUrlSync();
     _serverProvider?.removeListener(_handleServerStateChanged);
+    _sessionsProvider?.removeListener(_handleLocalSessionChanged);
     ControllerWindowService.closeAll().catchError((Object error) {
       debugPrint('[ControllerWindow] close failed: $error');
     });
@@ -172,8 +216,9 @@ class _HomeScreenState extends State<HomeScreen> {
   void _onItemTapped(int index) {
     FocusManager.instance.primaryFocus?.unfocus();
     final sessionProvider = context.read<SessionProvider>();
-    final blockedWorkbench =
-        index == 0 && sessionProvider.currentSessionId == null;
+    final blockedWorkbench = index == 0 &&
+        sessionProvider.currentSessionId == null &&
+        context.read<AccountShareProvider?>()?.openedSharedSession == null;
     final destination = blockedWorkbench ? 1 : index;
     if (blockedWorkbench) {
       ScaffoldMessenger.of(context).showLoggedSnackBar(
@@ -185,7 +230,10 @@ class _HomeScreenState extends State<HomeScreen> {
     }
     UrlSync.push(
       pageForHomeIndex(destination),
-      destination == 0 ? sessionProvider.currentSessionId : null,
+      destination == 0 &&
+              context.read<AccountShareProvider?>()?.openedSharedSession == null
+          ? sessionProvider.currentSessionId
+          : null,
     );
   }
 
@@ -237,6 +285,15 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  void _openSocialRequests() => Navigator.push<void>(
+      context,
+      MaterialPageRoute(
+          builder: (_) => SocialScreen(
+              initialTab: 1,
+              onSessionOpened: () {
+                if (mounted) _onItemTapped(0);
+              })));
+
   @override
   Widget build(BuildContext context) {
     final primarySidebarExpanded = context.select<SettingsProvider, bool>(
@@ -252,7 +309,9 @@ class _HomeScreenState extends State<HomeScreen> {
           if (mounted) setState(() => _selectedIndex = 0);
           UrlSync.push(
             pageForHomeIndex(0),
-            context.read<SessionProvider>().currentSessionId,
+            context.read<AccountShareProvider?>()?.openedSharedSession == null
+                ? context.read<SessionProvider>().currentSessionId
+                : null,
           );
         },
       ),
@@ -289,6 +348,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 key: const Key('global-invitations'),
                 tooltip: context.l10n.socialMessages,
                 icon: Badge(
+                  backgroundColor: Colors.red.shade700,
+                  textColor: Colors.white,
                   isLabelVisible: context
                           .watch<AccountShareProvider>()
                           .pendingInboundCount >
@@ -308,6 +369,7 @@ class _HomeScreenState extends State<HomeScreen> {
         body: Column(children: [
           InvitationNotice(
             onOpen: _openInvitations,
+            onOpenRequests: _openSocialRequests,
             keyboardVisible: MediaQuery.viewInsetsOf(context).bottom > 0,
           ),
           Expanded(
@@ -402,9 +464,91 @@ class _WorkbenchPage extends StatelessWidget {
   final bool saveShortcutEnabled;
 
   @override
-  Widget build(BuildContext context) => AddRecordPage(
+  Widget build(BuildContext context) {
+    final sharing = context.watch<AccountShareProvider?>();
+    final shared = sharing?.openedSharedSession;
+    if (shared != null) {
+      return SharedSessionWorkbench(
+        key: ValueKey('${sharing!.accountScope}:${shared.identity}'),
+        session: shared,
         onOpenSessions: onOpenSessions,
         saveShortcutEnabled: saveShortcutEnabled,
+      );
+    }
+    return AddRecordPage(
+      onOpenSessions: onOpenSessions,
+      saveShortcutEnabled: saveShortcutEnabled,
+    );
+  }
+}
+
+class SharedSessionWorkbench extends StatelessWidget {
+  const SharedSessionWorkbench(
+      {super.key,
+      required this.session,
+      required this.onOpenSessions,
+      required this.saveShortcutEnabled});
+  final SharedSessionDto session;
+  final VoidCallback onOpenSessions;
+  final bool saveShortcutEnabled;
+  @override
+  Widget build(BuildContext context) => MultiProvider(
+        providers: [
+          ChangeNotifierProvider<LogProvider>(
+              create: (context) => SharedWorkbenchProvider(
+                  context.read<AccountShareProvider>(), session)),
+          // No local membership, live draft, offline queue, or management API is
+          // inherited by a record-only grant, even if the session IDs coincide.
+          ChangeNotifierProvider(create: (_) => CollaborationProvider()),
+        ],
+        child: Builder(builder: (context) {
+          final logs = context.watch<LogProvider>() as SharedWorkbenchProvider;
+          final current = logs.session;
+          return AddRecordPage(
+            sessionOverride: Session(
+                sessionId: current.sessionId,
+                title: current.title,
+                status: current.status,
+                createdAt: current.createdAt,
+                updatedAt: current.updatedAt),
+            statusHeader: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Card(
+                      child: ListTile(
+                    leading: const Icon(Icons.folder_shared_outlined),
+                    title: Text(current.title),
+                    subtitle: Text(
+                        '${context.l10n.sharedSessionFrom(current.grantorUsername)} · '
+                        '${logs.currentSessionReadOnly ? context.l10n.roleViewer : context.l10n.shareEditLogs}'),
+                    trailing: Wrap(children: [
+                      IconButton(
+                          onPressed: logs.loading || logs.writing
+                              ? null
+                              : logs.refresh,
+                          icon: const Icon(Icons.refresh),
+                          tooltip: context.l10n.refresh),
+                      IconButton(
+                          onPressed: () => context
+                              .read<AccountShareProvider>()
+                              .closeSharedSession(),
+                          icon: const Icon(Icons.close),
+                          tooltip: context.l10n.close),
+                    ]),
+                  )),
+                  if (logs.loading) const LinearProgressIndicator(),
+                  if (logs.error != null)
+                    Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Text(sharingErrorText(context, logs.error!),
+                            style: TextStyle(
+                                color: Theme.of(context).colorScheme.error))),
+                ]),
+            onOpenSessions: onOpenSessions,
+            saveShortcutEnabled: saveShortcutEnabled,
+            allowUndo: false,
+          );
+        }),
       );
 }
 
@@ -733,10 +877,16 @@ class AddRecordPage extends StatelessWidget {
     super.key,
     this.onOpenSessions,
     this.saveShortcutEnabled = true,
+    this.sessionOverride,
+    this.statusHeader,
+    this.allowUndo = true,
   });
 
   final VoidCallback? onOpenSessions;
   final bool saveShortcutEnabled;
+  final Session? sessionOverride;
+  final Widget? statusHeader;
+  final bool allowUndo;
 
   @override
   Widget build(BuildContext context) {
@@ -751,7 +901,8 @@ class AddRecordPage extends StatelessWidget {
     BuildContext context,
     LogProvider logProvider,
   ) {
-    final currentSession = context.watch<SessionProvider>().currentSession;
+    final currentSession =
+        sessionOverride ?? context.watch<SessionProvider>().currentSession;
     if (currentSession == null) return _buildNoSessionState(context);
 
     final sessionClosed = currentSession.status != 'active';
@@ -841,7 +992,7 @@ class AddRecordPage extends StatelessWidget {
     final stackedContent = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const _WorkbenchStatusBar(),
+        statusHeader ?? const _WorkbenchStatusBar(),
         if (readOnly) ...[
           const SizedBox(height: 8),
           Container(
@@ -858,7 +1009,11 @@ class AddRecordPage extends StatelessWidget {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    context.watch<SessionProvider>().currentSession?.status !=
+                    (sessionOverride ??
+                                    context
+                                        .watch<SessionProvider>()
+                                        .currentSession)
+                                ?.status !=
                             'active'
                         ? context.l10n.historySessionReadOnly
                         : context.l10n.sharedDraftReadOnly,
@@ -882,6 +1037,7 @@ class AddRecordPage extends StatelessWidget {
           keepTrailingInlineOnCompact: true,
           child: LogForm(
             key: ValueKey('log-form-$currentSessionId'),
+            sessionId: currentSessionId,
             readOnly: readOnly,
             saveShortcutEnabled: saveShortcutEnabled,
           ),
@@ -922,7 +1078,7 @@ class AddRecordPage extends StatelessWidget {
               ],
             ),
           ),
-          trailing: _buildLogActions(context, readOnly),
+          trailing: allowUndo ? _buildLogActions(context, readOnly) : null,
           child: LogTable(
             readOnly: readOnly,
             conflictedLogIds: conflictedLogIds,

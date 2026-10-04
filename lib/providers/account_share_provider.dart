@@ -31,6 +31,29 @@ class AccountShareProvider with ChangeNotifier {
   bool _busy = false;
   Timer? _timer;
   final _pendingMutations = <String, String>{};
+  SharedSessionDto? _openedSession;
+  String? _openedScope;
+  SharedSessionDto? get openedSharedSession =>
+      _openedScope == accountScope ? _openedSession : null;
+
+  void openSharedSession(SharedSessionDto session) {
+    if (!sharedSessions.any((row) =>
+        row.identity == session.identity &&
+        row.grantorUserId == session.grantorUserId)) {
+      throw StateError('SHARE_ACCESS_CHANGED');
+    }
+    _openedSession = session;
+    _openedScope = accountScope;
+    notifyListeners();
+  }
+
+  void closeSharedSession() {
+    if (_openedSession == null) return;
+    _openedSession = null;
+    _openedScope = null;
+    notifyListeners();
+  }
+
   SocialSnapshot get social => _social;
   bool get loading => _loading;
   bool get busy => _busy;
@@ -39,6 +62,8 @@ class AccountShareProvider with ChangeNotifier {
   bool get supportsBatchSharing =>
       supportsLegacySharing &&
       (_server?.serverInfo?.features.contains('batchSessionSharing') ?? false);
+  bool get supportsPersonalPromotion =>
+      _server?.serverInfo?.features.contains('personalSharePromotion') ?? false;
   bool get supportsDirectJoin =>
       supportsFriends &&
       (_server?.serverInfo?.features.contains('friendDirectJoin') ?? false);
@@ -56,6 +81,14 @@ class AccountShareProvider with ChangeNotifier {
   Object? get inboxError => _inboxError;
   int get pendingShareCount =>
       inbox.where((grant) => grant.status == 'pending').length;
+  List<SocialRequest> get pendingSocialRequests => supportsFriends
+      ? [...social.friendRequests, ...social.sessionRequests]
+          .where((r) => r.recipientId == accountId && r.status == 'pending')
+          .toList()
+      : const [];
+  int pendingSessionApplications(String? sessionId) => pendingSocialRequests
+      .where((r) => r.kind == 'application' && r.sessionId == sessionId)
+      .length;
   Set<String> get pendingInboundKeys => {
         for (final grant in inbox)
           if (grant.status == 'pending') 'share:${grant.id}',
@@ -88,6 +121,8 @@ class AccountShareProvider with ChangeNotifier {
         '${server.serverInfo?.features.contains('socialWebSocket')}|$supportsBatchSharing';
     if (_scope == nextScope) return;
     _scope = nextScope;
+    _openedSession = null;
+    _openedScope = null;
     _epoch++;
     _timer?.cancel();
     _realtime?.dispose();
@@ -163,7 +198,20 @@ class AccountShareProvider with ChangeNotifier {
         if (supportsLegacySharing) ...[
           load(() => api.listSessionShares('inbox'), (value) => _inbox = value,
               inbox: true),
-          load(api.listSharedSessions, (value) => _sharedSessions = value),
+          load(api.listSharedSessions, (value) {
+            _sharedSessions = value;
+            final opened = openedSharedSession;
+            if (opened != null && opened.source == 'personal') {
+              final upgraded = value
+                  .where((s) =>
+                      s.source == 'collaboration' &&
+                      s.sessionId == opened.sessionId &&
+                      s.grantId == opened.grantId &&
+                      s.grantorUserId == opened.grantorUserId)
+                  .firstOrNull;
+              if (upgraded != null) _openedSession = upgraded;
+            }
+          }),
           if (supportsBatchSharing)
             load(
                 () => Future.wait([
@@ -331,6 +379,8 @@ class AccountShareProvider with ChangeNotifier {
               : sessions.map((s) => s.toJson()).toList(),
           'canEditLogs': canEditLogs,
           'canDeleteLogs': canDeleteLogs,
+          if (supportsPersonalPromotion)
+            'requireCollaborationForPersonalEdits': true,
         },
         expectedScope);
   }
@@ -357,13 +407,27 @@ class AccountShareProvider with ChangeNotifier {
   }
 
   Future<void> mutateSharedRecord(
-          SharedSessionDto session, Map<String, Object?> body,
-          {required String? expectedScope}) =>
-      _shareMutation(
-          'POST',
-          '/shared-sessions/${Uri.encodeComponent(session.source)}/${Uri.encodeComponent(session.sessionId)}/logs/mutations',
-          {'grantId': session.grantId, ...body},
-          expectedScope);
+      SharedSessionDto session, Map<String, Object?> body,
+      {required String? expectedScope}) {
+    final permission = sharedSessions
+        .where((row) =>
+            row.identity == session.identity &&
+            row.grantorUserId == session.grantorUserId)
+        .firstOrNull;
+    if (expectedScope != accountScope ||
+        permission == null ||
+        permission.status != 'active' ||
+        !permission.canEditLogs ||
+        !{'create', 'update', 'delete'}.contains(body['operation']) ||
+        (body['operation'] == 'delete' && !permission.canDeleteLogs)) {
+      throw StateError('SHARE_ACCESS_CHANGED');
+    }
+    return _shareMutation(
+        'POST',
+        '/shared-sessions/${Uri.encodeComponent(session.source)}/${Uri.encodeComponent(session.sessionId)}/logs/mutations',
+        {...body, 'grantId': session.grantId},
+        expectedScope);
+  }
 
   SharedSessionDto? sharedSessionById(String sessionId) {
     for (final item in _sharedSessions) {

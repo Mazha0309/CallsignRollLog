@@ -2,6 +2,20 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:openlogtool/utils/server_url.dart';
 
 void main() {
+  test('scanner rejects executable URLs, credentials and incomplete addresses',
+      () {
+    for (final input in [
+      '',
+      '//server.example',
+      'javascript:alert(1)',
+      'https://user:pass@server.example',
+      'https:///'
+    ]) {
+      expect(validatedServerConnectionInput(input), isNull);
+    }
+    expect(validatedServerConnectionInput('https://server.example/connect'),
+        'https://server.example');
+  });
   test('connection links and pasted portal pages resolve to the same server',
       () {
     expect(serverUrlFromConnectionInput('https://example.com/connect'),

@@ -12,13 +12,31 @@ Future<LogEntry?> showRecordEditorDialog(
   BuildContext context, {
   required LogEntry log,
   required bool readOnly,
+  Listenable? accessChanges,
+  bool Function()? canRead,
+  bool Function()? canEdit,
 }) {
+  Widget editor(BuildContext dialogContext) {
+    if (canRead?.call() == false) {
+      return AlertDialog(
+          content: Text(dialogContext.l10n.shareAccessChanged),
+          actions: [
+            TextButton(
+                onPressed: () => Navigator.pop(dialogContext),
+                child: Text(dialogContext.l10n.close))
+          ]);
+    }
+    return RecordEditorDialog(
+        log: log, readOnly: readOnly || canEdit?.call() == false);
+  }
+
   return showDialog<LogEntry>(
     context: context,
-    builder: (dialogContext) => RecordEditorDialog(
-      log: log,
-      readOnly: readOnly,
-    ),
+    builder: (dialogContext) => accessChanges == null
+        ? editor(dialogContext)
+        : ListenableBuilder(
+            listenable: accessChanges,
+            builder: (context, _) => editor(context)),
   );
 }
 
@@ -134,6 +152,7 @@ class _RecordEditorDialogState extends State<RecordEditorDialog> {
       content: SizedBox(
         width: isNarrow ? 320 : 520,
         child: Form(
+          autovalidateMode: AutovalidateMode.onUserInteraction,
           key: _formKey,
           child: FocusTraversalGroup(
             policy: OrderedTraversalPolicy(),

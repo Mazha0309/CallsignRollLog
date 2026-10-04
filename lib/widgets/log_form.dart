@@ -40,6 +40,7 @@ class LogForm extends StatefulWidget {
     super.key,
     this.readOnly = false,
     this.saveShortcutEnabled = true,
+    this.sessionId,
     this.aiAudioRecorder,
     this.aiRecognitionExecutor,
     this.aiTranscriptionExecutor,
@@ -49,6 +50,7 @@ class LogForm extends StatefulWidget {
 
   final bool readOnly;
   final bool saveShortcutEnabled;
+  final String? sessionId;
   final AiAudioRecorder? aiAudioRecorder;
   final AiRecognitionExecutor? aiRecognitionExecutor;
   final AiTranscriptionExecutor? aiTranscriptionExecutor;
@@ -60,6 +62,10 @@ class LogForm extends StatefulWidget {
 }
 
 class _LogFormState extends State<LogForm> with AutomaticKeepAliveClientMixin {
+  LogEntry? _pendingSubmission;
+  Map<String, String>? _pendingSubmissionFields;
+  LogProvider? _pendingSubmissionProvider;
+  String? _pendingSubmissionSession;
   static final List<DictionaryItem> _heightPresetOptions =
       List<DictionaryItem>.unmodifiable(<DictionaryItem>[
     DictionaryItem(
@@ -138,6 +144,7 @@ class _LogFormState extends State<LogForm> with AutomaticKeepAliveClientMixin {
   final Set<String> _acquiringDraftFields = <String>{};
   bool _disposing = false;
   CollaborationProvider? _collaborationProvider;
+  bool _validationAttempted = false;
   Timer? _lockExpiryTimer;
   bool _applyingSharedDraft = false;
   bool _historyReuseInProgress = false;
@@ -804,7 +811,7 @@ class _LogFormState extends State<LogForm> with AutomaticKeepAliveClientMixin {
       await dictionaryProvider.addQth(_qthController.text.trim());
     }
     try {
-      await logProvider.updateLogById(existing.id, patch);
+      await logProvider.updateLogFromOriginal(existing, patch);
     } catch (error) {
       if (!mounted) return;
       messenger?.showLoggedSnackBar(
@@ -1096,6 +1103,7 @@ class _LogFormState extends State<LogForm> with AutomaticKeepAliveClientMixin {
             !collaboration.canEditLiveDraft)) {
       return;
     }
+    setState(() => _validationAttempted = true);
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
     setState(() => _submissionInProgress = true);
@@ -1382,7 +1390,21 @@ class _LogFormState extends State<LogForm> with AutomaticKeepAliveClientMixin {
     );
     log.remarks = submittedFields['remarks']!;
 
-    await logProvider.addLog(log, sessionId: sessionProvider.currentSessionId);
+    final targetSession = widget.sessionId ?? sessionProvider.currentSessionId;
+    final retryFields = Map<String, String>.of(submittedFields);
+    if (usesAutomaticTime) retryFields['time'] = '';
+    // On an ambiguous network failure, keep the same ID and automatic time.
+    // Re-clicking Save must not create a second remote record.
+    final retry = identical(_pendingSubmissionProvider, logProvider) &&
+        _pendingSubmissionSession == targetSession &&
+        _pendingSubmissionFields?.length == retryFields.length &&
+        retryFields.entries
+            .every((e) => _pendingSubmissionFields?[e.key] == e.value);
+    _pendingSubmission = retry ? _pendingSubmission ?? log : log;
+    _pendingSubmissionFields = retryFields;
+    _pendingSubmissionProvider = logProvider;
+    _pendingSubmissionSession = targetSession;
+    await logProvider.addLog(_pendingSubmission!, sessionId: targetSession);
     if (!mounted) return;
     _resetForm();
 
@@ -1395,6 +1417,11 @@ class _LogFormState extends State<LogForm> with AutomaticKeepAliveClientMixin {
   }
 
   void _resetForm() {
+    _pendingSubmission = null;
+    _pendingSubmissionFields = null;
+    _pendingSubmissionProvider = null;
+    _pendingSubmissionSession = null;
+    setState(() => _validationAttempted = false);
     _aiRecordEpoch += 1;
     for (final timer in _inlineAiDebounce.values) {
       timer.cancel();
@@ -1430,7 +1457,7 @@ class _LogFormState extends State<LogForm> with AutomaticKeepAliveClientMixin {
     final remoteRevisions =
         collaboration.liveDraftSnapshot?.draft.fieldRevisions;
     return AiDraftSnapshot(
-      sessionId: sessionProvider.currentSessionId ?? '',
+      sessionId: widget.sessionId ?? sessionProvider.currentSessionId ?? '',
       recordEpoch: _aiRecordEpoch,
       captureGeneration: captureGeneration,
       draftId: collaboration.liveDraftSnapshot?.draft.draftId,
@@ -1610,6 +1637,9 @@ class _LogFormState extends State<LogForm> with AutomaticKeepAliveClientMixin {
           key: const Key('history-reuse-guard'),
           absorbing: _historyReuseInProgress || _clearInProgress,
           child: Form(
+            autovalidateMode: _validationAttempted
+                ? AutovalidateMode.onUserInteraction
+                : AutovalidateMode.disabled,
             key: _formKey,
             child: Column(
               mainAxisSize: MainAxisSize.min,

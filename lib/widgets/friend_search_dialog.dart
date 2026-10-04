@@ -293,8 +293,6 @@ class _FriendSearchDialogState extends State<FriendSearchDialog> {
               Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
             ListTile(
               contentPadding: EdgeInsets.zero,
-              leading: const AppIconBadge(
-                  icon: Icons.person_outline, size: AppIconBadgeSize.action),
               title: Text(person.username),
               subtitle: status == null ? null : Text(status),
               trailing: actionable

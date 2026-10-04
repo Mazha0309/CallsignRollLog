@@ -3,7 +3,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:openlogtool/l10n/l10n.dart';
 import 'package:openlogtool/providers/session_provider.dart';
 import 'package:openlogtool/src/bridge/models/session.dart';
-import 'package:openlogtool/widgets/session_history_dialog.dart';
 
 void main() {
   testWidgets('shared history rows show a share badge', (tester) async {
@@ -15,8 +14,8 @@ void main() {
         home: Scaffold(
           body: Builder(
             builder: (context) {
-              final entry = SessionListEntry(
-                session: const Session(
+              const entry = SessionListEntry(
+                session: Session(
                   sessionId: 'shared-1',
                   title: 'Bob 的点名',
                   status: 'active',

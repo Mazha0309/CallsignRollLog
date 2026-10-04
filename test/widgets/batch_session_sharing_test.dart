@@ -13,7 +13,6 @@ import 'package:openlogtool/src/bridge/models/session.dart';
 import 'package:openlogtool/widgets/session_history_dialog.dart';
 import 'package:openlogtool/widgets/session_sharing_dialog.dart';
 import 'package:openlogtool/widgets/shared_session_records_dialog.dart';
-import 'package:openlogtool/widgets/record_editor_dialog.dart';
 
 const shared = SharedSessionDto(
     source: 'personal',
@@ -256,6 +255,12 @@ void main() {
       expect(sharing.response, 'accept');
       expect(sessions.currentSessionId, 'p1');
       expect(find.text('好友的记录'), findsOneWidget);
+      final titleCenter = tester.getCenter(find.text('好友的记录')).dy;
+      expect(
+          tester.getCenter(find.byKey(const Key('session-share-badge-p1'))).dy,
+          closeTo(titleCenter, 0.5));
+      expect(tester.getCenter(find.byKey(const Key('session-type-icon-p1'))).dy,
+          closeTo(titleCenter, 0.5));
       expect(find.byKey(const Key('shared-collection-invitation-badge')),
           findsNothing);
       expect(
@@ -313,11 +318,15 @@ void main() {
     expect(find.textContaining('当前记录会话不会切换'), findsOneWidget);
   });
   testWidgets(
-      'shared history has its own filter, owner badge and collision-safe identity without switching workbench',
+      'shared history opens the workbench selection without touching the local session or showing a dialog',
       (tester) async {
     final sharing = SharingFixture();
-    final sessions = await pump(tester, sharing,
-        const SingleChildScrollView(child: SessionHistoryPanel()),
+    var opened = 0;
+    final sessions = await pump(
+        tester,
+        sharing,
+        SingleChildScrollView(
+            child: SessionHistoryPanel(onSessionOpened: () => opened++)),
         current: true);
     expect(find.text('好友的记录'), findsOneWidget);
     expect(find.textContaining('bob'), findsOneWidget);
@@ -326,21 +335,13 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('browse-shared-session-p1')));
     await tester.pumpAndSettle();
-    expect(find.text('BG5CRL-1'), findsOneWidget);
+    expect(opened, 1);
+    expect(sharing.openedSharedSession?.identity, shared.identity);
+    expect(find.byType(AlertDialog), findsNothing);
     expect(sessions.currentSessionId, 'p1');
-    expect(find.byKey(const Key('shared-record-add')), findsOneWidget);
-    expect(find.byIcon(Icons.delete_outline), findsNothing);
-    await tester.tap(find.byKey(const Key('shared-records-next')));
-    await tester.pumpAndSettle();
-    expect(find.text('BG5CRL-2'), findsOneWidget);
-    expect(sharing.reads, [1, 2]);
-    await tester.tap(find.byKey(const Key('shared-record-record-2')));
-    await tester.pumpAndSettle();
-    expect(find.byType(RecordEditorDialog), findsOneWidget);
     sharing.changeAccount();
     await tester.pumpAndSettle();
-    expect(find.byType(RecordEditorDialog), findsNothing);
-    expect(find.textContaining('BG5CRL'), findsNothing);
+    expect(sharing.openedSharedSession, isNull);
   });
   testWidgets(
       'multiple selection submits editing with deletion separately disabled',
