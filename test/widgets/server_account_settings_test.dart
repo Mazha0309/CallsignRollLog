@@ -17,6 +17,42 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
+  for (final width in [320.0, 1100.0]) {
+    testWidgets('account actions are full-width settings rows at $width',
+        (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      tester.view.physicalSize = Size(width, 1000);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final server = _SignedInSettingsServer();
+      addTearDown(server.dispose);
+      await tester.pumpWidget(_AuthTestApp(provider: server));
+      await tester.pumpAndSettle();
+      final section = find.byKey(const Key('account-advanced-settings'));
+      await tester.ensureVisible(section);
+      await tester.tap(section);
+      await tester.pumpAndSettle();
+      final rows = [
+        'account-change-username-button',
+        'account-change-password-button',
+        'account-device-sessions-button'
+      ].map((key) => find.byKey(Key(key))).toList();
+      for (final row in rows) {
+        expect(tester.widget(row), isA<ListTile>());
+        expect(tester.getSize(row).width, greaterThan(width - 80));
+      }
+      expect(
+          tester.getCenter(rows[0]).dy, lessThan(tester.getCenter(rows[1]).dy));
+      expect(
+          tester.getCenter(rows[1]).dy, lessThan(tester.getCenter(rows[2]).dy));
+      await tester.ensureVisible(rows[0]);
+      await tester.tap(rows[0]);
+      await tester.pumpAndSettle();
+      expect(find.byType(AlertDialog), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+  }
   testWidgets('connection links only prefill the phone form and preserve edits',
       (tester) async {
     SharedPreferences.setMockInitialValues({});
@@ -663,6 +699,15 @@ class _AuthTestServer extends ServerProvider {
     lastPassword = password;
     return 'user-1';
   }
+}
+
+class _SignedInSettingsServer extends _AuthTestServer {
+  @override
+  bool get isLoggedIn => true;
+  @override
+  String? get username => 'BG5CRL';
+  @override
+  String? get accountId => 'test-account';
 }
 
 class _AuthTestApp extends StatelessWidget {

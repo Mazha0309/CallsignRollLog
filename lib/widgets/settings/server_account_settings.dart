@@ -302,39 +302,46 @@ class _ServerAccountSettingsState extends State<ServerAccountSettings> {
                 ? '账号管理与登录设备'
                 : 'Account and sign-in devices'),
             children: [
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  OutlinedButton.icon(
-                    key: const Key('account-change-username-button'),
-                    icon: const Icon(Icons.badge_outlined, size: 18),
-                    label: Text(l10n.accountChangeUsername),
-                    onPressed: server.isBusy
-                        ? null
-                        : () => _showUsernameDialog(server),
-                  ),
-                  OutlinedButton.icon(
-                    key: const Key('account-change-password-button'),
-                    icon: const Icon(Icons.password_outlined, size: 18),
-                    label: Text(l10n.accountChangePassword),
-                    onPressed: server.isBusy
-                        ? null
-                        : () => _showPasswordDialog(server),
-                  ),
-                  OutlinedButton.icon(
-                    key: const Key('account-device-sessions-button'),
-                    icon: const Icon(Icons.devices_outlined, size: 18),
-                    label: Text(l10n.accountDeviceSessions),
-                    onPressed: server.isBusy
-                        ? null
-                        : () => showDialog<void>(
-                              context: context,
-                              builder: (_) =>
-                                  DeviceSessionsDialog(provider: server),
-                            ),
-                  ),
-                ],
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Column(
+                  children: [
+                    ListTile(
+                      key: const Key('account-change-username-button'),
+                      leading: const Icon(Icons.badge_outlined),
+                      title: Text(l10n.accountChangeUsername),
+                      trailing: const Icon(Icons.chevron_right),
+                      enabled: !server.isBusy,
+                      onTap: server.isBusy
+                          ? null
+                          : () => _showUsernameDialog(server),
+                    ),
+                    ListTile(
+                      key: const Key('account-change-password-button'),
+                      leading: const Icon(Icons.password_outlined),
+                      title: Text(l10n.accountChangePassword),
+                      trailing: const Icon(Icons.chevron_right),
+                      enabled: !server.isBusy,
+                      onTap: server.isBusy
+                          ? null
+                          : () => _showPasswordDialog(server),
+                    ),
+                    ListTile(
+                      key: const Key('account-device-sessions-button'),
+                      leading: const Icon(Icons.devices_outlined),
+                      title: Text(l10n.accountDeviceSessions),
+                      trailing: const Icon(Icons.chevron_right),
+                      enabled: !server.isBusy,
+                      onTap: server.isBusy
+                          ? null
+                          : () => showDialog<void>(
+                                context: context,
+                                builder: (_) =>
+                                    DeviceSessionsDialog(provider: server),
+                              ),
+                    ),
+                  ],
+                ),
               )
             ]),
       ],
