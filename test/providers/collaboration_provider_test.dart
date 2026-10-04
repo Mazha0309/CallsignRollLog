@@ -1240,8 +1240,8 @@ void main() {
         'BG5CRL',
       );
       expect(
-        canonicalLiveDraftPatchAckValue('controller', ' bg5ctrl '),
-        'BG5CTRL',
+        canonicalLiveDraftPatchAckValue('controller', ' bg5crl '),
+        'BG5CRL',
       );
       expect(
         canonicalLiveDraftPatchAckValue('device', ' IC-705 '),

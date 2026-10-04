@@ -123,7 +123,7 @@ void main() {
         LogEntry(
           id: 'log-1',
           time: '20:01',
-          controller: 'BG5CTRL',
+          controller: 'BG5CRL',
           callsign: 'BG5CRL',
           report: '59',
           rstRcvd: '59',

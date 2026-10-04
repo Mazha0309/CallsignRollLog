@@ -180,8 +180,11 @@ class _SocialScreenState extends State<SocialScreen> {
     final ok = await _run(() => collaboration.openJoinedSession(id));
     if (!ok || !mounted) return;
     if (manage) {
-      await Navigator.push(context,
-          MaterialPageRoute<void>(builder: (_) => const CollaborationScreen()));
+      await Navigator.push(
+          context,
+          MaterialPageRoute<void>(
+              builder: (_) =>
+                  const CollaborationScreen(focusParticipants: true)));
     } else {
       Navigator.pop(context);
       widget.onSessionOpened?.call();

@@ -86,7 +86,7 @@ void main() {
     );
     await tester.enterText(
       find.widgetWithText(TextFormField, '主控呼号 *'),
-      'BG5CTRL',
+      'BG5CRL',
     );
     await _enterCallsign(tester, 'BA4AAA');
     await tester.tap(find.byKey(const Key('outside-log-form')));
@@ -144,7 +144,7 @@ void main() {
 
     await tester.enterText(
       find.widgetWithText(TextFormField, '主控呼号 *'),
-      'BG5CTRL',
+      'BG5CRL',
     );
     await tester.tap(find.byKey(const Key('save-log-record')));
     await tester.pump();
@@ -167,7 +167,7 @@ void main() {
 
     await tester.enterText(
       find.widgetWithText(TextFormField, '主控呼号 *'),
-      'BG5CTRL',
+      'BG5CRL',
     );
     await _enterCallsign(tester, 'BG5FBT');
     await tester.enterText(find.widgetWithText(TextFormField, '功率'), '50');
@@ -182,7 +182,7 @@ void main() {
     await tester.enterText(find.widgetWithText(TextFormField, '功率'), '5kW');
     await tester.enterText(
       find.widgetWithText(TextFormField, '主控呼号 *'),
-      'BG5CTRL',
+      'BG5CRL',
     );
     await _enterCallsign(tester, 'BG7XYZ');
     await tester.tap(find.byKey(const Key('save-log-record')));
@@ -252,7 +252,7 @@ void main() {
 
     await tester.enterText(
       find.widgetWithText(TextFormField, '主控呼号 *'),
-      'BG5CTRL',
+      'BG5CRL',
     );
     await _enterCallsign(tester, 'BA4AAA');
     await tester.tap(find.byKey(const Key('outside-log-form')));
@@ -283,7 +283,7 @@ void main() {
 
     await tester.enterText(
       find.widgetWithText(TextFormField, '主控呼号 *'),
-      'BG5CTRL',
+      'BG5CRL',
     );
     await _enterCallsign(tester, 'BA4AAA');
     await tester.tap(find.byKey(const Key('outside-log-form')));
@@ -312,7 +312,7 @@ LogEntry _oldLog() => LogEntry(
       id: 'old-1',
       sessionId: 's1',
       time: '2026-07-13T12:00:00Z',
-      controller: 'BG5CTRL',
+      controller: 'BG5CRL',
       callsign: 'BA4AAA',
       report: '59',
       rstRcvd: '59',

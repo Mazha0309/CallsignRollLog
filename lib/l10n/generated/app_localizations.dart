@@ -100,6 +100,84 @@ abstract class AppLocalizations {
     Locale('zh')
   ];
 
+  /// No description provided for @detailsType.
+  ///
+  /// In zh, this message translates to:
+  /// **'记录方式'**
+  String get detailsType;
+
+  /// No description provided for @detailsLocal.
+  ///
+  /// In zh, this message translates to:
+  /// **'本地记录 · 无需服务器'**
+  String get detailsLocal;
+
+  /// No description provided for @detailsShared.
+  ///
+  /// In zh, this message translates to:
+  /// **'共同记录 · 保留本机副本'**
+  String get detailsShared;
+
+  /// No description provided for @detailsStatus.
+  ///
+  /// In zh, this message translates to:
+  /// **'会话状态'**
+  String get detailsStatus;
+
+  /// No description provided for @detailsRecords.
+  ///
+  /// In zh, this message translates to:
+  /// **'本机已保存记录'**
+  String get detailsRecords;
+
+  /// No description provided for @detailsCreated.
+  ///
+  /// In zh, this message translates to:
+  /// **'创建时间'**
+  String get detailsCreated;
+
+  /// No description provided for @detailsUpdated.
+  ///
+  /// In zh, this message translates to:
+  /// **'更新时间'**
+  String get detailsUpdated;
+
+  /// No description provided for @detailsEnded.
+  ///
+  /// In zh, this message translates to:
+  /// **'结束时间'**
+  String get detailsEnded;
+
+  /// No description provided for @detailsId.
+  ///
+  /// In zh, this message translates to:
+  /// **'会话 ID'**
+  String get detailsId;
+
+  /// No description provided for @sessionPeopleTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'参与者与邀请'**
+  String get sessionPeopleTitle;
+
+  /// No description provided for @sessionPeopleHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'好友不等于会话成员。邀请被接受或申请获批后，对方才能查看此会话记录；公开页面单独管理。'**
+  String get sessionPeopleHint;
+
+  /// No description provided for @sessionPendingRequests.
+  ///
+  /// In zh, this message translates to:
+  /// **'本会话的邀请与申请'**
+  String get sessionPendingRequests;
+
+  /// No description provided for @legacyInviteCodes.
+  ///
+  /// In zh, this message translates to:
+  /// **'邀请码（兼容旧版）'**
+  String get legacyInviteCodes;
+
   /// No description provided for @collaborationTechnicalDetails.
   ///
   /// In zh, this message translates to:

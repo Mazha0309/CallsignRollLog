@@ -9,6 +9,47 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
+  String get detailsType => 'Recording mode';
+
+  @override
+  String get detailsLocal => 'Local recording · No server required';
+
+  @override
+  String get detailsShared => 'Shared recording · Local copy retained';
+
+  @override
+  String get detailsStatus => 'Session status';
+
+  @override
+  String get detailsRecords => 'Records saved on this device';
+
+  @override
+  String get detailsCreated => 'Created';
+
+  @override
+  String get detailsUpdated => 'Updated';
+
+  @override
+  String get detailsEnded => 'Ended';
+
+  @override
+  String get detailsId => 'Session ID';
+
+  @override
+  String get sessionPeopleTitle => 'Participants & invitations';
+
+  @override
+  String get sessionPeopleHint =>
+      'Friends are not automatically session members. Records become available only after an invitation is accepted or a request is approved. Public pages are managed separately.';
+
+  @override
+  String get sessionPendingRequests =>
+      'Invitations and requests for this session';
+
+  @override
+  String get legacyInviteCodes => 'Invite codes (legacy compatibility)';
+
+  @override
   String get collaborationTechnicalDetails => 'Connection & diagnostics';
 
   @override

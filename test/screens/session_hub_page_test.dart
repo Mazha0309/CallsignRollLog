@@ -25,6 +25,75 @@ void main() {
     SharedPreferences.setMockInitialValues({});
   });
 
+  testWidgets('session details survives repeated expansion and shows metadata',
+      (tester) async {
+    final rows = [
+      _session(id: 'current-session', title: '详情测试', status: 'active')
+    ];
+    await tester.pumpWidget(_SessionHubTestApp(
+      sessionProvider: _FakeSessionProvider(
+          sessions: rows, currentSessionId: 'current-session'),
+      logProvider: LogProvider(
+          sessionListLoader: () async => rows,
+          sessionLogPageLoader: (_, __, ___) async => []),
+    ));
+    await tester.pumpAndSettle();
+    for (var i = 0; i < 3; i++) {
+      final details = find.byKey(const Key('current-session-details'));
+      await tester.ensureVisible(details);
+      await tester
+          .tap(find.descendant(of: details, matching: find.text('会话详细信息')));
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+    }
+    expect(find.text('current-session'), findsOneWidget);
+    expect(find.text('创建时间'), findsOneWidget);
+    expect(find.text('本地记录 · 无需服务器'), findsOneWidget);
+    expect(find.text('本机已保存记录'), findsOneWidget);
+  });
+
+  testWidgets(
+      'member management opens session-scoped friend invitations and applications',
+      (tester) async {
+    final rows = [
+      _session(id: 'current-session', title: '当前协作', status: 'active')
+    ];
+    final collaboration = _ManagementCollaborationProvider();
+    final social = _ManagementSharingProvider();
+    await tester.pumpWidget(_SessionHubTestApp(
+      sessionProvider: _FakeSessionProvider(
+          sessions: rows, currentSessionId: 'current-session'),
+      logProvider: LogProvider(
+          sessionListLoader: () async => rows,
+          sessionLogPageLoader: (_, __, ___) async => []),
+      collaborationProvider: collaboration,
+      serverProvider: _LoggedInServerProvider(),
+      sharingProvider: social,
+    ));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('open-collaboration-management')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('people-invite-friend')), findsOneWidget);
+    expect(
+        find.byKey(const Key('session-request-pending-here')), findsOneWidget);
+    expect(
+        find.byKey(const Key('session-request-other-session')), findsNothing);
+    final accept = find.descendant(
+        of: find.byKey(const Key('session-request-pending-here')),
+        matching: find.text('接受'));
+    await tester.ensureVisible(accept);
+    await tester.tap(accept);
+    await tester.pumpAndSettle();
+    expect(social.calls.single,
+        ['POST', '/session-requests/pending-here/accept', <String, Object?>{}]);
+    expect(collaboration.managementRefreshes, 1);
+    social.simulateAcceptedNotification();
+    await tester.pumpAndSettle();
+    expect(collaboration.managementRefreshes, 2);
+    expect(find.byKey(const Key('session-request-pending-here')), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('local recording can continue without connecting or logging in',
       (tester) async {
     final rows = [
@@ -973,7 +1042,7 @@ bridge_log.LogEntry _bridgeLog(String syncId, String callsign) =>
       syncId: syncId,
       sessionId: 'current-session',
       time: '2026-07-26T09:20:46.808Z',
-      controller: 'BG5CTRL',
+      controller: 'BG5CRL',
       callsign: callsign,
       rstSent: '59',
       rstRcvd: '59',
@@ -1039,6 +1108,50 @@ class _HubCollaborationProvider extends CollaborationProvider {
     collaborative = true;
     notifyListeners();
   }
+}
+
+class _ManagementCollaborationProvider extends _HubCollaborationProvider {
+  _ManagementCollaborationProvider() : super(collaborative: true);
+  int managementRefreshes = 0;
+  @override
+  CollaborationState get state => CollaborationState.ready;
+  @override
+  SessionRole get effectiveRole => SessionRole.owner;
+  @override
+  Future<void> refreshCurrentSession() async {}
+  @override
+  Future<void> refreshManagement() async {
+    managementRefreshes++;
+  }
+}
+
+class _ManagementSharingProvider extends _HubSharingProvider {
+  bool accepted = false;
+  void simulateAcceptedNotification() {
+    accepted = true;
+    notifyListeners();
+  }
+
+  @override
+  String get accountId => 'user-1';
+  @override
+  SocialSnapshot get social => SocialSnapshot(sessionRequests: [
+        for (final pair in [
+          ('pending-here', 'current-session'),
+          ('other-session', 'somewhere-else')
+        ])
+          SocialRequest.fromJson({
+            'id': pair.$1,
+            'senderId': 'bob',
+            'senderUsername': 'BG5CRL',
+            'recipientId': 'user-1',
+            'recipientUsername': 'Owner',
+            'status': accepted ? 'accepted' : 'pending',
+            'kind': 'application',
+            'role': 'editor',
+            'sessionId': pair.$2
+          }),
+      ]);
 }
 
 class _HubSharingProvider extends AccountShareProvider {

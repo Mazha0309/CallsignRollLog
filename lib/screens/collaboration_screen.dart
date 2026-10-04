@@ -8,12 +8,14 @@ import 'package:openlogtool/models/collaboration_conflict.dart';
 import 'package:openlogtool/models/collaboration_dto.dart';
 import 'package:openlogtool/models/live_draft.dart';
 import 'package:openlogtool/providers/collaboration_provider.dart';
+import 'package:openlogtool/providers/account_share_provider.dart';
 import 'package:openlogtool/providers/server_provider.dart';
 import 'package:openlogtool/providers/session_provider.dart';
 import 'package:openlogtool/services/collaboration_sync.dart';
 import 'package:openlogtool/theme/app_theme.dart';
 import 'package:openlogtool/widgets/collaboration_conflict_center.dart';
 import 'package:openlogtool/widgets/collaboration_local_session_action.dart';
+import 'package:openlogtool/widgets/session_people_actions.dart';
 import 'package:openlogtool/widgets/settings/settings_ui.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -59,10 +61,12 @@ class CollaborationScreen extends StatefulWidget {
     super.key,
     this.publicShareUriOpener,
     this.focusPublicShare = false,
+    this.focusParticipants = false,
   });
 
   final PublicShareUriOpener? publicShareUriOpener;
   final bool focusPublicShare;
+  final bool focusParticipants;
 
   @override
   State<CollaborationScreen> createState() => _CollaborationScreenState();
@@ -80,7 +84,7 @@ class _CollaborationScreenState extends State<CollaborationScreen> {
   @override
   void initState() {
     super.initState();
-    _selectedView = widget.focusPublicShare
+    _selectedView = widget.focusPublicShare || widget.focusParticipants
         ? _CollaborationView.access
         : _CollaborationView.overview;
     _selectedAccessView =
@@ -191,7 +195,7 @@ class _CollaborationScreenState extends State<CollaborationScreen> {
             ButtonSegment(
               value: _CollaborationView.access,
               icon: const Icon(Icons.group_outlined),
-              label: Text(context.l10n.collaborationAccessManagementTab),
+              label: Text(context.l10n.sessionPeopleTitle),
             ),
         ],
         selected: {selectedView},
@@ -363,7 +367,7 @@ class _CollaborationScreenState extends State<CollaborationScreen> {
                   value: _AccessView.invites,
                   icon: const Icon(Icons.mark_email_unread_outlined),
                   label: Text(
-                    '${context.l10n.memberInvitesTitle} '
+                    '${context.l10n.legacyInviteCodes} '
                     '(${collaboration.invites.length})',
                   ),
                 ),
@@ -385,7 +389,18 @@ class _CollaborationScreenState extends State<CollaborationScreen> {
         ),
         const SizedBox(height: 12),
         switch (selected) {
-          _AccessView.members => _memberManagementCard(collaboration, server),
+          _AccessView.members => Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if ((context.watch<AccountShareProvider?>()?.supportsFriends ??
+                        false) &&
+                    collaboration.binding != null)
+                  SessionPeopleActions(
+                      key: ValueKey(collaboration.binding!.sessionId),
+                      sessionId: collaboration.binding!.sessionId),
+                _memberManagementCard(collaboration, server),
+              ],
+            ),
           _AccessView.invites => _inviteManagementCard(collaboration),
           _AccessView.publicShare => KeyedSubtree(
               key: _publicShareAnchorKey,
@@ -423,6 +438,8 @@ class _CollaborationScreenState extends State<CollaborationScreen> {
   }
 
   Future<void> _initialize(CollaborationProvider collaboration) async {
+    final social = context.read<AccountShareProvider?>();
+    if (social?.supportsFriends == true) unawaited(social!.refresh());
     await _run(collaboration.refreshCurrentSession);
     if (mounted && collaboration.supportsPublicShareManagement) {
       await _run(collaboration.refreshPublicShares);

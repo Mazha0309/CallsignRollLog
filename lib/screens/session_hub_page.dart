@@ -17,6 +17,7 @@ import 'package:openlogtool/services/collaboration_sync.dart';
 import 'package:openlogtool/widgets/collaboration_local_session_action.dart';
 import 'package:openlogtool/widgets/session_history_dialog.dart';
 import 'package:openlogtool/widgets/session_friend_actions.dart';
+import 'package:openlogtool/widgets/session_details_panel.dart';
 import 'package:openlogtool/widgets/session_title_editor.dart';
 import 'package:openlogtool/widgets/settings/server_account_settings.dart';
 import 'package:openlogtool/widgets/settings/settings_ui.dart';
@@ -528,7 +529,8 @@ class SessionHubPage extends StatelessWidget {
                 onPressed: () => Navigator.push(
                   context,
                   MaterialPageRoute<void>(
-                    builder: (_) => const CollaborationScreen(),
+                    builder: (_) =>
+                        const CollaborationScreen(focusParticipants: true),
                   ),
                 ),
                 icon: const Icon(Icons.group_outlined),
@@ -586,15 +588,11 @@ class SessionHubPage extends StatelessWidget {
               ),
           ],
         ),
-        ExpansionTile(
+        SessionDetailsPanel(
           key: const Key('current-session-details'),
-          tilePadding: EdgeInsets.zero,
-          title: Text(context.l10n.hubSessionDetails),
-          children: [
-            Align(
-                alignment: Alignment.centerLeft,
-                child: SelectableText(sessionId))
-          ],
+          session: context.watch<SessionProvider>().currentSession!,
+          recordCount: context.watch<LogProvider>().logCount,
+          collaborative: collaborationSession,
         ),
       ],
     );

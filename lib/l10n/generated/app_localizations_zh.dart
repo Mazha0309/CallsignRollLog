@@ -9,6 +9,45 @@ class AppLocalizationsZh extends AppLocalizations {
   AppLocalizationsZh([String locale = 'zh']) : super(locale);
 
   @override
+  String get detailsType => '记录方式';
+
+  @override
+  String get detailsLocal => '本地记录 · 无需服务器';
+
+  @override
+  String get detailsShared => '共同记录 · 保留本机副本';
+
+  @override
+  String get detailsStatus => '会话状态';
+
+  @override
+  String get detailsRecords => '本机已保存记录';
+
+  @override
+  String get detailsCreated => '创建时间';
+
+  @override
+  String get detailsUpdated => '更新时间';
+
+  @override
+  String get detailsEnded => '结束时间';
+
+  @override
+  String get detailsId => '会话 ID';
+
+  @override
+  String get sessionPeopleTitle => '参与者与邀请';
+
+  @override
+  String get sessionPeopleHint => '好友不等于会话成员。邀请被接受或申请获批后，对方才能查看此会话记录；公开页面单独管理。';
+
+  @override
+  String get sessionPendingRequests => '本会话的邀请与申请';
+
+  @override
+  String get legacyInviteCodes => '邀请码（兼容旧版）';
+
+  @override
   String get collaborationTechnicalDetails => '连接与诊断详情';
 
   @override
