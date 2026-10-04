@@ -138,6 +138,45 @@ class ThemeSettings extends StatelessWidget {
               ),
             ),
           ),
+          SettingsActionTile(
+            icon: Icons.zoom_in_outlined,
+            title: l10n.interfaceScaleTitle,
+            subtitle: l10n.interfaceScaleHint,
+            trailing: Wrap(
+              key: const Key('interface-scale-control'),
+              spacing: 4,
+              runSpacing: 4,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                IconButton(
+                    key: const Key('interface-scale-down'),
+                    tooltip: l10n.interfaceScaleDown,
+                    onPressed: settingsProvider.interfaceScalePercent <=
+                            SettingsProvider.minInterfaceScale
+                        ? null
+                        : () => settingsProvider.setInterfaceScalePercent(
+                            settingsProvider.interfaceScalePercent - 5),
+                    icon: const Icon(Icons.remove)),
+                Text('${settingsProvider.interfaceScalePercent}%',
+                    key: const Key('interface-scale-value')),
+                IconButton(
+                    key: const Key('interface-scale-up'),
+                    tooltip: l10n.interfaceScaleUp,
+                    onPressed: settingsProvider.interfaceScalePercent >=
+                            SettingsProvider.maxInterfaceScale
+                        ? null
+                        : () => settingsProvider.setInterfaceScalePercent(
+                            settingsProvider.interfaceScalePercent + 5),
+                    icon: const Icon(Icons.add)),
+                TextButton(
+                    key: const Key('interface-scale-reset'),
+                    onPressed: settingsProvider.interfaceScalePercent == 100
+                        ? null
+                        : () => settingsProvider.setInterfaceScalePercent(100),
+                    child: Text(l10n.interfaceScaleReset)),
+              ],
+            ),
+          ),
         ],
       ),
     );

@@ -100,6 +100,84 @@ abstract class AppLocalizations {
     Locale('zh')
   ];
 
+  /// No description provided for @interfaceScaleTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'界面缩放'**
+  String get interfaceScaleTitle;
+
+  /// No description provided for @interfaceScaleHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'整体缩放按钮、文字、表格和弹窗（80%–150%），仅保存在当前设备。'**
+  String get interfaceScaleHint;
+
+  /// No description provided for @interfaceScaleUp.
+  ///
+  /// In zh, this message translates to:
+  /// **'放大界面'**
+  String get interfaceScaleUp;
+
+  /// No description provided for @interfaceScaleDown.
+  ///
+  /// In zh, this message translates to:
+  /// **'缩小界面'**
+  String get interfaceScaleDown;
+
+  /// No description provided for @interfaceScaleReset.
+  ///
+  /// In zh, this message translates to:
+  /// **'恢复 100%'**
+  String get interfaceScaleReset;
+
+  /// No description provided for @shareInboxTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'收到的共享邀请'**
+  String get shareInboxTitle;
+
+  /// No description provided for @shareInboxEmpty.
+  ///
+  /// In zh, this message translates to:
+  /// **'暂无待处理的共享邀请'**
+  String get shareInboxEmpty;
+
+  /// No description provided for @shareInvitationFrom.
+  ///
+  /// In zh, this message translates to:
+  /// **'{username} 向你发来了共享邀请'**
+  String shareInvitationFrom(String username);
+
+  /// No description provided for @shareAcceptedHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'已接受共享邀请，可以在“历史会话 → 共享”中查看。当前记录会话不会切换。'**
+  String get shareAcceptedHint;
+
+  /// No description provided for @newInvitationNotice.
+  ///
+  /// In zh, this message translates to:
+  /// **'收到新的邀请或申请'**
+  String get newInvitationNotice;
+
+  /// No description provided for @viewInvitations.
+  ///
+  /// In zh, this message translates to:
+  /// **'查看邀请'**
+  String get viewInvitations;
+
+  /// No description provided for @pendingInvitations.
+  ///
+  /// In zh, this message translates to:
+  /// **'{count} 条邀请或申请待处理'**
+  String pendingInvitations(int count);
+
+  /// No description provided for @dismissInvitationNotice.
+  ///
+  /// In zh, this message translates to:
+  /// **'暂时收起提示，邀请仍保留'**
+  String get dismissInvitationNotice;
+
   /// No description provided for @shareSessionsTitle.
   ///
   /// In zh, this message translates to:

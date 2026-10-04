@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
@@ -14,6 +15,76 @@ const features = [
 http.Response items(List<Object?> items) =>
     http.Response(jsonEncode({'items': items}), 200);
 void main() {
+  test(
+      'inbox appears while catalog is slow and survives unrelated load failures',
+      () async {
+    final catalog = Completer<http.Response>();
+    final server = FakeServer(apiWith((request) async {
+      if (request.url.path.endsWith('/social')) {
+        throw http.ClientException('social unavailable');
+      }
+      if (request.url.path.endsWith('/shared-sessions')) return catalog.future;
+      return items(request.url.queryParameters['box'] == 'inbox'
+          ? [
+              {
+                'id': 'share-1',
+                'grantorUserId': 'bob',
+                'granteeUserId': 'owner',
+                'grantorUsername': 'bob',
+                'status': 'pending',
+              }
+            ]
+          : []);
+    }), features: features)
+      ..id = 'owner';
+    final sharing = AccountShareProvider();
+    addTearDown(sharing.dispose);
+    addTearDown(server.dispose);
+    sharing.updateServer(server);
+    await Future<void>.delayed(Duration.zero);
+    expect(sharing.loading, isTrue);
+    expect(sharing.inbox.single.id, 'share-1');
+    expect(sharing.pendingInboundKeys, {'share:share-1'});
+    catalog.complete(http.Response(
+        '{"error":{"code":"SNAPSHOT_CORRUPT","message":"unavailable"}}', 500));
+    await Future<void>.delayed(Duration.zero);
+    expect(sharing.loading, isFalse);
+    expect(sharing.lastError, isNotNull);
+    expect(sharing.inboxError, isNull);
+    expect(sharing.inbox.single.id, 'share-1');
+  });
+
+  test('failed inbox is visible and a late old inbox cannot cross accounts',
+      () async {
+    final oldInbox = Completer<http.Response>();
+    var first = true;
+    final server = FakeServer(apiWith((request) async {
+      if (request.url.path.endsWith('/social')) return snapshot('friend');
+      if (request.url.queryParameters['box'] == 'inbox') {
+        if (first) {
+          first = false;
+          return oldInbox.future;
+        }
+        throw http.ClientException('offline');
+      }
+      return items([]);
+    }), features: features)
+      ..id = 'owner';
+    final sharing = AccountShareProvider();
+    addTearDown(sharing.dispose);
+    addTearDown(server.dispose);
+    sharing.updateServer(server);
+    await Future<void>.delayed(Duration.zero);
+    server.id = 'another';
+    sharing.updateServer(server);
+    await Future<void>.delayed(Duration.zero);
+    oldInbox.complete(items([
+      {'id': 'private-old', 'status': 'pending'}
+    ]));
+    await Future<void>.delayed(Duration.zero);
+    expect(sharing.inbox, isEmpty);
+    expect(sharing.inboxError, isNotNull);
+  });
   test(
       'batch grants send selected scope and separate record capabilities; all omits selection',
       () async {

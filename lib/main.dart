@@ -24,6 +24,7 @@ import 'package:openlogtool/services/controller_window_service.dart';
 import 'package:openlogtool/services/app_fonts.dart';
 import 'package:openlogtool/services/key_value_store.dart';
 import 'package:openlogtool/services/url_sync.dart';
+import 'package:openlogtool/widgets/app_scale.dart';
 import 'package:openlogtool/theme/app_theme.dart';
 import 'package:openlogtool/utils/windows_accessibility_guard.dart';
 import 'package:openlogtool/bootstrap/rust_library_loader.dart';
@@ -278,6 +279,11 @@ class MyApp extends StatelessWidget {
         fontFamily: appearance.fontFamily,
       ),
       themeMode: appearance.dark ? ThemeMode.dark : ThemeMode.light,
+      builder: (context, child) => Selector<SettingsProvider, double>(
+        selector: (_, settings) => settings.interfaceScale,
+        builder: (_, scale, child) => AppScale(scale: scale, child: child!),
+        child: child,
+      ),
       home: kIsWeb && controllerTabRoute.isController
           ? WebControllerTabPage(sessionId: controllerTabRoute.sessionId)
           : const HomeScreen(),

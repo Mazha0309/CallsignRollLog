@@ -9,6 +9,49 @@ class AppLocalizationsZh extends AppLocalizations {
   AppLocalizationsZh([String locale = 'zh']) : super(locale);
 
   @override
+  String get interfaceScaleTitle => '界面缩放';
+
+  @override
+  String get interfaceScaleHint => '整体缩放按钮、文字、表格和弹窗（80%–150%），仅保存在当前设备。';
+
+  @override
+  String get interfaceScaleUp => '放大界面';
+
+  @override
+  String get interfaceScaleDown => '缩小界面';
+
+  @override
+  String get interfaceScaleReset => '恢复 100%';
+
+  @override
+  String get shareInboxTitle => '收到的共享邀请';
+
+  @override
+  String get shareInboxEmpty => '暂无待处理的共享邀请';
+
+  @override
+  String shareInvitationFrom(String username) {
+    return '$username 向你发来了共享邀请';
+  }
+
+  @override
+  String get shareAcceptedHint => '已接受共享邀请，可以在“历史会话 → 共享”中查看。当前记录会话不会切换。';
+
+  @override
+  String get newInvitationNotice => '收到新的邀请或申请';
+
+  @override
+  String get viewInvitations => '查看邀请';
+
+  @override
+  String pendingInvitations(int count) {
+    return '$count 条邀请或申请待处理';
+  }
+
+  @override
+  String get dismissInvitationNotice => '暂时收起提示，邀请仍保留';
+
+  @override
   String get shareSessionsTitle => '共享会话';
 
   @override

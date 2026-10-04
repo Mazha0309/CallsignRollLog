@@ -141,6 +141,33 @@ class HistoryFixture extends SessionProvider {
       throw StateError('Shared browsing must not switch the workbench');
 }
 
+class InboxSharingFixture extends SharingFixture {
+  List<AccountShareGrantDto> invitations = [
+    const AccountShareGrantDto(
+      id: 'incoming',
+      grantorUserId: 'alice',
+      grantorUsername: 'Alice',
+      granteeUserId: 'me',
+      status: 'pending',
+    )
+  ];
+  String? response;
+  @override
+  List<AccountShareGrantDto> get inbox => invitations;
+  @override
+  Future<List<ShareSessionRef>> loadShareCandidates() async =>
+      throw StateError('catalog unavailable');
+  @override
+  Future<void> respondShare(String id, String action,
+      {required String? expectedScope}) async {
+    expect(id, 'incoming');
+    expect(expectedScope, scope);
+    response = action;
+    invitations = [];
+    notifyListeners();
+  }
+}
+
 Future<SessionProvider> pump(
     WidgetTester tester, SharingFixture sharing, Widget child,
     {bool current = false}) async {
@@ -167,6 +194,23 @@ Future<SessionProvider> pump(
 }
 
 void main() {
+  testWidgets(
+      'Sharing opens with actionable received invitations even when its catalog fails',
+      (tester) async {
+    final sharing = InboxSharingFixture();
+    await pump(tester, sharing, const SessionSharingDialog());
+    final accept = find.byKey(const Key('accept-share-incoming'));
+    expect(accept.hitTestable(), findsOneWidget);
+    expect(
+        tester.getTopLeft(accept).dy,
+        lessThan(
+            tester.getTopLeft(find.byKey(const Key('share-recipient'))).dy));
+    await tester.tap(accept);
+    await tester.pumpAndSettle();
+    expect(sharing.response, 'accept');
+    expect(find.text('暂无待处理的共享邀请'), findsOneWidget);
+    expect(find.textContaining('当前记录会话不会切换'), findsOneWidget);
+  });
   testWidgets(
       'shared history has its own filter, owner badge and collision-safe identity without switching workbench',
       (tester) async {

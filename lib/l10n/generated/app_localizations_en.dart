@@ -9,6 +9,52 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
+  String get interfaceScaleTitle => 'Interface zoom';
+
+  @override
+  String get interfaceScaleHint =>
+      'Scale buttons, text, tables and dialogs together (80%–150%). Saved on this device only.';
+
+  @override
+  String get interfaceScaleUp => 'Zoom in';
+
+  @override
+  String get interfaceScaleDown => 'Zoom out';
+
+  @override
+  String get interfaceScaleReset => 'Reset to 100%';
+
+  @override
+  String get shareInboxTitle => 'Received sharing invitations';
+
+  @override
+  String get shareInboxEmpty => 'No pending sharing invitations';
+
+  @override
+  String shareInvitationFrom(String username) {
+    return '$username sent you a sharing invitation';
+  }
+
+  @override
+  String get shareAcceptedHint =>
+      'Invitation accepted. Find these sessions in History → Shared. Your current recording session has not changed.';
+
+  @override
+  String get newInvitationNotice => 'New invitation or request received';
+
+  @override
+  String get viewInvitations => 'View invitations';
+
+  @override
+  String pendingInvitations(int count) {
+    return '$count invitations or requests need your response';
+  }
+
+  @override
+  String get dismissInvitationNotice =>
+      'Dismiss this reminder; keep the invitations';
+
+  @override
   String get shareSessionsTitle => 'Share sessions';
 
   @override

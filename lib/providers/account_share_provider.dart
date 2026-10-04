@@ -21,6 +21,7 @@ class AccountShareProvider with ChangeNotifier {
   List<AccountShareGrantDto> _inbox = const [];
   List<AccountShareGrantDto> _outgoing = const [];
   Object? _lastError;
+  Object? _inboxError;
   SocialSnapshot _social = const SocialSnapshot();
   String? _scope;
   int _epoch = 0;
@@ -52,6 +53,18 @@ class AccountShareProvider with ChangeNotifier {
   List<SharedSessionDto> get sharedSessions => _sharedSessions;
   List<AccountShareGrantDto> get inbox => _inbox;
   List<AccountShareGrantDto> get outgoing => _outgoing;
+  Object? get inboxError => _inboxError;
+  Set<String> get pendingInboundKeys => {
+        for (final grant in inbox)
+          if (grant.status == 'pending') 'share:${grant.id}',
+        if (supportsFriends)
+          for (final request in [
+            ...social.friendRequests,
+            ...social.sessionRequests
+          ])
+            if (request.recipientId == accountId && request.status == 'pending')
+              '${request.sessionId == null ? 'friend' : 'session'}:${request.id}',
+      };
   int get pendingInboundCount => supportsFriends
       ? [..._social.friendRequests, ..._social.sessionRequests]
               .where((r) => r.recipientId == accountId && r.status == 'pending')
@@ -83,6 +96,7 @@ class AccountShareProvider with ChangeNotifier {
     _outgoing = const [];
     _social = const SocialSnapshot();
     _lastError = null;
+    _inboxError = null;
     _loading = false;
     _busy = false;
     _pendingMutations.clear();
@@ -121,34 +135,48 @@ class AccountShareProvider with ChangeNotifier {
     final api = server.api;
     _loading = true;
     notifyListeners();
+    final errors = <Object>[];
+    Future<void> load<T>(Future<T> Function() fetch, void Function(T) apply,
+        {bool inbox = false}) async {
+      try {
+        final value = await fetch();
+        if (_disposed || epoch != _epoch) return;
+        apply(value);
+        if (inbox) _inboxError = null;
+        revision++;
+        notifyListeners();
+      } catch (error) {
+        if (_disposed || epoch != _epoch) return;
+        errors.add(error);
+        if (inbox) _inboxError = error;
+      }
+    }
+
     try {
-      if (supportsFriends) {
-        final snapshot = await api.getSocialSnapshot();
-        if (_disposed || epoch != _epoch) return;
-        _social = snapshot;
-      }
-      if (supportsLegacySharing) {
-        final shared = await api.listSharedSessions();
-        final inbox = await api.listSessionShares('inbox');
-        final outbox = supportsBatchSharing
-            ? await api.listSessionShares('outbox')
-            : const <AccountShareGrantDto>[];
-        final active = supportsBatchSharing
-            ? await api.listSessionShares('active')
-            : const <AccountShareGrantDto>[];
-        if (_disposed || epoch != _epoch) return;
-        _sharedSessions = shared;
-        _inbox = inbox;
-        _outgoing = [
-          ...outbox,
-          ...active.where((grant) => grant.grantorUserId == accountId)
-        ];
-      }
-      _lastError = null;
-      revision++;
-    } catch (error) {
+      // Invitations must not wait for, or disappear behind, a failed catalog
+      // or social request. Each response still belongs to this account epoch.
+      await Future.wait([
+        if (supportsFriends)
+          load(api.getSocialSnapshot, (value) => _social = value),
+        if (supportsLegacySharing) ...[
+          load(() => api.listSessionShares('inbox'), (value) => _inbox = value,
+              inbox: true),
+          load(api.listSharedSessions, (value) => _sharedSessions = value),
+          if (supportsBatchSharing)
+            load(
+                () => Future.wait([
+                      api.listSessionShares('outbox'),
+                      api.listSessionShares('active'),
+                    ]),
+                (value) => _outgoing = [
+                      ...value[0],
+                      ...value[1]
+                          .where((grant) => grant.grantorUserId == accountId),
+                    ]),
+        ],
+      ]);
       if (_disposed || epoch != _epoch) return;
-      _lastError = error;
+      _lastError = errors.firstOrNull;
     } finally {
       if (!_disposed && epoch == _epoch) {
         _loading = false;
@@ -233,7 +261,10 @@ class AccountShareProvider with ChangeNotifier {
 
   Future<void> _shareMutation(String method, String path,
       Map<String, Object?> body, String? expectedScope) async {
-    if (_disposed || !supportsLegacySharing || _busy || expectedScope != _scope) {
+    if (_disposed ||
+        !supportsLegacySharing ||
+        _busy ||
+        expectedScope != _scope) {
       throw StateError('ACCOUNT_CHANGED');
     }
     final scope = _scope;

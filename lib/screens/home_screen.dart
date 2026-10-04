@@ -21,6 +21,8 @@ import 'package:openlogtool/widgets/log_table.dart';
 import 'package:openlogtool/widgets/settings_panel.dart';
 import 'package:openlogtool/widgets/primary_navigation_rail.dart';
 import 'package:openlogtool/utils/app_snack_bar.dart';
+import 'package:openlogtool/widgets/invitation_notice.dart';
+import 'package:openlogtool/widgets/share_invitations_panel.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -202,6 +204,35 @@ class _HomeScreenState extends State<HomeScreen> {
     return false;
   }
 
+  void _openInvitations() {
+    if (context.read<AccountShareProvider>().supportsFriends) {
+      Navigator.push<void>(
+          context,
+          MaterialPageRoute(
+            builder: (_) => SocialScreen(
+                initialTab: 1,
+                onSessionOpened: () {
+                  if (mounted) _onItemTapped(0);
+                }),
+          ));
+    } else {
+      showDialog<void>(
+          context: context,
+          builder: (c) => AlertDialog(
+                title: Text(c.l10n.socialMessages),
+                content: const SizedBox(
+                    width: 520,
+                    child:
+                        SingleChildScrollView(child: ShareInvitationsPanel())),
+                actions: [
+                  TextButton(
+                      onPressed: () => Navigator.pop(c),
+                      child: Text(c.l10n.close))
+                ],
+              ));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final primarySidebarExpanded = context.select<SettingsProvider, bool>(
@@ -246,7 +277,10 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           centerTitle: false,
           actions: [
-            if (context.watch<AccountShareProvider?>()?.supportsFriends == true)
+            if (context.watch<AccountShareProvider?>()?.supportsFriends ==
+                    true ||
+                context.watch<AccountShareProvider?>()?.supportsLegacySharing ==
+                    true)
               IconButton(
                 key: const Key('global-invitations'),
                 tooltip: context.l10n.socialMessages,
@@ -259,15 +293,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       '${context.watch<AccountShareProvider>().pendingInboundCount}'),
                   child: const Icon(Icons.notifications_outlined),
                 ),
-                onPressed: () => Navigator.push<void>(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => SocialScreen(
-                          initialTab: 1,
-                          onSessionOpened: () {
-                            if (mounted) _onItemTapped(0);
-                          }),
-                    )),
+                onPressed: _openInvitations,
               ),
             _AppBarSyncStatus(
               onPressed: () => _onItemTapped(1),
@@ -275,48 +301,56 @@ class _HomeScreenState extends State<HomeScreen> {
             const SizedBox(width: 8),
           ],
         ),
-        body: LayoutBuilder(
-          builder: (context, constraints) {
-            final content = IndexedStack(
-              index: _selectedIndex,
-              children: pages,
-            );
-            final showSidebar = constraints.maxWidth >= 720;
-            final isDesktop = constraints.maxWidth >= 1200;
-            // Keep the page stack at a stable element position when crossing the
-            // mobile/sidebar breakpoint. Reparenting the focused TextField while
-            // Windows is dispatching WM_SIZE can tear down its native IME
-            // connection in the middle of that callback.
-            return Row(
-              children: [
-                if (showSidebar)
-                  PrimaryNavigationRail(
-                    isDesktop: isDesktop,
-                    expanded: primarySidebarExpanded,
-                    selectedIndex: _selectedIndex,
-                    onDestinationSelected: _onItemTapped,
-                    onExpandedChanged: context
-                        .read<SettingsProvider>()
-                        .setPrimarySidebarExpanded,
-                    destinations: [
-                      for (final destination in _destinations)
-                        NavigationRailDestination(
-                          icon: Icon(destination.icon),
-                          selectedIcon: Icon(destination.selectedIcon),
-                          label: Text(destination.label(context.l10n)),
-                        ),
-                    ],
-                  )
-                else
-                  const SizedBox.shrink(),
-                Expanded(
-                  key: const ValueKey('home-page-stack'),
-                  child: content,
-                ),
-              ],
-            );
-          },
-        ),
+        body: Column(children: [
+          InvitationNotice(
+            onOpen: _openInvitations,
+            keyboardVisible: MediaQuery.viewInsetsOf(context).bottom > 0,
+          ),
+          Expanded(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final content = IndexedStack(
+                  index: _selectedIndex,
+                  children: pages,
+                );
+                final showSidebar = constraints.maxWidth >= 720;
+                final isDesktop = constraints.maxWidth >= 1200;
+                // Keep the page stack at a stable element position when crossing the
+                // mobile/sidebar breakpoint. Reparenting the focused TextField while
+                // Windows is dispatching WM_SIZE can tear down its native IME
+                // connection in the middle of that callback.
+                return Row(
+                  children: [
+                    if (showSidebar)
+                      PrimaryNavigationRail(
+                        isDesktop: isDesktop,
+                        expanded: primarySidebarExpanded,
+                        selectedIndex: _selectedIndex,
+                        onDestinationSelected: _onItemTapped,
+                        onExpandedChanged: context
+                            .read<SettingsProvider>()
+                            .setPrimarySidebarExpanded,
+                        destinations: [
+                          for (final destination in _destinations)
+                            NavigationRailDestination(
+                              icon: Icon(destination.icon),
+                              selectedIcon: Icon(destination.selectedIcon),
+                              label: Text(destination.label(context.l10n)),
+                            ),
+                        ],
+                      )
+                    else
+                      const SizedBox.shrink(),
+                    Expanded(
+                      key: const ValueKey('home-page-stack'),
+                      child: content,
+                    ),
+                  ],
+                );
+              },
+            ),
+          )
+        ]),
         bottomNavigationBar: MediaQuery.sizeOf(context).width < 720
             ? NavigationBar(
                 key: const Key('mobile-navigation'),

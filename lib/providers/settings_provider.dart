@@ -27,6 +27,9 @@ class SettingsProvider with ChangeNotifier {
       'recordEditorDialogEnabled';
   static const String _appLocalePreferenceKey = 'appLocalePreference';
   static const String _tablePageSizeKey = 'tablePageSize';
+  static const String _interfaceScaleKey = 'interfaceScalePercent';
+  static const int minInterfaceScale = 80;
+  static const int maxInterfaceScale = 150;
 
   static const List<int> tablePageSizeOptions = [5, 10, 15, 20, 25];
 
@@ -45,6 +48,9 @@ class SettingsProvider with ChangeNotifier {
   bool _recordEditorDialogEnabled = true;
   AppLocalePreference _appLocalePreference = AppLocalePreference.system;
   int _tablePageSize = 10;
+  int _interfaceScalePercent = 100;
+  int _scaleRevision = 0;
+  Future<void> _scaleSave = Future<void>.value();
   ControllerDisplayPreferences _controllerDisplayPreferences =
       const ControllerDisplayPreferences();
   final Future<KeyValueStore> Function() _preferencesLoader;
@@ -67,6 +73,8 @@ class SettingsProvider with ChangeNotifier {
   bool get recordEditorDialogEnabled => _recordEditorDialogEnabled;
   AppLocalePreference get appLocalePreference => _appLocalePreference;
   int get tablePageSize => _tablePageSize;
+  int get interfaceScalePercent => _interfaceScalePercent;
+  double get interfaceScale => _interfaceScalePercent / 100;
   Locale? get locale => switch (_appLocalePreference) {
         AppLocalePreference.system => null,
         AppLocalePreference.simplifiedChinese => const Locale('zh', 'CN'),
@@ -85,8 +93,17 @@ class SettingsProvider with ChangeNotifier {
 
   Future<void> _loadSettings() async {
     final localePreferenceRevision = _localePreferenceRevision;
+    final scaleRevision = _scaleRevision;
     final prefs = await _preferencesLoader();
     if (_disposed) return;
+    final storedScale = await prefs.get(_interfaceScaleKey);
+    if (_disposed) return;
+    if (_scaleRevision == scaleRevision &&
+        storedScale is num &&
+        storedScale.isFinite) {
+      _interfaceScalePercent =
+          storedScale.round().clamp(minInterfaceScale, maxInterfaceScale);
+    }
 
     _isDarkMode = await prefs.getBool(_isDarkModeKey);
     _fontFamily = await prefs.getString(_fontFamilyKey) ?? '';
@@ -266,6 +283,18 @@ class SettingsProvider with ChangeNotifier {
     await _saveSetting(_tablePageSizeKey, value);
   }
 
+  Future<void> setInterfaceScalePercent(int value) async {
+    _scaleRevision++;
+    final next = value.clamp(minInterfaceScale, maxInterfaceScale);
+    _interfaceScalePercent = next;
+    notifyListeners();
+    // Fast +/- clicks must not let a slower old storage write win.
+    _scaleSave = _scaleSave
+        .catchError((Object _) {})
+        .then((_) => _saveSetting(_interfaceScaleKey, next));
+    await _scaleSave;
+  }
+
   Future<void> setControllerDisplayPreferences(
     ControllerDisplayPreferences preferences,
   ) async {
@@ -299,6 +328,7 @@ class SettingsProvider with ChangeNotifier {
 
   Future<void> resetToDefaults() async {
     _localePreferenceRevision += 1;
+    await setInterfaceScalePercent(100);
     _themeColor = const Color(0xFF2196F3);
     _isDarkMode = false;
     _fontFamily = '';

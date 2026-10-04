@@ -14,6 +14,7 @@ import 'package:openlogtool/widgets/session_friend_actions.dart';
 import 'package:openlogtool/widgets/session_join_policy_control.dart';
 import 'package:openlogtool/widgets/settings/settings_ui.dart';
 import 'package:openlogtool/widgets/session_sharing_dialog.dart';
+import 'package:openlogtool/widgets/share_invitations_panel.dart';
 
 class SocialScreen extends StatefulWidget {
   const SocialScreen({super.key, this.onSessionOpened, this.initialTab = 0})
@@ -345,6 +346,7 @@ class _SocialScreenState extends State<SocialScreen> {
                       ],
                     ]),
                     _list('messages', [
+                      const ShareInvitationsPanel(showEmpty: false),
                       if (data.friendRequests.isEmpty &&
                           data.sessionRequests.isEmpty &&
                           provider.inbox.isEmpty)
@@ -356,37 +358,6 @@ class _SocialScreenState extends State<SocialScreen> {
                         ...data.sessionRequests
                       ])
                         _requestCard(request, provider, disabled),
-                      for (final grant in provider.inbox)
-                        SettingsSectionCard(
-                            icon: Icons.share_outlined,
-                            title: l.sharedSessionFrom(
-                                grant.grantorUsername.isEmpty
-                                    ? grant.grantorUserId
-                                    : grant.grantorUsername),
-                            description:
-                                '${grant.scopeMode == 'all' ? l.shareAll : '${l.shareSelected} (${grant.selectedSessions.length})'} · ${grant.canEditLogs ? l.shareEditLogs : l.shareViewOnly}${grant.canDeleteLogs ? ' · ${l.shareDeleteLogs}' : ''}',
-                            child: Wrap(spacing: 8, children: [
-                              FilledButton(
-                                  onPressed: disabled
-                                      ? null
-                                      : () {
-                                          final scope = provider.accountScope;
-                                          _run(() => provider.respondShare(
-                                              grant.id, 'accept',
-                                              expectedScope: scope));
-                                        },
-                                  child: Text(l.socialAccept)),
-                              TextButton(
-                                  onPressed: disabled
-                                      ? null
-                                      : () {
-                                          final scope = provider.accountScope;
-                                          _run(() => provider.respondShare(
-                                              grant.id, 'reject',
-                                              expectedScope: scope));
-                                        },
-                                  child: Text(l.socialReject)),
-                            ])),
                       if (provider.supportsBatchSharing)
                         Align(
                             alignment: Alignment.centerLeft,

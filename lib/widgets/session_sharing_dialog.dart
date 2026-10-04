@@ -9,6 +9,7 @@ import 'package:openlogtool/providers/session_provider.dart';
 import 'package:openlogtool/services/server_api.dart';
 import 'package:openlogtool/widgets/personal_cloud_panel.dart';
 import 'package:openlogtool/widgets/personal_cloud_conflict_page.dart';
+import 'package:openlogtool/widgets/share_invitations_panel.dart';
 
 String sharingErrorText(BuildContext context, Object error) {
   final l = context.l10n;
@@ -246,6 +247,8 @@ class _SessionSharingDialogState extends State<SessionSharingDialog> {
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           mainAxisSize: MainAxisSize.min,
                           children: [
+                          const ShareInvitationsPanel(),
+                          const Divider(height: 24),
                           if (_loading || _working)
                             const LinearProgressIndicator(),
                           if (_error != null) ...[
