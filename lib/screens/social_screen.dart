@@ -310,6 +310,12 @@ class _SocialScreenState extends State<SocialScreen> {
                                 for (final friend in data.friends)
                                   ListTile(
                                       contentPadding: EdgeInsets.zero,
+                                      leading: AppIconBadge(
+                                          key: Key(
+                                              'friend-user-icon-${friend.userId}'),
+                                          icon: Icons.person_outline,
+                                          tone: AppTone.neutral,
+                                          size: AppIconBadgeSize.action),
                                       title: Text(friend.username),
                                       trailing: PopupMenuButton<String>(
                                           enabled: !disabled,
@@ -336,6 +342,10 @@ class _SocialScreenState extends State<SocialScreen> {
                               for (final person in data.blocks)
                                 ListTile(
                                     contentPadding: EdgeInsets.zero,
+                                    leading: const AppIconBadge(
+                                        icon: Icons.person_outline,
+                                        tone: AppTone.neutral,
+                                        size: AppIconBadgeSize.action),
                                     title: Text(person.username),
                                     trailing: TextButton(
                                         onPressed: disabled

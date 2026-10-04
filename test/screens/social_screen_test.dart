@@ -179,6 +179,8 @@ void main() {
     await tester.tap(find.byKey(const Key('friend-search-submit')));
     await tester.pumpAndSettle();
     expect(social.queries, ['BA1ABC']);
+    expect(find.byIcon(Icons.person_outline), findsOneWidget);
+    expect(find.byType(CircleAvatar), findsNothing);
     await tester.tap(find.text('发送申请'));
     await tester.pumpAndSettle();
     expect(social.calls.single, [
