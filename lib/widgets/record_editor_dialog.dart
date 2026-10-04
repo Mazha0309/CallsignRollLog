@@ -5,30 +5,51 @@ import 'package:openlogtool/models/log_entry.dart';
 import 'package:openlogtool/providers/dictionary_provider.dart';
 import 'package:openlogtool/utils/log_time.dart';
 import 'package:openlogtool/widgets/dictionary_autocomplete_field.dart';
+import 'package:openlogtool/widgets/scroll_safe_unfocus.dart';
 import 'package:provider/provider.dart';
 
 Future<LogEntry?> showRecordEditorDialog(
   BuildContext context, {
   required LogEntry log,
   required bool readOnly,
+  Listenable? accessChanges,
+  bool Function()? canRead,
+  bool Function()? canEdit,
 }) {
+  Widget editor(BuildContext dialogContext) {
+    if (canRead?.call() == false) {
+      return AlertDialog(
+          content: Text(dialogContext.l10n.shareAccessChanged),
+          actions: [
+            TextButton(
+                onPressed: () => Navigator.pop(dialogContext),
+                child: Text(dialogContext.l10n.close))
+          ]);
+    }
+    return RecordEditorDialog(
+        log: log, readOnly: readOnly || canEdit?.call() == false);
+  }
+
   return showDialog<LogEntry>(
     context: context,
-    builder: (dialogContext) => RecordEditorDialog(
-      log: log,
-      readOnly: readOnly,
-    ),
+    builder: (dialogContext) => accessChanges == null
+        ? editor(dialogContext)
+        : ListenableBuilder(
+            listenable: accessChanges,
+            builder: (context, _) => editor(context)),
   );
 }
 
 class RecordEditorDialog extends StatefulWidget {
   final LogEntry log;
   final bool readOnly;
+  final String? title;
 
   const RecordEditorDialog({
     super.key,
     required this.log,
     this.readOnly = false,
+    this.title,
   });
 
   @override
@@ -37,6 +58,7 @@ class RecordEditorDialog extends StatefulWidget {
 
 class _RecordEditorDialogState extends State<RecordEditorDialog> {
   final _formKey = GlobalKey<FormState>();
+  final _outsideTap = ScrollSafeUnfocus();
   late final Map<String, TextEditingController> _controllers;
   late final Map<String, FocusNode> _focusNodes;
   bool _saving = false;
@@ -84,6 +106,7 @@ class _RecordEditorDialogState extends State<RecordEditorDialog> {
 
   @override
   void dispose() {
+    _outsideTap.dispose();
     for (final controller in _controllers.values) {
       controller.dispose();
     }
@@ -123,110 +146,125 @@ class _RecordEditorDialogState extends State<RecordEditorDialog> {
         children: [
           Icon(Icons.edit_outlined, size: 22, color: theme.colorScheme.primary),
           const SizedBox(width: 10),
-          Text(context.l10n.editRecord),
+          Expanded(child: Text(widget.title ?? context.l10n.editRecord)),
         ],
       ),
       content: SizedBox(
         width: isNarrow ? 320 : 520,
         child: Form(
+          autovalidateMode: AutovalidateMode.onUserInteraction,
           key: _formKey,
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                _buildField(
-                  field: 'time',
-                  label: context.l10n.fieldTime,
-                  width: isNarrow ? null : 140,
-                  validator: (value) => isValidLogTimeInput(value ?? '')
-                      ? null
-                      : context.l10n.logTimeInvalid,
-                ),
-                _buildField(
-                  field: 'controller',
-                  label: context.l10n.fieldController,
-                ),
-                _buildField(
-                  field: 'callsign',
-                  label: context.l10n.fieldCallsign,
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return context.l10n.callsignRequired;
-                    }
-                    return null;
-                  },
-                ),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildField(
-                        field: 'rstSent',
-                        label: context.l10n.fieldRstSent,
+          child: FocusTraversalGroup(
+            policy: OrderedTraversalPolicy(),
+            child: SingleChildScrollView(
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.manual,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _buildField(
+                    field: 'time',
+                    label: context.l10n.fieldTime,
+                    width: isNarrow ? null : 140,
+                    validator: (value) => isValidLogTimeInput(value ?? '')
+                        ? null
+                        : context.l10n.logTimeInvalid,
+                  ),
+                  _buildField(
+                    field: 'controller',
+                    label: context.l10n.fieldController,
+                  ),
+                  _buildField(
+                    field: 'callsign',
+                    label: context.l10n.fieldCallsign,
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return context.l10n.callsignRequired;
+                      }
+                      return null;
+                    },
+                  ),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildField(
+                          field: 'rstSent',
+                          label: context.l10n.fieldRstSent,
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: _buildField(
-                        field: 'rstRcvd',
-                        label: context.l10n.fieldRstRcvd,
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: _buildField(
+                          field: 'rstRcvd',
+                          label: context.l10n.fieldRstRcvd,
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-                _buildDictionaryField(
-                  field: 'qth',
-                  label: context.l10n.fieldQth,
-                  options: dictionary.qthDict,
-                  upperCase: false,
-                ),
-                _buildDictionaryField(
-                  field: 'device',
-                  label: context.l10n.fieldDevice,
-                  options: dictionary.deviceDict,
-                  upperCase: false,
-                ),
-                _buildDictionaryField(
-                  field: 'antenna',
-                  label: context.l10n.fieldAntenna,
-                  options: dictionary.antennaDict,
-                  upperCase: false,
-                ),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildField(
-                        field: 'power',
-                        label: context.l10n.fieldPower,
+                    ],
+                  ),
+                  _buildDictionaryField(
+                    field: 'qth',
+                    label: context.l10n.fieldQth,
+                    options: dictionary.qthDict,
+                    upperCase: false,
+                  ),
+                  _buildDictionaryField(
+                    field: 'device',
+                    label: context.l10n.fieldDevice,
+                    options: dictionary.deviceDict,
+                    upperCase: false,
+                  ),
+                  _buildDictionaryField(
+                    field: 'antenna',
+                    label: context.l10n.fieldAntenna,
+                    options: dictionary.antennaDict,
+                    upperCase: false,
+                  ),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildField(
+                          field: 'power',
+                          label: context.l10n.fieldPower,
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: _buildField(
-                        field: 'height',
-                        label: context.l10n.fieldHeight,
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: _buildField(
+                          field: 'height',
+                          label: context.l10n.fieldHeight,
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-                _buildField(
-                  field: 'remarks',
-                  label: context.l10n.fieldRemarks,
-                ),
-              ],
+                    ],
+                  ),
+                  _buildField(
+                    field: 'remarks',
+                    label: context.l10n.fieldRemarks,
+                  ),
+                ],
+              ),
             ),
           ),
         ),
       ),
       actions: [
-        TextButton(
-          onPressed: _saving ? null : () => Navigator.pop(context),
-          child: Text(context.l10n.cancel),
+        Focus(
+          canRequestFocus: false,
+          skipTraversal: true,
+          descendantsAreTraversable: false,
+          child: TextButton(
+            onPressed: _saving ? null : () => Navigator.pop(context),
+            child: Text(context.l10n.cancel),
+          ),
         ),
-        FilledButton(
-          key: const Key('record-editor-save'),
-          onPressed: _saving || widget.readOnly ? null : _submit,
-          child: Text(context.l10n.saveRecord),
+        Focus(
+          canRequestFocus: false,
+          skipTraversal: true,
+          descendantsAreTraversable: false,
+          child: FilledButton(
+            key: const Key('record-editor-save'),
+            onPressed: _saving || widget.readOnly ? null : _submit,
+            child: Text(context.l10n.saveRecord),
+          ),
         ),
       ],
     );
@@ -244,6 +282,8 @@ class _RecordEditorDialogState extends State<RecordEditorDialog> {
         key: Key('record-editor-field-$field'),
         controller: _controllers[field],
         focusNode: _focusNodes[field],
+        onTapOutside: (event) =>
+            _outsideTap.onTapOutside(event, _focusNodes[field]),
         enabled: !widget.readOnly,
         validator: validator,
         decoration: InputDecoration(

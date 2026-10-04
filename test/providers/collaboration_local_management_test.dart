@@ -43,9 +43,10 @@ void main() {
     expect(collaboration.state, CollaborationState.localOnly);
   });
 
-  test('offline local close selects closed history without closing server',
+  test(
+      'offline independent copy is writable without stopping or deleting source',
       () async {
-    final sessions = _ManagedSessions(_Mode.close);
+    final sessions = _ManagedSessions(_Mode.copy);
     final logs = _logs(sessions);
     final server = _OfflineServer();
     final collaboration = _ManagedCollaboration();
@@ -56,12 +57,14 @@ void main() {
     await logs.reloadForSession(source.sessionId);
     collaboration.updateDependencies(server, sessions, logs);
 
-    await collaboration.closeCurrentSessionLocally();
+    await collaboration.createEditableLocalCopy(title: 'Independent');
 
-    expect(sessions.closeCalls, 1);
-    expect(sessions.currentSessionId, closedLocal.sessionId);
-    expect(logs.currentSessionId, closedLocal.sessionId);
-    expect(logs.currentSessionReadOnly, isTrue);
+    expect(sessions.copyCalls, 1);
+    expect(sessions.stopCalls, 0);
+    expect(sessions.deleteCalls, 0);
+    expect(sessions.currentSessionId, editableLocal.sessionId);
+    expect(logs.currentSessionId, editableLocal.sessionId);
+    expect(logs.currentSessionReadOnly, isFalse);
     expect(collaboration.state, CollaborationState.localOnly);
   });
 
@@ -256,7 +259,7 @@ void main() {
 LogProvider _logs(_ManagedSessions sessions) => LogProvider(
       sessionListLoader: () async => switch (sessions.mode) {
         _Mode.stop => const [source, editableLocal],
-        _Mode.close => const [source, closedLocal],
+        _Mode.copy => const [source, editableLocal],
         _Mode.delete => const [source],
       },
       sessionLogPageLoader: (_, __, ___) async => [],
@@ -278,7 +281,7 @@ model.LogEntry _log(String id) => model.LogEntry(
       updatedAt: '2026-07-17T12:00:00Z',
     );
 
-enum _Mode { stop, close, delete }
+enum _Mode { stop, copy, delete }
 
 class _ManagedSessions extends SessionProvider {
   _ManagedSessions(this.mode);
@@ -286,7 +289,7 @@ class _ManagedSessions extends SessionProvider {
   final _Mode mode;
   Session? _current = source;
   int stopCalls = 0;
-  int closeCalls = 0;
+  int copyCalls = 0;
   int deleteCalls = 0;
   int databaseReloadCalls = 0;
 
@@ -305,11 +308,12 @@ class _ManagedSessions extends SessionProvider {
   }
 
   @override
-  Future<Session> closeSessionLocally(String sessionId) async {
-    closeCalls += 1;
-    _current = closedLocal;
+  Future<Session> copyCurrentCollaborationSessionToLocal(
+      {required String title}) async {
+    copyCalls += 1;
+    _current = editableLocal;
     notifyListeners();
-    return closedLocal;
+    return editableLocal;
   }
 
   @override

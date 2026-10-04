@@ -334,6 +334,68 @@ void main() {
     });
   });
 
+  group('ServerApi account sharing', () {
+    test('parses share grants and shared sessions from items envelopes',
+        () async {
+      final store = MemoryTokenStore(
+        AuthSessionDto.fromJson(_authJson('access', 'refresh')),
+      );
+      final client = MockClient((request) async {
+        switch ('${request.method} ${request.url.path}') {
+          case 'GET /api/v1/account/session-shares':
+            expect(request.url.queryParameters['box'], 'inbox');
+            return _jsonResponse({
+              'items': [
+                {
+                  'id': 'grant-1',
+                  'grantorUserId': 'bob-id',
+                  'granteeUserId': 'user-1',
+                  'status': 'pending',
+                },
+              ],
+            });
+          case 'POST /api/v1/account/session-shares':
+            return _jsonResponse({
+              'share': {
+                'id': 'grant-2',
+                'grantorUserId': 'user-1',
+                'granteeUserId': 'bob-id',
+                'status': 'pending',
+              },
+            }, 201);
+          case 'GET /api/v1/account/shared-sessions':
+            return _jsonResponse({
+              'items': [
+                {
+                  'source': 'collaboration',
+                  'sessionId': 'shared-1',
+                  'title': 'Bob net',
+                  'status': 'active',
+                  'grantorUsername': 'bob',
+                  'canJoin': true,
+                  'createdAt': '2026-09-13T12:00:00.000Z',
+                  'updatedAt': '2026-09-13T12:00:00.000Z',
+                },
+              ],
+            });
+          default:
+            fail('Unexpected request: ${request.method} ${request.url}');
+        }
+      });
+      final api = _api(store: store, client: client);
+      final inbox = await api.listSessionShares('inbox');
+      expect(inbox.single.id, 'grant-1');
+      final created = await api.createSessionShare(
+        granteeUsername: 'bob',
+        idempotencyKey: 'k1',
+      );
+      expect(created.id, 'grant-2');
+      final shared = await api.listSharedSessions();
+      expect(shared.single.sessionId, 'shared-1');
+      expect(shared.single.grantorUsername, 'bob');
+    });
+  });
+
   group('ServerApi account management', () {
     test('completes required password change and persists the issued session',
         () async {
@@ -528,6 +590,21 @@ void main() {
             return _jsonResponse({
               'invite': _inviteJson(revokedAt: _now),
             });
+          case 'GET /api/v1/account/shared-sessions':
+            return _jsonResponse({
+              'items': [
+                {
+                  'source': 'collaboration',
+                  'sessionId': 'shared-1',
+                  'title': 'Shared net',
+                  'status': 'active',
+                  'grantorUsername': 'bob',
+                  'canJoin': false,
+                  'createdAt': _now,
+                  'updatedAt': _now,
+                },
+              ],
+            });
           case 'POST /api/v1/collaboration-invites/redeem':
             return _jsonResponse({
               'membership': _membershipJson(role: 'editor'),
@@ -542,6 +619,7 @@ void main() {
       final api = _api(store: store, client: client);
 
       expect(await api.listSessions(), hasLength(1));
+      expect(await api.listSharedSessions(), hasLength(1));
       expect(
         (await api.putSession(
           sessionId: 'session-1',
@@ -642,7 +720,7 @@ void main() {
         InviteRole.editor,
       );
 
-      expect(seen, hasLength(14));
+      expect(seen, hasLength(15));
     });
 
     test('server-info is public and supports a base URI already at api/v1',

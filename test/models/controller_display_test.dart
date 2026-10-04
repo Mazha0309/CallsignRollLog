@@ -3,6 +3,26 @@ import 'package:openlogtool/models/controller_display.dart';
 import 'package:openlogtool/utils/log_time.dart';
 
 void main() {
+  test('visible ordinal prefers saved records over a stale snapshot', () {
+    expect(
+      resolveVisibleRecordOrdinal(snapshotOrdinal: 1, savedCount: 3),
+      4,
+    );
+    expect(
+      resolveVisibleRecordOrdinal(snapshotOrdinal: 5, savedCount: 3),
+      5,
+    );
+    expect(resolveVisibleRecordOrdinal(savedCount: 3), 4);
+    expect(
+      resolveVisibleRecordCount(snapshotTotalRecords: 1, savedCount: 3),
+      3,
+    );
+    expect(
+      resolveVisibleRecordCount(snapshotTotalRecords: 5, savedCount: 3),
+      5,
+    );
+  });
+
   test('maps the live-draft response into controller display data', () {
     final dto = ControllerDisplayDto.fromLiveDraftJson(
       {

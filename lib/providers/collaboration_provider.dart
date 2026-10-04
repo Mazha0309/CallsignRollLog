@@ -20,6 +20,7 @@ import 'package:openlogtool/services/server_api.dart';
 import 'package:openlogtool/src/bridge/rust_api.dart';
 import 'package:openlogtool/utils/log_time.dart';
 import 'package:openlogtool/services/key_value_store.dart';
+import 'package:openlogtool/services/personal_promotion_state.dart';
 import 'package:openlogtool/services/app_logger.dart';
 
 enum CollaborationState {
@@ -544,17 +545,24 @@ LiveDraftSnapshotDto selectLiveDraftSnapshotAfterRefresh({
   required LiveDraftSnapshotDto current,
   required LiveDraftSnapshotDto incoming,
 }) {
-  if (current.draft.draftId != incoming.draft.draftId ||
-      current.draft.version <= incoming.draft.version) {
+  if (current.draft.draftId == incoming.draft.draftId) {
+    if (current.draft.version <= incoming.draft.version) {
+      return incoming;
+    }
+    return LiveDraftSnapshotDto(
+      draft: current.draft,
+      locks: incoming.locks,
+      currentOrdinal: current.currentOrdinal,
+      totalRecords: current.totalRecords,
+      previousRecord: current.previousRecord,
+    );
+  }
+  if (incoming.currentOrdinal > current.currentOrdinal ||
+      incoming.totalRecords > current.totalRecords ||
+      incoming.draft.createdAt.isAfter(current.draft.createdAt)) {
     return incoming;
   }
-  return LiveDraftSnapshotDto(
-    draft: current.draft,
-    locks: incoming.locks,
-    currentOrdinal: current.currentOrdinal,
-    totalRecords: current.totalRecords,
-    previousRecord: current.previousRecord,
-  );
+  return current;
 }
 
 /// Complete in-memory projection produced by one member-only live-draft
@@ -2220,7 +2228,8 @@ class CollaborationProvider with ChangeNotifier {
     _safeNotify();
   }
 
-  Future<void> publishCurrentSession() async {
+  Future<void> publishCurrentSession(
+      {bool promotePersonalShare = false}) async {
     final sessions = _requireSessions();
     final logs = _requireLogs();
     final sessionId = sessions.currentSessionId;
@@ -2235,9 +2244,25 @@ class CollaborationProvider with ChangeNotifier {
       }
       final info = await _ensureServerCapabilities(
         context,
-        _publishFeatures,
+        {
+          ..._publishFeatures,
+          if (promotePersonalShare) 'personalSharePromotion'
+        },
       );
       _assertOperationCurrent(context);
+      // A failed publication can survive an app restart. Preserve the owner's
+      // explicit promotion decision so a retry cannot downgrade to the legacy
+      // path or reject canonical edits made after successful remote activation.
+      final promotionStore = await openKeyValueStore();
+      final promotionKey = personalPromotionKey(
+          info.serverInstanceId, context.accountId, sessionId);
+      promotePersonalShare =
+          promotePersonalShare || await promotionStore.getBool(promotionKey);
+      _assertOperationCurrent(context);
+      if (promotePersonalShare &&
+          !await promotionStore.setBool(promotionKey, true)) {
+        throw StateError('PROMOTION_STATE_STORAGE_FAILED');
+      }
       _state = CollaborationState.publishing;
       _failedOperation = null;
       _publishingSessionId = sessionId;
@@ -2271,6 +2296,10 @@ class CollaborationProvider with ChangeNotifier {
           title: publishSession['title']! as String,
           logs: bootstrapLogs,
         );
+        final personalRevision = promotePersonalShare
+            ? (await context.api.getPersonalCloudSnapshotMeta()).revision
+            : null;
+        _assertOperationCurrent(context);
 
         _setProgress('创建远端协作会话', 0.08);
         remoteTouched = true;
@@ -2302,10 +2331,18 @@ class CollaborationProvider with ChangeNotifier {
             sessionId: sessionId,
             expectedLogCount: bootstrapLogs.length,
             idempotencyKey: _uuidV4(),
+            personalSnapshotRevision: personalRevision,
           );
           _assertOperationCurrent(context);
         } else if (remoteSession.status != 'active') {
           throw StateError('REMOTE_SESSION_STATE_INVALID');
+        } else if (promotePersonalShare) {
+          await context.api.activateSession(
+              sessionId: sessionId,
+              expectedLogCount: bootstrapLogs.length,
+              idempotencyKey: _uuidV4(),
+              personalSnapshotRevision: personalRevision);
+          _assertOperationCurrent(context);
         }
 
         _setProgress('安装服务端规范快照', 0.9);
@@ -2318,12 +2355,19 @@ class CollaborationProvider with ChangeNotifier {
           ),
         );
         _assertOperationCurrent(context);
-        validatePublishedCollaborationSnapshot(
-          sessionId: sessionId,
-          title: prepared.title,
-          localLogs: bootstrapLogs,
-          snapshot: snapshot,
-        );
+        if (!promotePersonalShare) {
+          validatePublishedCollaborationSnapshot(
+            sessionId: sessionId,
+            title: prepared.title,
+            localLogs: bootstrapLogs,
+            snapshot: snapshot,
+          );
+        } else if (snapshot.session.sessionId != sessionId ||
+            snapshot.session.status != 'active' ||
+            snapshot.session.deletedAt != null ||
+            remoteMembership.role != SessionRole.owner) {
+          throw StateError('PUBLISH_REMOTE_CONTENT_MISMATCH');
+        }
         final bindingJson = await RustApi.installCollaborationSnapshot(
           requestJson: jsonEncode({
             'mode': 'publish',
@@ -2335,6 +2379,7 @@ class CollaborationProvider with ChangeNotifier {
           }),
         );
         snapshotInstalled = true;
+        if (promotePersonalShare) await promotionStore.remove(promotionKey);
         final installedBinding = LocalCollaborationBinding.fromJson(
           jsonDecode(bindingJson),
         );
@@ -2395,6 +2440,7 @@ class CollaborationProvider with ChangeNotifier {
               sessionId: sessionId,
             );
             safelyAborted = true;
+            if (promotePersonalShare) await promotionStore.remove(promotionKey);
           } catch (_) {
             // Conservatively retain the lease if local rollback cannot be
             // proven. The Session must remain read-only in that case.
@@ -2414,6 +2460,64 @@ class CollaborationProvider with ChangeNotifier {
         }
         rethrow;
       }
+    });
+  }
+
+  /// Open a membership already granted through a friend invitation/application.
+  /// Existing replicas retain their outbox; missing replicas install atomically.
+  Future<void> openJoinedSession(String sessionId) async {
+    await _runOperation((context) async {
+      final info = await _ensureServerCapabilities(
+          context, {'sessionSnapshots', 'sessionMembership'});
+      _assertOperationCurrent(context);
+      final membership = await context.api.getMembership(sessionId);
+      _assertOperationCurrent(context);
+      if (membership.sessionId != sessionId ||
+          membership.userId != context.accountId) {
+        throw StateError('JOIN_REMOTE_CONTENT_MISMATCH');
+      }
+      var bindingJson = await RustApi.getCollaborationBinding(
+          serverInstanceId: info.serverInstanceId,
+          accountId: context.accountId,
+          sessionId: sessionId);
+      _assertOperationCurrent(context);
+      if (bindingJson == null) {
+        final snapshot = await context.api
+            .getSessionSnapshot(sessionId, includeDeleted: false);
+        _assertOperationCurrent(context);
+        if (snapshot.session.sessionId != sessionId) {
+          throw StateError('JOIN_REMOTE_CONTENT_MISMATCH');
+        }
+        bindingJson = await RustApi.installCollaborationSnapshot(
+            requestJson: jsonEncode({
+          'mode': 'join',
+          'serverInstanceId': info.serverInstanceId,
+          'serverOrigin': context.serverUrl,
+          'accountId': context.accountId,
+          'membership': membership.toJson(),
+          'snapshot': snapshot.toJson(),
+        }));
+        if (!_isServerIdentityCurrent(context)) {
+          _scheduleRefresh();
+          throw StateError('JOIN_COMMITTED_CONTEXT_CHANGED');
+        }
+      }
+      context.logs.setCollaborationReadOnly(sessionId, true);
+      await context.sessions.switchToSession(sessionId);
+      if (context.sessions.currentSessionId != sessionId) {
+        throw StateError('SESSION_SWITCH_NOT_CONFIRMED');
+      }
+      _adoptOperationSession(context, sessionId);
+      await context.logs.reloadForSession(sessionId, propagateErrors: true);
+      _assertOperationCurrent(context);
+      _binding = LocalCollaborationBinding.fromJson(jsonDecode(bindingJson));
+      _membership = membership;
+      _members = const [];
+      _invites = const [];
+      _lastCreatedInvite = null;
+      _failedOperation = null;
+      _state = CollaborationState.catchingUp;
+      _clearError();
     });
   }
 
@@ -4111,50 +4215,6 @@ class CollaborationProvider with ChangeNotifier {
         quiescence.synchronization,
       ]);
       final local = await sessions.stopCurrentCollaborationSessionLocally();
-      await _finishCommittedLocalReplacement(
-        sessions: sessions,
-        logs: logs,
-        sourceSessionId: sourceSessionId,
-        localSessionId: local.sessionId,
-      );
-    } catch (error) {
-      _setError(_localErrorCode(error), error.toString());
-      rethrow;
-    } finally {
-      _operationInProgress = false;
-      _safeNotify();
-      _scheduleRefresh();
-    }
-  }
-
-  /// Stops synchronization and keeps the materialized replica as a closed,
-  /// read-only local history session. The shared server session is not closed.
-  Future<void> closeCurrentSessionLocally() async {
-    if (_operationInProgress) {
-      throw StateError('COLLABORATION_OPERATION_IN_PROGRESS');
-    }
-    final sessions = _requireSessions();
-    final logs = _requireLogs();
-    final sourceSessionId = sessions.currentSessionId;
-    final sourceBinding = binding;
-    if (sourceSessionId == null ||
-        sourceBinding == null ||
-        sourceBinding.sessionId != sourceSessionId) {
-      throw StateError('LOCAL_COLLABORATION_REQUIRED');
-    }
-
-    _operationInProgress = true;
-    _stateEpoch += 1;
-    _refreshGeneration += 1;
-    _clearError();
-    final quiescence = _suspendForDeviceLocalMutation();
-    _safeNotify();
-    try {
-      await waitForCollaborationLocalQuiescence([
-        quiescence.liveDraft,
-        quiescence.synchronization,
-      ]);
-      final local = await sessions.closeSessionLocally(sourceSessionId);
       await _finishCommittedLocalReplacement(
         sessions: sessions,
         logs: logs,

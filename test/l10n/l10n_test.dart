@@ -90,24 +90,21 @@ void main() {
       en.aboutUpdateAvailableMessage('2.1.0-R', '2.2.0-R'),
       contains('Latest version: 2.2.0-R'),
     );
-    expect(zh.createEditableLocalCopy, '停止协作并创建本地副本');
+    expect(zh.createEditableLocalCopy, '另存独立会话');
     expect(
       zh.createEditableLocalCopyConfirmation('周日晚间点名'),
-      contains('原本机协作副本不会被关闭或删除'),
+      contains('原协作会话和你的成员身份不变'),
     );
     expect(
       en.createEditableLocalCopy,
-      'Stop syncing and create local copy',
+      'Save independent copy',
     );
-    expect(zh.convertCollaborationToLocal, '停止本机协作并转为本地会话');
-    expect(
-      zh.convertCollaborationToLocalConfirmation('周日晚间点名'),
-      contains('服务器共享会话、成员和其他设备不受影响'),
-    );
-    expect(
-      en.convertCollaborationToLocal,
-      'Stop collaboration on this device and convert to a local session',
-    );
+    expect(zh.historySessionCloseTitle, '结束记录');
+    expect(zh.closeSharedSession, '结束共同记录');
+    expect(zh.leaveSession, '离开协作');
+    expect(en.historySessionCloseTitle, 'End recording');
+    expect(en.closeSharedSession, 'End shared recording');
+    expect(en.leaveSession, 'Leave collaboration');
     expect(
       zh.deleteLibraryItemConfirmation('FT-991A', '设备词库'),
       '确定从设备词库中删除“FT-991A”吗？',

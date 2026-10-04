@@ -1,4 +1,159 @@
 {
+  "interfaceScaleTitle": "Interface zoom",
+  "interfaceScaleHint": "Scale buttons, text, tables and dialogs together (80%–150%). Saved on this device only.",
+  "interfaceScaleUp": "Zoom in",
+  "interfaceScaleDown": "Zoom out",
+  "interfaceScaleReset": "Reset to 100%",
+  "shareInboxTitle": "Received sharing invitations",
+  "shareInboxEmpty": "No pending sharing invitations",
+  "shareInvitationFrom": "{username} sent you a sharing invitation",
+  "@shareInvitationFrom": {"placeholders":{"username":{"type":"String"}}},
+  "shareAcceptedHint": "Invitation accepted. Find these sessions in History → Shared. Your current recording session has not changed.",
+  "newInvitationNotice": "New invitation or request received",
+  "viewInvitations": "View invitations",
+  "pendingInvitations": "{count} invitations or requests need your response",
+  "@pendingInvitations": {"placeholders":{"count":{"type":"int"}}},
+  "dismissInvitationNotice": "Dismiss this reminder; keep the invitations",
+  "shareSessionsTitle": "Share sessions",
+  "shareSelected": "Select sessions",
+  "shareAll": "Share all, including future sessions",
+  "shareAllHint": "Includes all your current and future sessions. New local sessions and offline changes become available after cloud sync.",
+  "shareSelectedHint": "Only the sessions you select are shared. Future sessions and records shared by others are excluded.",
+  "shareViewOnly": "View only",
+  "shareEditLogs": "Allow adding and editing records",
+  "shareDeleteLogs": "Also allow deleting records",
+  "sharePermissionHint": "Only the owner can delete or close a session or grant access to others. Closed sessions are view-only.",
+  "shareRecipientHint": "Choose a friend or enter a username on this server",
+  "shareSend": "Send sharing invitation",
+  "shareManage": "Outgoing shares",
+  "shareRevoke": "Revoke sharing",
+  "shareRevokeHint": "This authorization will no longer allow viewing or editing your sessions. Independent collaboration memberships are unaffected.",
+  "shareSaved": "Sharing settings saved",
+  "shareSyncFirst": "Confirm pairing or resolve conflicts in Personal cloud sync, then retry. Cloud data will not be overwritten automatically.",
+  "shareSyncLocal": "Sync local records",
+  "shareNeedsSelection": "Choose a recipient and at least one session, or choose ongoing sharing of all sessions.",
+  "shareAccessChanged": "The account or share permissions changed. Close and reopen this view.",
+  "shareConflict": "Someone changed these records. Refresh before editing again to avoid overwriting their changes.",
+  "shareLoadFailed": "Could not load shared data. Check your connection and retry.",
+  "shareOperationFailed": "The operation did not complete. Check your connection and permissions, then retry.",
+  "shareExisting": "You already share with this user. Edit the existing grant below.",
+  "shareAddRecord": "Add record",
+  "shareRecordsHint": "Viewing shared records does not switch your current recording session.",
+  "shareUpgradeRequired": "Update your server to use batch sharing and record permissions.",
+  "shareSelectVisible": "Select search results",
+  "shareClearSelection": "Clear selection",
+  "socialSearch": "Search",
+  "socialSearchHint": "Username or registered callsign",
+  "socialSearchScope": "Search users on your current server only. Personal records are not searched or made public.",
+  "socialSearchStart": "Enter at least 2 characters, then search and choose a person to add.",
+  "socialSearchEmpty": "No matching users. Check that your partner registered on the same server.",
+  "socialSearchMore": "More users match. Enter a more specific username.",
+  "socialSearchFailed": "Search failed. Check your connection and retry.",
+  "socialSearchUpgrade": "This server does not support user search yet. Update the server first.",
+  "socialSearchRateLimited": "Too many searches. Please try again shortly.",
+  "socialAlreadyFriend": "Already friends",
+  "socialRequestSent": "Request sent",
+  "socialRequestIncoming": "Wants to be your friend",
+  "socialRequestClosed": "Request closed",
+  "socialJoinMode": "How people join",
+  "socialJoinInviteOnly": "Invite only",
+  "socialJoinApproval": "Friends request approval",
+  "socialJoinDirect": "Friends join directly",
+  "socialDirectRole": "Role for new direct joins",
+  "socialDirectJoinWarning": "Friends on this server can join without approval and see all existing and new records in this session. This affects only this session; your other sessions stay private.",
+  "socialDirectJoinExistingHint": "This role applies only to future direct joins. Existing members keep their roles. Removed members need a new invitation or approval.",
+  "socialDirectJoinConfirm": "Allow direct joins",
+  "socialDirectJoin": "Join directly",
+  "socialDirectJoinRemoved": "You were removed from this session. Ask the owner for a new invitation.",
+  "detailsType": "Recording mode",
+  "detailsLocal": "Local recording · No server required",
+  "detailsShared": "Shared recording · Local copy retained",
+  "detailsStatus": "Session status",
+  "detailsRecords": "Records saved on this device",
+  "detailsCreated": "Created",
+  "detailsUpdated": "Updated",
+  "detailsEnded": "Ended",
+  "detailsId": "Session ID",
+  "sessionPeopleTitle": "Participants & invitations",
+  "sessionPeopleHint": "Choose who can join and manage invitations and requests here. Records are not shared with friends by default. Public pages are managed separately.",
+  "sessionPendingRequests": "Invitations and requests for this session",
+  "legacyInviteCodes": "Invite codes (legacy compatibility)",
+  "collaborationTechnicalDetails": "Connection & diagnostics",
+  "collaborationOverviewOnline": "Connected. Record updates are being shared with participants.",
+  "collaborationOverviewOffline": "The connection is unavailable. Existing records are still on this device.",
+  "collaborationOverviewAttention": "Some records or sync issues need attention. Open Sync to review them.",
+  "collaborationOverviewPending": "Saved on this device. {count} changes are waiting to sync.",
+  "@collaborationOverviewPending": {"placeholders":{"count":{"type":"int"}}},
+  "historySessionCollaborationCloseRequired": "This is a collaborative session. Use Collaboration & members to end shared recording or leave; it cannot be ended as a local session.",
+  "collaborationLifecycleHint": "Switching pages or temporarily going offline does not leave the collaboration. The owner can end shared recording; participants can leave. Existing records are kept.",
+  "hubLocalStart": "Create a session to start recording. No server or account is required; records are saved on this device and can be viewed or exported.",
+  "hubLocalHint": "Local recording works on its own. Sync and collaboration are optional.",
+  "hubOptionalOnline": "Sync and collaboration (optional)",
+  "hubOptionalOnlineHint": "Connect a server when you want multi-device sync or to record with others.",
+  "hubConfigureServer": "Set up an optional server",
+  "hubOnlineConnected": "Friends and collaboration use your connected server. Local recording remains independent.",
+  "hubEnableCollaboration": "Record with a friend",
+  "hubConfirmUpload": "Upload this session and enable collaboration",
+  "hubUploadExplanation": "This uploads the current session and its existing records to the server below and starts collaboration sync. Other local sessions are not uploaded by this action. The session stays private; choose friends to invite afterwards. No public page is created.",
+  "hubContextChanged": "The server, account or current session changed. Close this dialog and try again.",
+  "hubAlreadyMember": "This person has already joined. You can find them in participant management.",
+  "hubInvitationHint": "They can view this session's records after accepting. Your other sessions are not shared.",
+  "hubContinueRecording": "Continue recording",
+  "hubViewRecords": "View records",
+  "hubSessionDetails": "Session details",
+  "hubHistoryHint": "Browse existing records on this device. Ended sessions are a status filter, not public archives.",
+  "hubAllRecords": "All",
+  "hubMyRecords": "My records",
+  "hubTogetherRecords": "Shared records",
+  "hubEndedRecords": "Ended",
+  "socialTitle": "Friends & invitations",
+  "socialAddFriend": "Add friend",
+  "socialFriends": "Friends",
+  "socialMessages": "Messages",
+  "socialSessions": "Sessions",
+  "socialIntro": "Add your partners as friends, then invite them to a session. Personal records remain private.",
+  "socialUsername": "Username (callsign used at registration)",
+  "socialSend": "Send request",
+  "socialInvite": "Invite",
+  "socialApply": "Request to join",
+  "socialAccept": "Accept",
+  "socialReject": "Decline",
+  "socialPending": "Awaiting response",
+  "socialAccepted": "Accepted",
+  "socialView": "View only",
+  "socialEdit": "Record together",
+  "socialOpen": "Open session",
+  "socialPrivate": "Invite only",
+  "socialDiscoverable": "Friends can discover and request to join",
+  "socialVisibilityHint": "Discoverable friend sessions appear here. The owner chooses how people join; records are available to members only.",
+  "socialNoFriends": "No friends yet. Search for your partner's username or registered callsign to add them.",
+  "socialNoMessages": "No invitations or requests",
+  "socialNoSessions": "No sessions available. You can also enable collaboration for your current session.",
+  "socialPublish": "Enable collaboration for current session",
+  "socialRemove": "Remove friend",
+  "socialRemoveHint": "Pending requests between you will be cancelled. Existing session memberships are managed separately by the session owner.",
+  "socialBlock": "Block",
+  "socialUnblock": "Unblock",
+  "socialBlocked": "Blocked",
+  "socialDone": "Done",
+  "socialFriendRequest": "Friend request",
+  "socialInvitation": "Session invitation",
+  "socialApplication": "Join request",
+  "socialSent": "Sent by me",
+  "socialReceived": "Received",
+  "socialManage": "Manage participants",
+  "socialConnect": "Connect to a server and sign in to add friends.",
+  "socialUpgrade": "Update this server to enable friends.",
+  "socialLoadFailed": "Could not refresh. Please retry.",
+  "socialChooseFriend": "Choose a friend",
+  "socialErrorUser": "Username not found. Check that your partner registered on the same server.",
+  "socialErrorFriends": "Please add each other as friends first.",
+  "socialErrorClosed": "This request is closed or expired. Please refresh.",
+  "socialErrorSelf": "You cannot add yourself.",
+  "socialErrorBlocked": "Requests to this user are unavailable.",
+  "socialServerLink": "Copy server connection",
+  "socialServerLinkHint": "Paste a server address or a server portal link, then sign in.",
+  "socialLegacy": "Legacy sharing",
   "@@locale": "en",
   "navWorkbench": "Net Desk",
   "navSessions": "Sessions",
@@ -26,16 +181,31 @@
   "newRecordNameHint": "Enter a name for this record (optional)",
   "automaticName": "automatic name",
   "newRecordStarted": "Started new record: {name}",
-  "@newRecordStarted": {"placeholders": {"name": {"type": "String"}}},
+  "@newRecordStarted": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "createNewRecordFailed": "Could not create a new record: {error}",
-  "@createNewRecordFailed": {"placeholders": {"error": {"type": "String"}}},
+  "@createNewRecordFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "currentOrdinal": "Current #{ordinal}",
   "sessionsTitle": "Sessions",
   "sessionsSubtitle": "Manage this net, collaborating scribes, and controller displays.",
   "noCurrentSession": "No current net session",
-  "noCurrentSessionHint": "Create a net session to start logging.",
+  "noCurrentSessionHint": "Create a net session, or join a collaboration, to start logging.",
+  "workbenchNoSessionHint": "Create a session on the Sessions page, or join a collaboration, before logging.",
+  "createOrJoinSessionFirst": "Create a session or join a collaboration first",
+  "goCreateSession": "Create a session",
   "sessionActive": "Active",
-  "sessionClosed": "Closed",
+  "sessionClosed": "Ended",
   "savedPositions": "{count} saved",
   "localSession": "Local session",
   "manageCollaboration": "Collaboration & members",
@@ -55,15 +225,15 @@
   "historySessionCurrent": "Current session",
   "historySessionSwitched": "Opened session: {title}",
   "historySessionOpenFailed": "Could not open session: {error}",
-  "historySessionCloseTitle": "Close only on this device",
-  "historySessionCloseConfirmation": "Close “{title}” only on this device? It will remain as read-only local history. If it is a collaboration replica, this device stops synchronizing and discards pending synchronization, conflicts, offline review records, and the local copy of any unsubmitted draft. The shared server session, members, and other devices are not affected.",
-  "historySessionClosed": "Session closed on this device",
-  "historySessionCloseFailed": "Could not close session on this device: {error}",
+  "historySessionCloseTitle": "End recording",
+  "historySessionCloseConfirmation": "End recording in “{title}”? Existing records will be kept. You can view them or resume recording later. No data will be deleted.",
+  "historySessionClosed": "Recording ended. Existing records were kept.",
+  "historySessionCloseFailed": "Failed to end recording: {error}",
   "historySessionCollaborationCloseRequiresOpen": "This is a collaboration session. Open it first, then close it from Collaboration & members.",
   "historySessionCollaborationCloseOwnerRequired": "Only a fully synchronized session owner can close a collaboration session. Refresh access in Collaboration & members and try again.",
   "historySessionReopenAction": "Reactivate",
   "historySessionReopenTitle": "Reactivate local session",
-  "historySessionReopenConfirmation": "Reactivate “{title}” and switch to it? Any other active local session will be closed automatically; collaboration sessions are not affected. Reopen a collaboration target from Collaboration & members.",
+  "historySessionReopenConfirmation": "Resume recording in “{title}” and switch to it? Other sessions stay unchanged. Collaborative sessions must be resumed by their owner in Collaboration & members.",
   "historySessionReopened": "Reactivated and switched to session: {title}",
   "historySessionReopenFailed": "Could not reactivate local session: {error}",
   "historySessionReopenedLogsUnavailable": "Session “{title}” was reactivated, but its logs could not be loaded. It is temporarily read-only; retry loading.",
@@ -97,7 +267,13 @@
   "staleControllerDataWarning": "Connection lost. The last received content is shown and may be out of date.",
   "previousSavedRecord": "Previous saved record",
   "recordOrdinal": "Position #{ordinal}",
-  "@recordOrdinal": {"placeholders": {"ordinal": {"type": "int"}}},
+  "@recordOrdinal": {
+    "placeholders": {
+      "ordinal": {
+        "type": "int"
+      }
+    }
+  },
   "noPreviousRecord": "No previous record",
   "waitingForCallsign": "Waiting for a callsign…",
   "beingEdited": "Editing",
@@ -161,22 +337,14 @@
   "resolutionSubmitDuplicate": "Submit as duplicate",
   "resolutionCopyCurrent": "Copy to current draft",
   "callsignRequired": "Enter a callsign",
-  "leaveSession": "Leave server collaboration",
-  "leaveSessionConfirmation": "This sends a membership-leave request to the server. After it succeeds, the local replica remains read-only and a new invitation is required to participate again. If the server is unreachable, use a local-device action instead.",
-  "convertCollaborationToLocal": "Stop collaboration on this device and convert to a local session",
-  "convertCollaborationToLocalTitle": "Stop collaboration on this device?",
-  "convertCollaborationToLocalConfirmation": "This stops collaboration synchronization for “{title}” on this device and replaces it with an editable local session. Only records already saved in the table are copied. An unsubmitted shared live draft stays on the server and is not added to the local session. The shared server session, its members, and other devices are not affected. This cannot be undone.",
-  "@convertCollaborationToLocalConfirmation": {"placeholders": {"title": {"type": "String"}}},
-  "convertCollaborationToLocalUnsyncedConfirmation": "This stops synchronization for “{title}” on this device and keeps records already saved in the table. Pending synchronization, conflicts, offline review records, and an unsubmitted live draft are permanently discarded from this device. The shared server session, members, and other devices are not affected. This cannot be undone.",
-  "@convertCollaborationToLocalUnsyncedConfirmation": {"placeholders": {"title": {"type": "String"}}},
-  "convertCollaborationToLocalSucceeded": "Stopped collaboration on this device and converted to a local session",
-  "closeCollaborationLocally": "Close only on this device",
-  "moreLocalCollaborationActions": "More local actions",
-  "createEditableLocalCopy": "Stop syncing and create local copy",
-  "createEditableLocalCopyTitle": "Stop syncing on this device?",
-  "createEditableLocalCopyConfirmation": "This creates an independent copy of “{title}” on this device, copies every saved record currently shown in the table, and switches to it immediately. The new copy can be edited offline and will no longer synchronize. The shared server session and its original local replica will not be closed or deleted. Collaboration queues, conflicts, and an unsubmitted live draft stay with the original replica and are not copied.",
+  "leaveSession": "Leave collaboration",
+  "leaveSessionConfirmation": "You will stop receiving updates for this session. Records already on this device will remain read-only, and other members can continue. To join again, you will need a new invitation or approved application. A server connection is required. You do not need to leave just to close this page.",
+  "moreLocalCollaborationActions": "More actions",
+  "createEditableLocalCopy": "Save independent copy",
+  "createEditableLocalCopyTitle": "Save an independent session?",
+  "createEditableLocalCopyConfirmation": "Copy the saved table records from “{title}” into a new session and switch to it for independent recording, without a server. Your original collaborative session and membership stay unchanged; you can switch back later. Pending sync operations, conflicts, offline records awaiting review and unsubmitted drafts stay in the original session. They are neither copied nor deleted.",
   "editableLocalCopySessionTitle": "{title} (local copy)",
-  "editableLocalCopySucceeded": "Switched to the editable local copy",
+  "editableLocalCopySucceeded": "Switched to the independent copy. The original collaboration was kept.",
   "collaborationScreenTitle": "Collaboration and members",
   "collaborationConnectionSection": "Connection and session",
   "collaborationConnectionSectionHint": "Review the server account, current session, and synchronization entry points.",
@@ -189,6 +357,21 @@
   "collaborationServerAccount": "{url}\nAccount {id}",
   "collaborationServerLoginHint": "Check the server and sign in from Settings → Server and account.",
   "remoteCommitPendingLocalApplyHint": "The remote commit succeeded. The client will restore only the local acknowledgement and will not create another mutation.",
+  "accountSharing": "Account sharing",
+  "accountSharingHint": "Request then accept. Shared sessions are read-only until you join with the passphrase.",
+  "sharedSessionBadge": "Shared",
+  "sharedSessionFrom": "Shared from {username}",
+  "@sharedSessionFrom": {
+    "placeholders": {
+      "username": {
+        "type": "String"
+      }
+    }
+  },
+  "acceptShare": "Accept",
+  "pendingInboundShares": "Pending requests",
+  "browseSharedSession": "Browse shared session",
+  "joinSharedSession": "Join with passphrase",
   "joinCollaborationTitle": "Join collaboration",
   "joinCollaborationHint": "Enter a member invitation code. A complete local replica is installed with the same remote Session ID.",
   "inviteCodeLabel": "Invitation code",
@@ -214,12 +397,12 @@
   "transportAuthRequired": "Sign-in required",
   "transportIncompatible": "Protocol error",
   "readOnlyRevoked": "Membership has been revoked. The local cache is read-only.",
-  "readOnlyClosePending": "The close request is saved locally and awaits confirmation; the session remains locked if it conflicts.",
+  "readOnlyClosePending": "The end request is awaiting sync confirmation. Records are temporarily read-only.",
   "readOnlyReopenPending": "The reopen request is saved locally. The session remains read-only until the server confirms it.",
-  "readOnlySessionClosed": "The collaboration session is closed. The local cache is read-only.",
+  "readOnlySessionClosed": "Shared recording has ended. Existing records remain available to view.",
   "readOnlyViewer": "This account is a read-only member.",
-  "readOnlyResyncing": "The event cursor requires a canonical snapshot reinstall; pending changes are preserved.",
-  "readOnlyCheckingAccess": "Access and the event cursor are being checked. The session is temporarily read-only.",
+  "readOnlyResyncing": "Restoring synchronization. Saved changes will be kept.",
+  "readOnlyCheckingAccess": "Checking your participation permissions. Viewing only for now.",
   "logNotOwnedReadOnlyHint": "You can change or delete only records that you created.",
   "logAuthorUnknownReadOnlyHint": "This historical record has no author information and is read-only for members.",
   "logSessionReadOnlyHint": "The current member role, session state, or synchronization state does not allow record changes.",
@@ -227,16 +410,16 @@
   "renameCollaborationSession": "Rename collaboration session",
   "saveLocally": "Save locally",
   "sessionTitleQueued": "Title saved locally and awaiting synchronization",
-  "closeCollaborationSessionTitle": "Close shared server session",
-  "closeCollaborationSessionMessage": "This sends a request to close the shared session on the server. After the server confirms it, no member can add or change records. The owner can reopen it later.",
-  "closeSharedSession": "Close shared server session",
-  "closeCollaborationDraftNotEmpty": "The current live draft still contains data. Submit the complete record, or explicitly discard the draft before closing.",
-  "closeCollaborationDraftIncomplete": "The draft is missing its time, controller callsign, or logged callsign, so it cannot be submitted. You can still discard it and close.",
-  "closeCollaborationDraftLocked": "Another member or device is editing {count} draft fields. Wait for those edits to finish, then refresh before closing.",
-  "closeCollaborationDiscardAndClose": "Discard draft and close",
-  "closeCollaborationSubmitAndClose": "Submit and close",
-  "closeCollaborationQueuedOffline": "The record was saved only to the offline queue and has not reached the server. The session was not closed. Reconnect and resolve the record before retrying.",
-  "closeSessionQueued": "Shared-session close requested; awaiting server synchronization",
+  "closeCollaborationSessionTitle": "End shared recording",
+  "closeCollaborationSessionMessage": "All members will stop adding or editing records. Existing records and membership will be kept, and you can resume recording later. This change must sync to the server. You do not need to end recording just to leave this page.",
+  "closeSharedSession": "End shared recording",
+  "closeCollaborationDraftNotEmpty": "The current check-in draft has content. Submit the complete record or explicitly discard the draft before ending recording.",
+  "closeCollaborationDraftIncomplete": "The draft is missing the time, controller callsign or check-in callsign. It cannot be submitted, but can be explicitly discarded before ending recording.",
+  "closeCollaborationDraftLocked": "Other members or devices are editing {count} draft fields. Wait for them to finish and refresh before ending recording.",
+  "closeCollaborationDiscardAndClose": "Discard draft and end",
+  "closeCollaborationSubmitAndClose": "Submit and end",
+  "closeCollaborationQueuedOffline": "The record is only saved in the offline queue and has not reached the server. Shared recording has not ended. Reconnect and resolve the record before trying again.",
+  "closeSessionQueued": "The request to end shared recording was saved and is awaiting sync confirmation.",
   "reopenCollaborationSessionTitle": "Reopen collaboration session",
   "reopenCollaborationSessionMessage": "Reopening is submitted as a synchronized change. The session remains read-only until confirmed.",
   "reopenSessionQueued": "Reopen request saved locally and awaiting synchronization",
@@ -300,13 +483,49 @@
   "duplicateAddNewRecord": "Add new record",
   "duplicateContinueDialogTitle": "Callsign already recorded",
   "duplicateContinueDialogMessage": "{callsign} was already logged at position {ordinal}. Continue adding it?",
-  "@duplicateContinueDialogMessage": {"placeholders": {"callsign": {"type": "String"}, "ordinal": {"type": "int"}}},
+  "@duplicateContinueDialogMessage": {
+    "placeholders": {
+      "callsign": {
+        "type": "String"
+      },
+      "ordinal": {
+        "type": "int"
+      }
+    }
+  },
   "duplicateContinueAdd": "Continue adding",
   "duplicateUpdateDialogTitle": "Callsign already recorded",
   "duplicateUpdateDialogMessage": "{callsign} already has a record in this net. Choose how to proceed:",
-  "@duplicateUpdateDialogMessage": {"placeholders": {"callsign": {"type": "String"}}},
+  "@duplicateUpdateDialogMessage": {
+    "placeholders": {
+      "callsign": {
+        "type": "String"
+      }
+    }
+  },
   "duplicateOldRecordSummary": "Existing (#{ordinal}): {time} {callsign} {rstSent}/{rstRcvd} {qth}",
-  "@duplicateOldRecordSummary": {"placeholders": {"ordinal": {"type": "int"}, "time": {"type": "String"}, "callsign": {"type": "String"}, "rstSent": {"type": "String"}, "rstRcvd": {"type": "String"}, "qth": {"type": "String"}}},
+  "@duplicateOldRecordSummary": {
+    "placeholders": {
+      "ordinal": {
+        "type": "int"
+      },
+      "time": {
+        "type": "String"
+      },
+      "callsign": {
+        "type": "String"
+      },
+      "rstSent": {
+        "type": "String"
+      },
+      "rstRcvd": {
+        "type": "String"
+      },
+      "qth": {
+        "type": "String"
+      }
+    }
+  },
   "recordUpdated": "Record updated",
   "callsignHistoryFillSetting": "Reuse callsign history",
   "callsignHistoryFillHint": "Match existing callsign records and fill the radio, antenna, QTH, and related fields in one tap.",
@@ -331,7 +550,13 @@
   "publicShareExpiryCustomHours": "Validity (hours)",
   "publicShareExpiryRangeError": "Enter a whole number from 1 to 720.",
   "publicShareEstimatedExpiry": "Estimated expiry: {time} (local time)",
-  "@publicShareEstimatedExpiry": {"placeholders": {"time": {"type": "String"}}},
+  "@publicShareEstimatedExpiry": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "copyPublicShareLink": "Copy link",
   "openPublicShare": "Open in browser",
   "revokePublicShare": "Revoke",
@@ -493,10 +718,25 @@
   "aboutCheckUpdates": "Check for updates",
   "aboutCheckingUpdates": "Checking…",
   "aboutUpToDate": "You’re up to date ({version})",
-  "@aboutUpToDate": {"placeholders": {"version": {"type": "String"}}},
+  "@aboutUpToDate": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "aboutUpdateAvailableTitle": "Update available",
   "aboutUpdateAvailableMessage": "Current version: {currentVersion}\nLatest version: {latestVersion}",
-  "@aboutUpdateAvailableMessage": {"placeholders": {"currentVersion": {"type": "String"}, "latestVersion": {"type": "String"}}},
+  "@aboutUpdateAvailableMessage": {
+    "placeholders": {
+      "currentVersion": {
+        "type": "String"
+      },
+      "latestVersion": {
+        "type": "String"
+      }
+    }
+  },
   "aboutOpenRelease": "View release",
   "aboutUpdateLater": "Not now",
   "aboutUpdateCheckFailed": "Couldn’t check for updates. Check your connection and try again.",
@@ -548,7 +788,13 @@
   "logsClose": "Close",
   "logsCopied": "Logs copied",
   "logsCount": "{count, plural, =0{No persistent logs} =1{1 persistent log} other{{count} persistent logs}}",
-  "@logsCount": {"placeholders": {"count": {"type": "int"}}},
+  "@logsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "logsSearchHint": "Search messages, sources, errors, or stacks",
   "logsLevelAll": "All",
   "logsLevelDebug": "Debug",
@@ -567,7 +813,13 @@
   "resetSettingsConfirmAction": "Restore defaults",
   "resetSettingsSucceeded": "Default settings restored",
   "resetSettingsFailed": "Could not restore default settings: {error}",
-  "@resetSettingsFailed": {"placeholders": {"error": {"type": "String"}}},
+  "@resetSettingsFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "localDataOperationsTitle": "On-device data",
   "localDataOperationsHint": "Diagnose, back up, restore, or reset this device's database. These actions do not directly change server data.",
   "databaseDiagnosticsSection": "Diagnostics",
@@ -581,19 +833,67 @@
   "personalCloudUpToDate": "Personal records and dictionary changes are up to date",
   "personalCloudDecisionRequired": "A first-time pairing or real edit conflict needs your confirmation. Unrelated changes have already been merged safely.",
   "personalCloudError": "Account personal snapshot sync failed: {error}",
-  "@personalCloudError": {"placeholders": {"error": {"type": "String"}}},
+  "@personalCloudError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "personalCloudLocalSummary": "Personal records on device: {sessionCount} sessions and {logCount} records",
-  "@personalCloudLocalSummary": {"placeholders": {"sessionCount": {"type": "int"}, "logCount": {"type": "int"}}},
+  "@personalCloudLocalSummary": {
+    "placeholders": {
+      "sessionCount": {
+        "type": "int"
+      },
+      "logCount": {
+        "type": "int"
+      }
+    }
+  },
   "personalCloudRemoteSummary": "Account snapshot: {sessionCount} sessions and {logCount} records · revision {revision}",
-  "@personalCloudRemoteSummary": {"placeholders": {"sessionCount": {"type": "int"}, "logCount": {"type": "int"}, "revision": {"type": "int"}}},
+  "@personalCloudRemoteSummary": {
+    "placeholders": {
+      "sessionCount": {
+        "type": "int"
+      },
+      "logCount": {
+        "type": "int"
+      },
+      "revision": {
+        "type": "int"
+      }
+    }
+  },
   "personalCloudRemoteEmpty": "This account does not have a personal records snapshot yet",
   "personalCloudDictionaryLocalSummary": "Dictionary changes on device: {itemCount}",
-  "@personalCloudDictionaryLocalSummary": {"placeholders": {"itemCount": {"type": "int"}}},
+  "@personalCloudDictionaryLocalSummary": {
+    "placeholders": {
+      "itemCount": {
+        "type": "int"
+      }
+    }
+  },
   "personalCloudDictionaryRemoteSummary": "Account dictionary snapshot: {itemCount} changes · revision {revision}",
-  "@personalCloudDictionaryRemoteSummary": {"placeholders": {"itemCount": {"type": "int"}, "revision": {"type": "int"}}},
+  "@personalCloudDictionaryRemoteSummary": {
+    "placeholders": {
+      "itemCount": {
+        "type": "int"
+      },
+      "revision": {
+        "type": "int"
+      }
+    }
+  },
   "personalCloudDictionaryRemoteEmpty": "This account does not have a dictionary snapshot yet",
   "personalCloudConflictSummary": "{count} conflicting field(s) need a choice",
-  "@personalCloudConflictSummary": {"placeholders": {"count": {"type": "int"}}},
+  "@personalCloudConflictSummary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "personalCloudConfirmMerge": "Confirm safe merge",
   "personalCloudKeepLocalConflicts": "Keep device values",
   "personalCloudKeepRemoteConflicts": "Keep cloud values",
@@ -604,7 +904,16 @@
   "personalCloudConflictSelectAllLocal": "Select all device",
   "personalCloudConflictSelectAllRemote": "Select all cloud",
   "personalCloudConflictSelectionProgress": "Selected {selected} of {total}; choose every item before applying.",
-  "@personalCloudConflictSelectionProgress": {"placeholders": {"selected": {"type": "int"}, "total": {"type": "int"}}},
+  "@personalCloudConflictSelectionProgress": {
+    "placeholders": {
+      "selected": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "personalCloudConflictApply": "Apply choices",
   "personalCloudConflictApplySucceeded": "Conflict choices applied and synchronized",
   "personalCloudConflictNoneTitle": "No synchronization conflicts",
@@ -614,7 +923,16 @@
   "personalCloudConflictRecordsDataset": "Personal records",
   "personalCloudConflictDictionaryDataset": "Personal dictionary",
   "personalCloudConflictEntityReference": "{dataset} · ID {id}",
-  "@personalCloudConflictEntityReference": {"placeholders": {"dataset": {"type": "String"}, "id": {"type": "String"}}},
+  "@personalCloudConflictEntityReference": {
+    "placeholders": {
+      "dataset": {
+        "type": "String"
+      },
+      "id": {
+        "type": "String"
+      }
+    }
+  },
   "personalCloudConflictBaseline": "Common baseline",
   "personalCloudConflictValueAbsent": "Does not exist (choosing this side deletes the item)",
   "personalCloudConflictValueEmpty": "Empty value",
@@ -622,9 +940,21 @@
   "personalCloudConflictDeletionField": "Deletion state",
   "personalCloudConflictDictionaryStateField": "Dictionary state",
   "personalCloudFieldConflictTitle": "Field {field} differs on both sides",
-  "@personalCloudFieldConflictTitle": {"placeholders": {"field": {"type": "String"}}},
+  "@personalCloudFieldConflictTitle": {
+    "placeholders": {
+      "field": {
+        "type": "String"
+      }
+    }
+  },
   "personalCloudEntityConflictTitle": "{entity} conflict",
-  "@personalCloudEntityConflictTitle": {"placeholders": {"entity": {"type": "String"}}},
+  "@personalCloudEntityConflictTitle": {
+    "placeholders": {
+      "entity": {
+        "type": "String"
+      }
+    }
+  },
   "personalCloudEntitySession": "Session",
   "personalCloudEntityLog": "Record",
   "personalCloudEntityDictionaryItem": "Dictionary item",
@@ -635,12 +965,42 @@
   "personalCloudRestoreLocal": "Restore device from snapshot",
   "personalCloudReplaceTitle": "Replace account personal snapshot",
   "personalCloudReplaceWarning": "The {localSessions} personal sessions and {localLogs} records on this device will completely replace the {remoteSessions} sessions and {remoteLogs} records in the account snapshot. This does not create or modify collaboration sessions. The change will synchronize to other signed-in devices.",
-  "@personalCloudReplaceWarning": {"placeholders": {"localSessions": {"type": "int"}, "localLogs": {"type": "int"}, "remoteSessions": {"type": "int"}, "remoteLogs": {"type": "int"}}},
+  "@personalCloudReplaceWarning": {
+    "placeholders": {
+      "localSessions": {
+        "type": "int"
+      },
+      "localLogs": {
+        "type": "int"
+      },
+      "remoteSessions": {
+        "type": "int"
+      },
+      "remoteLogs": {
+        "type": "int"
+      }
+    }
+  },
   "personalCloudReplacePhrase": "REPLACE ACCOUNT SNAPSHOT WITH DEVICE",
   "personalCloudReplaceAction": "Replace snapshot",
   "personalCloudRestoreTitle": "Restore from account personal snapshot",
   "personalCloudRestoreWarning": "The {remoteSessions} sessions and {remoteLogs} records in the account snapshot will replace the {localSessions} sessions and {localLogs} personal records on this device. Libraries, settings, and collaboration sessions are unaffected.",
-  "@personalCloudRestoreWarning": {"placeholders": {"remoteSessions": {"type": "int"}, "remoteLogs": {"type": "int"}, "localSessions": {"type": "int"}, "localLogs": {"type": "int"}}},
+  "@personalCloudRestoreWarning": {
+    "placeholders": {
+      "remoteSessions": {
+        "type": "int"
+      },
+      "remoteLogs": {
+        "type": "int"
+      },
+      "localSessions": {
+        "type": "int"
+      },
+      "localLogs": {
+        "type": "int"
+      }
+    }
+  },
   "personalCloudRestorePhrase": "RESTORE DEVICE FROM ACCOUNT SNAPSHOT",
   "personalCloudRestoreAction": "Restore this device",
   "personalCloudReplaceSucceeded": "The account snapshot now contains this device's personal records",
@@ -649,20 +1009,68 @@
   "databaseStatusTitle": "On-device database status",
   "databaseStatusHint": "Review local content, collaboration work, and advanced diagnostics",
   "databaseStatusSchemaVersion": "Database schema version: {version}",
-  "@databaseStatusSchemaVersion": {"placeholders": {"version": {"type": "String"}}},
+  "@databaseStatusSchemaVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "databaseStatusBackupFormatVersion": "Backup format version: {version}",
-  "@databaseStatusBackupFormatVersion": {"placeholders": {"version": {"type": "String"}}},
+  "@databaseStatusBackupFormatVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "databaseStatusLocalContentSection": "On-device content",
   "databaseStatusLocalContentHint": "Sessions, net-control records, and library items stored in this device database",
   "databaseStatusSessionsLabel": "Sessions",
   "databaseStatusSessionsSummary": "{active} active · {closed} closed · {archived} archived · {deleted} deleted",
-  "@databaseStatusSessionsSummary": {"placeholders": {"active": {"type": "int"}, "closed": {"type": "int"}, "archived": {"type": "int"}, "deleted": {"type": "int"}}},
+  "@databaseStatusSessionsSummary": {
+    "placeholders": {
+      "active": {
+        "type": "int"
+      },
+      "closed": {
+        "type": "int"
+      },
+      "archived": {
+        "type": "int"
+      },
+      "deleted": {
+        "type": "int"
+      }
+    }
+  },
   "databaseStatusLogsLabel": "Net-control records",
   "databaseStatusDictionariesLabel": "Library items",
   "databaseStatusLifecycleSummary": "{active} available · {deleted} deleted",
-  "@databaseStatusLifecycleSummary": {"placeholders": {"active": {"type": "int"}, "deleted": {"type": "int"}}},
+  "@databaseStatusLifecycleSummary": {
+    "placeholders": {
+      "active": {
+        "type": "int"
+      },
+      "deleted": {
+        "type": "int"
+      }
+    }
+  },
   "databaseStatusDictionarySummary": "{label} {active} ({deleted} deleted)",
-  "@databaseStatusDictionarySummary": {"placeholders": {"label": {"type": "String"}, "active": {"type": "int"}, "deleted": {"type": "int"}}},
+  "@databaseStatusDictionarySummary": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      },
+      "active": {
+        "type": "int"
+      },
+      "deleted": {
+        "type": "int"
+      }
+    }
+  },
   "databaseStatusDictionaryDevice": "Devices",
   "databaseStatusDictionaryAntenna": "Antennas",
   "databaseStatusDictionaryQth": "QTH",
@@ -680,13 +1088,25 @@
   "databaseStatusAdvancedHint": "For troubleshooting only; an infrastructure table at zero is usually healthy",
   "databaseStatusUnknown": "unknown",
   "databaseStatusLoadFailed": "Could not read the on-device database status: {error}",
-  "@databaseStatusLoadFailed": {"placeholders": {"error": {"type": "String"}}},
+  "@databaseStatusLoadFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "databaseExportTitle": "Export on-device database",
   "databaseExportHint": "Back up sessions, records, libraries, local collaboration replicas, and pending-sync state",
   "databaseExportDialogTitle": "Save OpenLogTool on-device database backup",
   "databaseExportSucceeded": "On-device database backup exported",
   "databaseExportFailed": "Could not export the on-device database: {error}",
-  "@databaseExportFailed": {"placeholders": {"error": {"type": "String"}}},
+  "@databaseExportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "databaseImportTitle": "Import on-device database",
   "databaseImportHint": "Select and preview a JSON backup, then replace the complete on-device database",
   "databaseImportPickerTitle": "Select an OpenLogTool on-device database backup",
@@ -705,24 +1125,63 @@
   "databaseImportConfirmAction": "Replace and import",
   "databaseImportSucceeded": "On-device database imported and the interface has been refreshed",
   "databaseImportSucceededSummary": "On-device database imported: {sessionCount} sessions and {logCount} records. Historical sessions are available on the Sessions page",
-  "@databaseImportSucceededSummary": {"placeholders": {"sessionCount": {"type": "int"}, "logCount": {"type": "int"}}},
+  "@databaseImportSucceededSummary": {
+    "placeholders": {
+      "sessionCount": {
+        "type": "int"
+      },
+      "logCount": {
+        "type": "int"
+      }
+    }
+  },
   "databaseImportInvalid": "The selected file is not a valid OpenLogTool database backup ({error})",
-  "@databaseImportInvalid": {"placeholders": {"error": {"type": "String"}}},
+  "@databaseImportInvalid": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "databaseImportReadFailed": "Could not read the selected backup: {error}",
-  "@databaseImportReadFailed": {"placeholders": {"error": {"type": "String"}}},
+  "@databaseImportReadFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "databaseImportFailed": "Could not import the on-device database: {error}",
-  "@databaseImportFailed": {"placeholders": {"error": {"type": "String"}}},
+  "@databaseImportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "databaseClearTitle": "Clear on-device data",
   "databaseClearHint": "Remove local records, collaboration replicas, and custom library entries, then restore built-in library defaults",
   "databaseClearWarning": "This cannot be undone. It removes every on-device session, net record, collaboration replica, pending-sync queue, and custom library entry. It does not delete or close server sessions, sign you out, or reset appearance. Built-in libraries are restored to their defaults.",
   "databaseClearConfirmationPhrase": "DELETE ALL DATA",
   "databaseClearConfirmationInstruction": "Enter “{phrase}” to confirm:",
-  "@databaseClearConfirmationInstruction": {"placeholders": {"phrase": {"type": "String"}}},
+  "@databaseClearConfirmationInstruction": {
+    "placeholders": {
+      "phrase": {
+        "type": "String"
+      }
+    }
+  },
   "databaseClearConfirmationLabel": "Confirmation text",
   "databaseClearConfirmAction": "Permanently clear on-device data",
   "databaseClearSucceeded": "On-device data cleared and built-in libraries restored to their defaults",
   "databaseClearFailed": "Could not clear on-device data: {error}",
-  "@databaseClearFailed": {"placeholders": {"error": {"type": "String"}}},
+  "@databaseClearFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "databaseReplacementRefreshFailed": "The on-device database was changed, but the interface refresh or built-in library restore failed. Return to Sessions and try again; restart the app only if it remains inconsistent.",
   "databaseMaintenanceCollaborationBusy": "A collaboration publish, join, or other operation is in progress. Wait for it to end before managing the on-device database.",
   "localCollaborationOperationBusy": "Another collaboration operation is still in progress. Wait for it to end and try again.",
@@ -792,67 +1251,193 @@
   "templateHeaderExampleResult": "Net log for 2024-03-28",
   "templateVariablesTip": "Tip: Template variables add the current date and time to filenames and headers automatically, making files easier to organize.",
   "chooseColor": "Choose {label}",
-  "@chooseColor": {"placeholders": {"label": {"type": "String"}}},
+  "@chooseColor": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
   "colorHexValue": "HEX: #{value}",
-  "@colorHexValue": {"placeholders": {"value": {"type": "String"}}},
+  "@colorHexValue": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
   "colorOpacity": "Opacity",
   "noDataToExport": "There is no data to export",
   "saveExportFileDialog": "Save {format} export file",
-  "@saveExportFileDialog": {"placeholders": {"format": {"type": "String"}}},
+  "@saveExportFileDialog": {
+    "placeholders": {
+      "format": {
+        "type": "String"
+      }
+    }
+  },
   "downloadsDirectoryUnavailable": "The Downloads folder is unavailable",
   "exportSavedViaSystemPicker": "{format} export completed and was saved with the system file picker",
-  "@exportSavedViaSystemPicker": {"placeholders": {"format": {"type": "String"}}},
+  "@exportSavedViaSystemPicker": {
+    "placeholders": {
+      "format": {
+        "type": "String"
+      }
+    }
+  },
   "exportSucceeded": "{format} export completed",
-  "@exportSucceeded": {"placeholders": {"format": {"type": "String"}}},
+  "@exportSucceeded": {
+    "placeholders": {
+      "format": {
+        "type": "String"
+      }
+    }
+  },
   "fileSavedTo": "File saved to:\n{path}",
-  "@fileSavedTo": {"placeholders": {"path": {"type": "String"}}},
+  "@fileSavedTo": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "exportFailed": "Export failed: {error}",
-  "@exportFailed": {"placeholders": {"error": {"type": "String"}}},
+  "@exportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "excelGenerationFailed": "Export failed: Could not generate the Excel file",
   "importSucceeded": "Imported {count} records",
-  "@importSucceeded": {"placeholders": {"count": {"type": "int"}}},
+  "@importSucceeded": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "importFailed": "Import failed: {error}",
-  "@importFailed": {"placeholders": {"error": {"type": "String"}}},
+  "@importFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "excelImportComingSoon": "Excel import is not available yet",
   "excelImportLlmProcessing": "Parsing Excel with AI…",
   "excelImportPreviewTitle": "Import preview",
   "excelImportPreviewCount": "{count} records recognized",
-  "@excelImportPreviewCount": {"placeholders": {"count": {"type": "int"}}},
+  "@excelImportPreviewCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "excelImportConfirm": "Import",
   "excelImportSuccess": "Imported {count} records",
-  "@excelImportSuccess": {"placeholders": {"count": {"type": "int"}}},
+  "@excelImportSuccess": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "excelImportFailed": "Import failed: {error}",
-  "@excelImportFailed": {"placeholders": {"error": {"type": "String"}}},
+  "@excelImportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "pathCopied": "Path copied",
   "createSession": "New session",
   "createSessionTitle": "Create a net session",
   "createSessionNameHint": "Enter a session name",
   "sessionCreated": "Created session \"{title}\"",
-  "@sessionCreated": {"placeholders": {"title": {"type": "String"}}},
+  "@sessionCreated": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "createSessionFailed": "Could not create session: {error}",
-  "@createSessionFailed": {"placeholders": {"error": {"type": "String"}}},
+  "@createSessionFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "searchSessions": "Search sessions",
   "allSessionStatuses": "All statuses",
   "sessionArchived": "Archived",
   "sessionPage": "Page {page} of {total}",
-  "@sessionPage": {"placeholders": {"page": {"type": "int"}, "total": {"type": "int"}}},
+  "@sessionPage": {
+    "placeholders": {
+      "page": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "moreSessionActions": "More session actions",
   "openAndManageCollaboration": "Open and manage collaboration",
   "exportLibraryJson": "Export library JSON",
   "libraryExportDialogTitle": "Export lookup libraries",
   "libraryExportSucceeded": "Lookup libraries exported",
   "libraryExportFailed": "Could not export lookup libraries: {error}",
-  "@libraryExportFailed": {"placeholders": {"error": {"type": "String"}}},
+  "@libraryExportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "editLibraryItem": "Edit",
   "editLibraryItemTitle": "Edit \"{name}\"",
-  "@editLibraryItemTitle": {"placeholders": {"name": {"type": "String"}}},
+  "@editLibraryItemTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "editLibraryItemLabel": "Library entry",
   "libraryItemRenamed": "Updated to \"{value}\"",
-  "@libraryItemRenamed": {"placeholders": {"value": {"type": "String"}}},
+  "@libraryItemRenamed": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
   "libraryItemRenameFailed": "Could not update entry: {error}",
-  "@libraryItemRenameFailed": {"placeholders": {"error": {"type": "String"}}},
+  "@libraryItemRenameFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "libraryPageStatus": "Page {current} of {total}",
-  "@libraryPageStatus": {"placeholders": {"current": {"type": "int"}, "total": {"type": "int"}}},
+  "@libraryPageStatus": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "previousPage": "Previous page",
   "nextPage": "Next page",
   "settingsCategoryAppearance": "Appearance",
@@ -896,7 +1481,13 @@
   "aiEditProfile": "Edit profile",
   "aiDeleteProfileTitle": "Delete AI profile",
   "aiDeleteProfileMessage": "Delete “{name}” and its on-device credential?",
-  "@aiDeleteProfileMessage": {"placeholders": {"name": {"type": "String"}}},
+  "@aiDeleteProfileMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "aiProfileName": "Profile name",
   "aiBaseUrl": "API base URL",
   "aiModelName": "Model name",
@@ -915,7 +1506,13 @@
   "aiInvalidJson": "Invalid JSON",
   "aiInvalidBaseUrl": "Enter a valid HTTP(S) API address",
   "aiSettingsFailed": "AI settings operation failed: {error}",
-  "@aiSettingsFailed": {"placeholders": {"error": {"type": "String"}}},
+  "@aiSettingsFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "aiProtocolAudioTranscriptions": "Audio transcription multipart",
   "aiProtocolChatAudio": "Chat input_audio",
   "aiProtocolChatText": "Chat text extraction",
@@ -928,20 +1525,44 @@
   "aiWorkbenchUnavailable": "Recognition is unavailable while this record is read-only or busy.",
   "aiReadyStatus": "Tap the microphone to capture one check-in.",
   "aiRecordingStatus": "Recording {elapsed}",
-  "@aiRecordingStatus": {"placeholders": {"elapsed": {"type": "String"}}},
+  "@aiRecordingStatus": {
+    "placeholders": {
+      "elapsed": {
+        "type": "String"
+      }
+    }
+  },
   "aiLiveTranscriptTitle": "Live recognized fields",
   "aiLiveStructuredWaiting": "Building enough context for a complete check-in. Recognized fields will appear here.",
   "aiLiveStructuredUpdating": "Organizing fields from everything recognized so far…",
   "aiLiveTranscriptionRetrying": "Live recognition temporarily failed. The complete content will still be retried after recording stops: {error}",
-  "@aiLiveTranscriptionRetrying": {"placeholders": {"error": {"type": "String"}}},
+  "@aiLiveTranscriptionRetrying": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "aiRecognizingStatus": "Recognizing and preparing suggestions…",
   "aiStartRecording": "Record",
   "aiStopAndRecognize": "Recognize",
   "aiMicrophonePermissionDenied": "Microphone permission was not granted.",
   "aiRecordingFailed": "Recording failed: {error}",
-  "@aiRecordingFailed": {"placeholders": {"error": {"type": "String"}}},
+  "@aiRecordingFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "aiRecognitionFailed": "Recognition failed: {error}",
-  "@aiRecognitionFailed": {"placeholders": {"error": {"type": "String"}}},
+  "@aiRecognitionFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "aiReviewTitle": "Review AI suggestions",
   "aiTranscriptTitle": "Transcript",
   "aiCopyTranscript": "Copy transcript",
@@ -949,16 +1570,40 @@
   "aiNoStructuredCandidates": "No structured fields were returned. The transcript is still available above.",
   "aiCandidateRecord": "Suggested record",
   "aiCandidateNumber": "Candidate {number}",
-  "@aiCandidateNumber": {"placeholders": {"number": {"type": "int"}}},
+  "@aiCandidateNumber": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
   "aiCandidateHint": "Empty fields are selected automatically. Replacing existing text always requires your explicit selection.",
   "aiApplySelected": "Apply selected",
   "aiCandidatesApplied": "Applied {count} suggested field(s).",
-  "@aiCandidatesApplied": {"placeholders": {"count": {"type": "int"}}},
+  "@aiCandidatesApplied": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "aiCandidatesStale": "These suggestions are no longer safe to apply because the record changed.",
   "aiApplyFailed": "Could not apply AI suggestions: {error}",
-  "@aiApplyFailed": {"placeholders": {"error": {"type": "String"}}},
+  "@aiApplyFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "aiWillReplaceValue": "Will replace: {value}",
-  "@aiWillReplaceValue": {"placeholders": {"value": {"type": "String"}}},
+  "@aiWillReplaceValue": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
   "aiWillFillEmpty": "Will fill an empty field",
   "aiReplacementNeedsConfirmation": "Select to confirm replacement",
   "aiCandidateUnchanged": "Already matches",
@@ -991,22 +1636,55 @@
   "aiDictionaryNeedsAssistant": "Configure and enable the text assistant in Settings first.",
   "aiDictionaryNoSuggestions": "No dictionary changes were suggested.",
   "aiDictionaryApplied": "Applied {count} dictionary suggestion(s).",
-  "@aiDictionaryApplied": {"placeholders": {"count": {"type": "int"}}},
+  "@aiDictionaryApplied": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "aiDictionaryFailed": "Dictionary AI operation failed: {error}",
-  "@aiDictionaryFailed": {"placeholders": {"error": {"type": "String"}}},
+  "@aiDictionaryFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "aiDictionaryOptimizing": "Optimizing dictionaries",
   "aiDictionaryRecognizing": "Recognizing historical terms",
   "aiDictionaryPreparing": "Preparing local data…",
   "aiDictionaryProgress": "Completed {completed} / {total}",
-  "@aiDictionaryProgress": {"placeholders": {"completed": {"type": "int"}, "total": {"type": "int"}}},
+  "@aiDictionaryProgress": {
+    "placeholders": {
+      "completed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "aiDictionaryReviewTitle": "Review dictionary suggestions",
   "aiDictionaryReviewHint": "Generated from {recordCount} historical record(s) and the current dictionaries. Only selected changes will be written.",
-  "@aiDictionaryReviewHint": {"placeholders": {"recordCount": {"type": "int"}}},
+  "@aiDictionaryReviewHint": {
+    "placeholders": {
+      "recordCount": {
+        "type": "int"
+      }
+    }
+  },
   "aiDictionaryActionAdd": "Add",
   "aiDictionaryActionRename": "Rename",
   "aiDictionaryActionMerge": "Merge",
   "aiDictionaryUsedCount": "Used {count} time(s) in history",
-  "@aiDictionaryUsedCount": {"placeholders": {"count": {"type": "int"}}},
+  "@aiDictionaryUsedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "aiDictionaryMergeWarning": "Merging hides the source term and is not selected by default. Historical records are unchanged.",
   "aiDictionaryApplySelected": "Apply selected suggestions",
   "fieldFormatSuggestionLabel": "Format option",

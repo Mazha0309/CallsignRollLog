@@ -8,12 +8,18 @@ import 'package:openlogtool/models/collaboration_conflict.dart';
 import 'package:openlogtool/models/collaboration_dto.dart';
 import 'package:openlogtool/models/live_draft.dart';
 import 'package:openlogtool/providers/collaboration_provider.dart';
+import 'package:openlogtool/providers/account_share_provider.dart';
 import 'package:openlogtool/providers/server_provider.dart';
 import 'package:openlogtool/providers/session_provider.dart';
+import 'package:openlogtool/providers/personal_cloud_provider.dart';
+import 'package:openlogtool/widgets/session_friend_actions.dart';
 import 'package:openlogtool/services/collaboration_sync.dart';
 import 'package:openlogtool/theme/app_theme.dart';
 import 'package:openlogtool/widgets/collaboration_conflict_center.dart';
 import 'package:openlogtool/widgets/collaboration_local_session_action.dart';
+import 'package:openlogtool/widgets/session_people_actions.dart';
+import 'package:openlogtool/widgets/app_section_tabs.dart';
+import 'package:openlogtool/widgets/share_invitation_badge.dart';
 import 'package:openlogtool/widgets/settings/settings_ui.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -59,10 +65,12 @@ class CollaborationScreen extends StatefulWidget {
     super.key,
     this.publicShareUriOpener,
     this.focusPublicShare = false,
+    this.focusParticipants = false,
   });
 
   final PublicShareUriOpener? publicShareUriOpener;
   final bool focusPublicShare;
+  final bool focusParticipants;
 
   @override
   State<CollaborationScreen> createState() => _CollaborationScreenState();
@@ -80,7 +88,7 @@ class _CollaborationScreenState extends State<CollaborationScreen> {
   @override
   void initState() {
     super.initState();
-    _selectedView = widget.focusPublicShare
+    _selectedView = widget.focusPublicShare || widget.focusParticipants
         ? _CollaborationView.access
         : _CollaborationView.overview;
     _selectedAccessView =
@@ -123,34 +131,36 @@ class _CollaborationScreenState extends State<CollaborationScreen> {
           final selectedView = availableViews.contains(_selectedView)
               ? _selectedView
               : _CollaborationView.overview;
-          return AppPageFrame(
-            scrollKey: const PageStorageKey('collaboration-management-page'),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                _buildViewSelector(
-                  collaboration,
-                  availableViews,
-                  selectedView,
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _buildViewSelector(
+                collaboration,
+                availableViews,
+                selectedView,
+              ),
+              Expanded(
+                child: AppPageFrame(
+                  scrollKey:
+                      const PageStorageKey('collaboration-management-page'),
+                  child: switch (selectedView) {
+                    _CollaborationView.overview => _buildOverviewView(
+                        collaboration,
+                        server,
+                        sessions,
+                      ),
+                    _CollaborationView.synchronization =>
+                      _buildSynchronizationView(collaboration),
+                    _CollaborationView.access => _buildAccessView(
+                        collaboration,
+                        server,
+                        showOwnerAccess: showOwnerAccess,
+                        preparingOwnerAccess: hasKnownOwnerAccess,
+                      ),
+                  },
                 ),
-                const SizedBox(height: AppSpace.md),
-                switch (selectedView) {
-                  _CollaborationView.overview => _buildOverviewView(
-                      collaboration,
-                      server,
-                      sessions,
-                    ),
-                  _CollaborationView.synchronization =>
-                    _buildSynchronizationView(collaboration),
-                  _CollaborationView.access => _buildAccessView(
-                      collaboration,
-                      server,
-                      showOwnerAccess: showOwnerAccess,
-                      preparingOwnerAccess: hasKnownOwnerAccess,
-                    ),
-                },
-              ],
-            ),
+              ),
+            ],
           );
         },
       ),
@@ -164,42 +174,44 @@ class _CollaborationScreenState extends State<CollaborationScreen> {
   ) {
     final conflictCount = collaboration.conflictCount;
     final problemCount = collaboration.offlineRecords.length + conflictCount;
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: SegmentedButton<_CollaborationView>(
-        key: const Key('collaboration-view-selector'),
-        showSelectedIcon: false,
-        segments: [
-          if (availableViews.contains(_CollaborationView.overview))
-            ButtonSegment(
-              value: _CollaborationView.overview,
-              icon: const Icon(Icons.dashboard_outlined),
-              label: Text(context.l10n.collaborationOverviewTab),
+    return AppSectionTabs<_CollaborationView>(
+      key: const Key('collaboration-view-selector'),
+      segments: [
+        if (availableViews.contains(_CollaborationView.overview))
+          ButtonSegment(
+            value: _CollaborationView.overview,
+            icon: const Icon(Icons.dashboard_outlined),
+            label: Text(context.l10n.collaborationOverviewTab),
+          ),
+        if (availableViews.contains(_CollaborationView.synchronization))
+          ButtonSegment(
+            value: _CollaborationView.synchronization,
+            icon: const Icon(Icons.sync_outlined),
+            label: Text(
+              problemCount == 0
+                  ? context.l10n.collaborationSyncConflictsTab
+                  : '${context.l10n.collaborationSyncConflictsTab} '
+                      '($problemCount)',
             ),
-          if (availableViews.contains(_CollaborationView.synchronization))
-            ButtonSegment(
-              value: _CollaborationView.synchronization,
-              icon: const Icon(Icons.sync_outlined),
-              label: Text(
-                problemCount == 0
-                    ? context.l10n.collaborationSyncConflictsTab
-                    : '${context.l10n.collaborationSyncConflictsTab} '
-                        '($problemCount)',
-              ),
-            ),
-          if (availableViews.contains(_CollaborationView.access))
-            ButtonSegment(
-              value: _CollaborationView.access,
-              icon: const Icon(Icons.group_outlined),
-              label: Text(context.l10n.collaborationAccessManagementTab),
-            ),
-        ],
-        selected: {selectedView},
-        onSelectionChanged: (selection) {
-          if (selection.isEmpty) return;
-          setState(() => _selectedView = selection.first);
-        },
-      ),
+          ),
+        if (availableViews.contains(_CollaborationView.access))
+          ButtonSegment(
+            value: _CollaborationView.access,
+            icon: RequestBadge(
+                count: context
+                        .watch<AccountShareProvider?>()
+                        ?.pendingSessionApplications(
+                            collaboration.binding?.sessionId) ??
+                    0,
+                child: const Icon(Icons.group_outlined)),
+            label: Text(context.l10n.sessionPeopleTitle),
+          ),
+      ],
+      selected: {selectedView},
+      onSelectionChanged: (selection) {
+        if (selection.isEmpty) return;
+        setState(() => _selectedView = selection.first);
+      },
     );
   }
 
@@ -241,35 +253,32 @@ class _CollaborationScreenState extends State<CollaborationScreen> {
           _statusCard(collaboration),
           const SizedBox(height: 12),
         ],
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: SegmentedButton<_SynchronizationView>(
-            key: const Key('collaboration-sync-view-selector'),
-            showSelectedIcon: false,
-            segments: [
-              ButtonSegment(
-                value: _SynchronizationView.offlineRecords,
-                icon: const Icon(Icons.cloud_off_outlined),
-                label: Text(
-                  '${context.l10n.offlineReviewTitle} '
-                  '(${collaboration.offlineRecords.length})',
-                ),
+        AppSectionTabs<_SynchronizationView>(
+          key: const Key('collaboration-sync-view-selector'),
+          secondary: true,
+          segments: [
+            ButtonSegment(
+              value: _SynchronizationView.offlineRecords,
+              icon: const Icon(Icons.cloud_off_outlined),
+              label: Text(
+                '${context.l10n.offlineReviewTitle} '
+                '(${collaboration.offlineRecords.length})',
               ),
-              ButtonSegment(
-                value: _SynchronizationView.conflicts,
-                icon: const Icon(Icons.rule_folder_outlined),
-                label: Text(
-                  '${context.l10n.conflictCenterTitle} '
-                  '(${collaboration.conflictCount})',
-                ),
+            ),
+            ButtonSegment(
+              value: _SynchronizationView.conflicts,
+              icon: const Icon(Icons.rule_folder_outlined),
+              label: Text(
+                '${context.l10n.conflictCenterTitle} '
+                '(${collaboration.conflictCount})',
               ),
-            ],
-            selected: {selected},
-            onSelectionChanged: (selection) {
-              if (selection.isEmpty) return;
-              setState(() => _selectedSynchronizationView = selection.first);
-            },
-          ),
+            ),
+          ],
+          selected: {selected},
+          onSelectionChanged: (selection) {
+            if (selection.isEmpty) return;
+            setState(() => _selectedSynchronizationView = selection.first);
+          },
         ),
         const SizedBox(height: 12),
         if (selected == _SynchronizationView.offlineRecords)
@@ -344,48 +353,64 @@ class _CollaborationScreenState extends State<CollaborationScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: SegmentedButton<_AccessView>(
-            key: const Key('collaboration-access-view-selector'),
-            showSelectedIcon: false,
-            segments: [
+        AppSectionTabs<_AccessView>(
+          key: const Key('collaboration-access-view-selector'),
+          secondary: true,
+          segments: [
+            ButtonSegment(
+              value: _AccessView.members,
+              icon: RequestBadge(
+                  count: context
+                          .watch<AccountShareProvider?>()
+                          ?.pendingSessionApplications(
+                              collaboration.binding?.sessionId) ??
+                      0,
+                  child: const Icon(Icons.people_outline)),
+              label: Text(
+                '${context.l10n.membersTitle} '
+                '(${collaboration.members.length})',
+              ),
+            ),
+            if (collaboration.supportsInvites)
               ButtonSegment(
-                value: _AccessView.members,
-                icon: const Icon(Icons.people_outline),
+                value: _AccessView.invites,
+                icon: const Icon(Icons.mark_email_unread_outlined),
                 label: Text(
-                  '${context.l10n.membersTitle} '
-                  '(${collaboration.members.length})',
+                  '${context.l10n.legacyInviteCodes} '
+                  '(${collaboration.invites.length})',
                 ),
               ),
-              if (collaboration.supportsInvites)
-                ButtonSegment(
-                  value: _AccessView.invites,
-                  icon: const Icon(Icons.mark_email_unread_outlined),
-                  label: Text(
-                    '${context.l10n.memberInvitesTitle} '
-                    '(${collaboration.invites.length})',
-                  ),
-                ),
-              ButtonSegment(
-                value: _AccessView.publicShare,
-                icon: const Icon(Icons.public_outlined),
-                label: Text(
-                  '${context.l10n.publicShareManagement} '
-                  '(${collaboration.publicShares.length})',
-                ),
+            ButtonSegment(
+              value: _AccessView.publicShare,
+              icon: const Icon(Icons.public_outlined),
+              label: Text(
+                '${context.l10n.publicShareManagement} '
+                '(${collaboration.publicShares.length})',
               ),
-            ],
-            selected: {selected},
-            onSelectionChanged: (selection) {
-              if (selection.isEmpty) return;
-              setState(() => _selectedAccessView = selection.first);
-            },
-          ),
+            ),
+          ],
+          selected: {selected},
+          onSelectionChanged: (selection) {
+            if (selection.isEmpty) return;
+            setState(() => _selectedAccessView = selection.first);
+          },
         ),
         const SizedBox(height: 12),
         switch (selected) {
-          _AccessView.members => _memberManagementCard(collaboration, server),
+          _AccessView.members => Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if ((context.watch<AccountShareProvider?>()?.supportsFriends ??
+                        false) &&
+                    collaboration.binding != null) ...[
+                  SessionPeopleActions(
+                      key: ValueKey(collaboration.binding!.sessionId),
+                      sessionId: collaboration.binding!.sessionId),
+                  const SizedBox(height: AppSpace.md),
+                ],
+                _memberManagementCard(collaboration, server),
+              ],
+            ),
           _AccessView.invites => _inviteManagementCard(collaboration),
           _AccessView.publicShare => KeyedSubtree(
               key: _publicShareAnchorKey,
@@ -423,6 +448,8 @@ class _CollaborationScreenState extends State<CollaborationScreen> {
   }
 
   Future<void> _initialize(CollaborationProvider collaboration) async {
+    final social = context.read<AccountShareProvider?>();
+    if (social?.supportsFriends == true) unawaited(social!.refresh());
     await _run(collaboration.refreshCurrentSession);
     if (mounted && collaboration.supportsPublicShareManagement) {
       await _run(collaboration.refreshPublicShares);
@@ -966,53 +993,62 @@ class _CollaborationScreenState extends State<CollaborationScreen> {
           children: [
             Text(session.title, style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 4),
-            SelectableText(session.sessionId),
             const SizedBox(height: 8),
             if (isLocal)
               Text(context.l10n.localCollaborationSessionHint)
             else ...[
-              Text(
-                context.l10n.collaborationSessionSummary(
-                  collaborationStateLabel(
-                    context.l10n,
-                    collaboration.state.name,
-                  ),
-                  _roleLabel(
-                    collaboration.effectiveRole ?? binding?.role,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                context.l10n.collaborationSyncSummary(
-                  _transportLabel(collaboration.transportPhase),
-                  collaboration.lastAppliedSeq,
-                  collaboration.serverHeadSeq,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                context.l10n.collaborationQueueSummary(
-                  collaboration.pendingCount,
-                  collaboration.conflictCount,
-                  collaboration.rejectedCount,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                collaboration.canEditCurrentSession
-                    ? context.l10n.collaborationReliableQueueHint
-                    : _readOnlyReason(collaboration, sessions),
-              ),
-              if (collaboration.lastSuccessfulSyncAt != null) ...[
+              Text(_roleLabel(collaboration.effectiveRole ?? binding?.role)),
+              const SizedBox(height: 8),
+              Text(_overviewSyncLabel(collaboration)),
+              if (!collaboration.canEditCurrentSession) ...[
                 const SizedBox(height: 4),
-                Text(
-                  context.l10n.collaborationLastSync(
-                    collaboration.lastSuccessfulSyncAt!.toLocal().toString(),
-                  ),
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
+                Text(_readOnlyReason(collaboration, sessions)),
               ],
+              ExpansionTile(
+                key: const PageStorageKey<String>(
+                    'collaboration-technical-details'),
+                tilePadding: EdgeInsets.zero,
+                title: Text(context.l10n.collaborationTechnicalDetails),
+                children: [
+                  Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SelectableText(
+                          session.sessionId,
+                          // Keep its scroll offset separate from the tile's
+                          // boolean expansion state in PageStorage.
+                          key: PageStorageKey<String>(
+                              'collaboration-session-id-${session.sessionId}'),
+                        ),
+                        Text(context.l10n.collaborationSessionSummary(
+                          collaborationStateLabel(
+                              context.l10n, collaboration.state.name),
+                          _roleLabel(
+                              collaboration.effectiveRole ?? binding?.role),
+                        )),
+                        Text(context.l10n.collaborationSyncSummary(
+                          _transportLabel(collaboration.transportPhase),
+                          collaboration.lastAppliedSeq,
+                          collaboration.serverHeadSeq,
+                        )),
+                        Text(context.l10n.collaborationQueueSummary(
+                          collaboration.pendingCount,
+                          collaboration.conflictCount,
+                          collaboration.rejectedCount,
+                        )),
+                        if (collaboration.lastSuccessfulSyncAt != null)
+                          Text(context.l10n.collaborationLastSync(
+                            collaboration.lastSuccessfulSyncAt!
+                                .toLocal()
+                                .toString(),
+                          )),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
               if (collaboration.hasOpenSessionConflict) ...[
                 const SizedBox(height: 8),
                 Text(
@@ -1024,6 +1060,10 @@ class _CollaborationScreenState extends State<CollaborationScreen> {
               ],
             ],
             const SizedBox(height: 12),
+            if (!isLocal) ...[
+              Text(context.l10n.collaborationLifecycleHint),
+              const SizedBox(height: 12),
+            ],
             if (isLocal ||
                 collaboration.state == CollaborationState.publishing ||
                 failedPublish)
@@ -1031,7 +1071,21 @@ class _CollaborationScreenState extends State<CollaborationScreen> {
                 onPressed: collaboration.isBusy
                     ? null
                     : () => _run(
-                          collaboration.publishCurrentSession,
+                          () async {
+                            if (isLocal) {
+                              await confirmAndPublishCurrentSession(context);
+                            } else {
+                              final cloud =
+                                  context.read<PersonalCloudProvider?>();
+                              if (cloud == null) {
+                                await collaboration.publishCurrentSession();
+                              } else {
+                                await cloud.runWithPersonalSyncPaused(
+                                    collaboration.publishCurrentSession);
+                              }
+                            }
+                            return null;
+                          },
                           success: context.l10n.publishSessionSucceeded,
                         ),
                 icon: const Icon(Icons.cloud_upload),
@@ -1108,6 +1162,21 @@ class _CollaborationScreenState extends State<CollaborationScreen> {
         ),
       ),
     );
+  }
+
+  String _overviewSyncLabel(CollaborationProvider collaboration) {
+    if (collaboration.conflictCount > 0 ||
+        collaboration.rejectedCount > 0 ||
+        collaboration.offlineRecords.isNotEmpty) {
+      return context.l10n.collaborationOverviewAttention;
+    }
+    if (collaboration.pendingCount > 0) {
+      return context.l10n
+          .collaborationOverviewPending(collaboration.pendingCount);
+    }
+    return collaboration.transportPhase == CollaborationTransportPhase.online
+        ? context.l10n.collaborationOverviewOnline
+        : context.l10n.collaborationOverviewOffline;
   }
 
   String _transportLabel(CollaborationTransportPhase phase) => switch (phase) {
@@ -1194,7 +1263,31 @@ class _CollaborationScreenState extends State<CollaborationScreen> {
     }
   }
 
+  Object _sessionActionIdentity(CollaborationProvider collaboration) {
+    final binding = collaboration.binding;
+    return (
+      context.read<SessionProvider>().currentSessionId,
+      binding?.sessionId,
+      binding?.serverInstanceId,
+      binding?.accountId,
+      context.read<ServerProvider>().contextRevision,
+    );
+  }
+
+  bool _sessionActionStillCurrent(
+    CollaborationProvider collaboration,
+    Object identity,
+  ) {
+    if (!mounted) return false;
+    if (_sessionActionIdentity(collaboration) == identity) return true;
+    ScaffoldMessenger.of(context).showLoggedSnackBar(
+      SnackBar(content: Text(context.l10n.hubContextChanged)),
+    );
+    return false;
+  }
+
   Future<void> _leaveSession(CollaborationProvider collaboration) async {
+    final identity = _sessionActionIdentity(collaboration);
     final accepted = await showDialog<bool>(
           context: context,
           builder: (dialogContext) => AlertDialog(
@@ -1213,11 +1306,14 @@ class _CollaborationScreenState extends State<CollaborationScreen> {
           ),
         ) ??
         false;
-    if (!accepted) return;
+    if (!accepted || !_sessionActionStillCurrent(collaboration, identity)) {
+      return;
+    }
     await _run(collaboration.leaveCurrentSession);
   }
 
   Future<void> _closeSession(CollaborationProvider collaboration) async {
+    final identity = _sessionActionIdentity(collaboration);
     try {
       if (collaboration.supportsLiveDraft) {
         await collaboration.refreshLiveDraft();
@@ -1231,6 +1327,7 @@ class _CollaborationScreenState extends State<CollaborationScreen> {
       }
       return;
     }
+    if (!_sessionActionStillCurrent(collaboration, identity)) return;
     final fields = collaboration.liveDraftFields;
     final hasDraft =
         fields != null && _liveDraftHasCloseBlockingContent(fields);
@@ -1317,7 +1414,11 @@ class _CollaborationScreenState extends State<CollaborationScreen> {
         ],
       ),
     );
-    if (action == null || !mounted) return;
+    if (!mounted ||
+        action == null ||
+        !_sessionActionStillCurrent(collaboration, identity)) {
+      return;
+    }
 
     final messenger = ScaffoldMessenger.of(context);
     try {
@@ -1343,6 +1444,7 @@ class _CollaborationScreenState extends State<CollaborationScreen> {
           }
           break;
       }
+      if (!_sessionActionStillCurrent(collaboration, identity)) return;
       await collaboration.closeCurrentSession();
       if (mounted) {
         messenger.showLoggedSnackBar(
@@ -1359,12 +1461,15 @@ class _CollaborationScreenState extends State<CollaborationScreen> {
   }
 
   Future<void> _reopenSession(CollaborationProvider collaboration) async {
+    final identity = _sessionActionIdentity(collaboration);
     final successMessage = context.l10n.reopenSessionQueued;
     final accepted = await _confirm(
       context.l10n.reopenCollaborationSessionTitle,
       context.l10n.reopenCollaborationSessionMessage,
     );
-    if (!accepted) return;
+    if (!accepted || !_sessionActionStillCurrent(collaboration, identity)) {
+      return;
+    }
     await _run(
       collaboration.reopenCurrentSession,
       success: successMessage,
@@ -1519,77 +1624,75 @@ class _CollaborationScreenState extends State<CollaborationScreen> {
     CollaborationProvider collaboration,
     ServerProvider server,
   ) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              context.l10n.membersTitle,
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            const SizedBox(height: 8),
-            ...collaboration.members.map(
-              (member) => ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: Icon(
-                  member.role == SessionRole.owner
-                      ? Icons.workspace_premium
-                      : Icons.person,
-                ),
-                title: Text(member.username ?? member.userId),
-                subtitle: Text(_roleLabel(member.role)),
-                trailing: member.userId == server.accountId
-                    ? Text(context.l10n.currentAccount)
-                    : PopupMenuButton<String>(
-                        enabled: !collaboration.isBusy,
-                        onSelected: (action) {
-                          if (action == 'owner') {
-                            _confirmTransfer(collaboration, member);
-                          } else if (action == 'remove') {
-                            _confirmRemove(collaboration, member);
-                          } else if (action == 'editor') {
-                            _run(
-                              () => collaboration.updateMemberRole(
-                                member.userId,
-                                InviteRole.editor,
-                              ),
-                              success: context.l10n.memberSetEditor,
-                            );
-                          } else if (action == 'viewer') {
-                            _run(
-                              () => collaboration.updateMemberRole(
-                                member.userId,
-                                InviteRole.viewer,
-                              ),
-                              success: context.l10n.memberSetViewer,
-                            );
-                          }
-                        },
-                        itemBuilder: (_) => [
-                          PopupMenuItem(
-                            value: 'editor',
-                            child: Text(context.l10n.setAsEditor),
-                          ),
-                          PopupMenuItem(
-                            value: 'viewer',
-                            child: Text(context.l10n.setAsViewer),
-                          ),
-                          PopupMenuItem(
-                            value: 'owner',
-                            child: Text(context.l10n.transferOwnership),
-                          ),
-                          PopupMenuItem(
-                            value: 'remove',
-                            child: Text(context.l10n.removeMember),
-                          ),
-                        ],
-                      ),
+    return SettingsSectionCard(
+      key: const Key('session-members-card'),
+      icon: Icons.groups_outlined,
+      title: context.l10n.membersTitle,
+      child: AppTileGroup(
+        children: [
+          ...collaboration.members.map(
+            (member) => ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: AppIconBadge(
+                icon: member.role == SessionRole.owner
+                    ? Icons.workspace_premium_outlined
+                    : Icons.person_outline,
+                size: AppIconBadgeSize.action,
+                tone: member.role == SessionRole.owner
+                    ? AppTone.primary
+                    : AppTone.neutral,
               ),
+              title: Text(member.username ?? member.userId),
+              subtitle: Text(_roleLabel(member.role)),
+              trailing: member.userId == server.accountId
+                  ? Text(context.l10n.currentAccount)
+                  : PopupMenuButton<String>(
+                      enabled: !collaboration.isBusy,
+                      onSelected: (action) {
+                        if (action == 'owner') {
+                          _confirmTransfer(collaboration, member);
+                        } else if (action == 'remove') {
+                          _confirmRemove(collaboration, member);
+                        } else if (action == 'editor') {
+                          _run(
+                            () => collaboration.updateMemberRole(
+                              member.userId,
+                              InviteRole.editor,
+                            ),
+                            success: context.l10n.memberSetEditor,
+                          );
+                        } else if (action == 'viewer') {
+                          _run(
+                            () => collaboration.updateMemberRole(
+                              member.userId,
+                              InviteRole.viewer,
+                            ),
+                            success: context.l10n.memberSetViewer,
+                          );
+                        }
+                      },
+                      itemBuilder: (_) => [
+                        PopupMenuItem(
+                          value: 'editor',
+                          child: Text(context.l10n.setAsEditor),
+                        ),
+                        PopupMenuItem(
+                          value: 'viewer',
+                          child: Text(context.l10n.setAsViewer),
+                        ),
+                        PopupMenuItem(
+                          value: 'owner',
+                          child: Text(context.l10n.transferOwnership),
+                        ),
+                        PopupMenuItem(
+                          value: 'remove',
+                          child: Text(context.l10n.removeMember),
+                        ),
+                      ],
+                    ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

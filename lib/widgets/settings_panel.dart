@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:openlogtool/l10n/l10n.dart';
 import 'package:openlogtool/providers/app_info_provider.dart';
 import 'package:openlogtool/providers/settings_provider.dart';
+import 'package:openlogtool/services/url_sync.dart';
 import 'package:openlogtool/theme/app_theme.dart';
 import 'package:openlogtool/utils/app_snack_bar.dart';
 import 'package:openlogtool/widgets/about_app_dialog.dart';
@@ -62,35 +63,84 @@ extension on _SettingsCategory {
 /// The app shell owns the only page-level title. This panel presents section
 /// navigation on wide screens and a category index/detail flow on phones.
 class SettingsPanel extends StatefulWidget {
-  const SettingsPanel({super.key});
+  const SettingsPanel({super.key, this.handlesSystemBack = true});
+
+  /// The home shell delegates back here instead of letting two PopScopes
+  /// handle the same route notification independently.
+  final bool handlesSystemBack;
 
   @override
-  State<SettingsPanel> createState() => _SettingsPanelState();
+  State<SettingsPanel> createState() => SettingsPanelState();
 }
 
-class _SettingsPanelState extends State<SettingsPanel> {
+class SettingsPanelState extends State<SettingsPanel> {
   _SettingsCategory _desktopCategory = _SettingsCategory.appearance;
   _SettingsCategory? _compactCategory;
+  bool _wide = false;
+  final _navigationScroll = ScrollController();
+  final _categoryScroll = {
+    for (final category in _SettingsCategory.values)
+      category: ScrollController(),
+  };
+  final _categoryKeys = {
+    for (final category in _SettingsCategory.values) category: GlobalKey(),
+  };
+
+  bool popCategory() {
+    if (_wide || _compactCategory == null) return false;
+    FocusManager.instance.primaryFocus?.unfocus();
+    setState(() => _compactCategory = null);
+    return true;
+  }
+
+  @override
+  void dispose() {
+    _navigationScroll.dispose();
+    for (final controller in _categoryScroll.values) {
+      controller.dispose();
+    }
+    super.dispose();
+  }
+
+  Widget _scrollPane({
+    required String name,
+    required ScrollController controller,
+    required Widget child,
+  }) =>
+      Scrollbar(
+        controller: controller,
+        child: SingleChildScrollView(
+          key: Key('settings-$name-scroll'),
+          controller: controller,
+          primary: false,
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.manual,
+          child: child,
+        ),
+      );
 
   @override
   Widget build(BuildContext context) => LayoutBuilder(
         builder: (context, constraints) {
-          final wide = constraints.maxWidth >= AppBreakpoints.medium;
-          if (!wide) return _buildCompactSettings(context);
+          _wide = constraints.maxWidth >= AppBreakpoints.medium;
+          if (!_wide) return _buildCompactSettings(context);
 
           return Row(
             key: const Key('settings-wide-layout'),
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               SizedBox(
                 width: 248,
-                child: _buildCategoryNavigation(
-                  context,
-                  selected: _desktopCategory,
-                  onSelected: (category) {
-                    if (_desktopCategory == category) return;
-                    setState(() => _desktopCategory = category);
-                  },
+                child: _scrollPane(
+                  name: 'navigation',
+                  controller: _navigationScroll,
+                  child: _buildCategoryNavigation(
+                    context,
+                    selected: _desktopCategory,
+                    onSelected: (category) {
+                      if (_desktopCategory == category) return;
+                      setState(() => _desktopCategory = category);
+                    },
+                  ),
                 ),
               ),
               const SizedBox(width: AppSpace.lg),
@@ -109,25 +159,29 @@ class _SettingsPanelState extends State<SettingsPanel> {
   Widget _buildCompactSettings(BuildContext context) {
     final selected = _compactCategory;
     return PopScope(
-      canPop: selected == null,
+      canPop: !widget.handlesSystemBack || selected == null,
       onPopInvokedWithResult: (didPop, _) {
-        if (didPop) return;
-        setState(() => _compactCategory = null);
+        if (!didPop && widget.handlesSystemBack) popCategory();
       },
-      child: Column(
+      child: Stack(
         key: const Key('settings-compact-layout'),
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+        fit: StackFit.expand,
         children: [
           Offstage(
             offstage: selected != null,
             child: TickerMode(
               enabled: selected == null,
-              child: _buildCategoryNavigation(
-                context,
-                selected: null,
-                onSelected: (category) {
-                  setState(() => _compactCategory = category);
-                },
+              child: _scrollPane(
+                name: 'navigation',
+                controller: _navigationScroll,
+                child: _buildCategoryNavigation(
+                  context,
+                  selected: null,
+                  onSelected: (category) {
+                    setState(() => _compactCategory = category);
+                    UrlSync.checkpoint();
+                  },
+                ),
               ),
             ),
           ),
@@ -142,7 +196,7 @@ class _SettingsPanelState extends State<SettingsPanel> {
                     alignment: AlignmentDirectional.centerStart,
                     child: TextButton.icon(
                       key: const Key('settings-category-back'),
-                      onPressed: () => setState(() => _compactCategory = null),
+                      onPressed: popCategory,
                       icon: const Icon(Icons.arrow_back),
                       label: Text(
                         MaterialLocalizations.of(context).backButtonTooltip,
@@ -150,10 +204,12 @@ class _SettingsPanelState extends State<SettingsPanel> {
                     ),
                   ),
                   const SizedBox(height: AppSpace.xs),
-                  _buildCategoryStack(
-                    context,
-                    selected: selected ?? _SettingsCategory.appearance,
-                    compact: true,
+                  Expanded(
+                    child: _buildCategoryStack(
+                      context,
+                      selected: selected ?? _SettingsCategory.appearance,
+                      compact: true,
+                    ),
                   ),
                 ],
               ),
@@ -227,19 +283,26 @@ class _SettingsPanelState extends State<SettingsPanel> {
     required bool compact,
   }) {
     final padding = compact ? AppSpace.sm : AppSpace.md;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+    return Stack(
+      fit: StackFit.expand,
       children: [
         for (final category in _SettingsCategory.values)
           Offstage(
             offstage: selected != category,
             child: TickerMode(
               enabled: selected == category,
-              child: _buildCategoryContent(
-                context,
-                category: category,
-                compact: compact,
-                cardPadding: padding,
+              child: _scrollPane(
+                name: category.name,
+                controller: _categoryScroll[category]!,
+                child: KeyedSubtree(
+                  key: _categoryKeys[category],
+                  child: _buildCategoryContent(
+                    context,
+                    category: category,
+                    compact: compact,
+                    cardPadding: padding,
+                  ),
+                ),
               ),
             ),
           ),

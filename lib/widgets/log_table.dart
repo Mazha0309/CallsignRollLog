@@ -28,6 +28,7 @@ class _LogTableState extends State<LogTable> {
   static const double _mobileBreakpoint = 680;
   static const double _desktopActionsWidth = 128;
   int? _editingIndex;
+  LogEntry? _editingOriginal;
   late Map<String, TextEditingController> _controllers;
   int _currentPage = 0;
   List<LogEntry> _lastSeenLogs = [];
@@ -100,6 +101,9 @@ class _LogTableState extends State<LogTable> {
         context,
         log: log,
         readOnly: false,
+        accessChanges: logProvider,
+        canRead: () => logProvider.hasReadAccess,
+        canEdit: () => logProvider.canMutateLog(log),
       );
       if (patch == null || !mounted) return;
       await _applyEditingPatch(logProvider, log, patch);
@@ -110,6 +114,7 @@ class _LogTableState extends State<LogTable> {
         controller.dispose();
       }
       _editingIndex = index;
+      _editingOriginal = log;
       _editingSaveInProgress = false;
       _controllers = {
         'time': TextEditingController(
@@ -161,7 +166,7 @@ class _LogTableState extends State<LogTable> {
       createdAt: original.createdAt,
     );
     try {
-      await logProvider.updateLogById(original.id, finalPatch);
+      await logProvider.updateLogFromOriginal(original, finalPatch);
     } catch (error) {
       if (!mounted) return;
       messenger?.showLoggedSnackBar(
@@ -188,7 +193,7 @@ class _LogTableState extends State<LogTable> {
     final logProvider = Provider.of<LogProvider>(context, listen: false);
     final currentIndex =
         logProvider.logs.indexWhere((candidate) => candidate.id == logId);
-    final original = currentIndex < 0 ? null : logProvider.logs[currentIndex];
+    final original = currentIndex < 0 ? null : _editingOriginal;
     if (widget.readOnly ||
         widget.conflictedLogIds.contains(logId) ||
         original == null ||
@@ -225,7 +230,7 @@ class _LogTableState extends State<LogTable> {
     );
     patch.remarks = _controllers['remarks']?.text ?? '';
     try {
-      await logProvider.updateLogById(logId, patch);
+      await logProvider.updateLogFromOriginal(original, patch);
     } catch (error) {
       if (!mounted) return;
       setState(() => _editingSaveInProgress = false);
@@ -817,7 +822,9 @@ class _LogTableState extends State<LogTable> {
                     IconButton(
                       icon: const Icon(Icons.delete_outline, size: 20),
                       color: colors.error,
-                      onPressed: () => _showDeleteConfirmation(context, log),
+                      onPressed: logProvider.canDeleteLog(log)
+                          ? () => _showDeleteConfirmation(context, log)
+                          : null,
                       tooltip: context.l10n.deleteRecord,
                     ),
                   ],
@@ -1014,8 +1021,9 @@ class _LogTableState extends State<LogTable> {
                         );
                         final deleteButton = OutlinedButton.icon(
                           key: Key('mobile-delete-log-${log.id}'),
-                          onPressed: () =>
-                              _showDeleteConfirmation(context, log),
+                          onPressed: logProvider.canDeleteLog(log)
+                              ? () => _showDeleteConfirmation(context, log)
+                              : null,
                           icon: const Icon(Icons.delete_outline),
                           label: Text(context.l10n.deleteRecord),
                           style: OutlinedButton.styleFrom(
@@ -1607,7 +1615,7 @@ class _LogTableState extends State<LogTable> {
     final logProvider = tableContext.read<LogProvider>();
     if (widget.readOnly ||
         widget.conflictedLogIds.contains(log.id) ||
-        !logProvider.canMutateLog(log)) {
+        !logProvider.canDeleteLog(log)) {
       return;
     }
     final deleted = await showDialog<bool>(
@@ -1617,13 +1625,13 @@ class _LogTableState extends State<LogTable> {
         onDelete: () async {
           if (widget.readOnly ||
               widget.conflictedLogIds.contains(log.id) ||
-              !logProvider.canMutateLog(log)) {
+              !logProvider.canDeleteLog(log)) {
             throw StateError(_mutationBlockLabel(
               dialogContext,
               logProvider.mutationBlockReason(log),
             ));
           }
-          await logProvider.deleteLogById(log.id);
+          await logProvider.deleteLogFromOriginal(log);
         },
       ),
     );

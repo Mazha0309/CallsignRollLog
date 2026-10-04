@@ -8,19 +8,16 @@ import '../models/session.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 // These functions are ignored because they are not marked as `pub`: `close_inactive_local_sessions_from_pool`, `close_session_locally_from_pool`, `convert_collaboration_session_to_local_from_pool`, `copy_collaboration_session_to_local_from_pool`, `hard_delete_session_from_pool`, `into_session`, `into_summary`, `list_session_summaries_from_pool`, `reopen_local_session_from_pool`, `replace_collaboration_session_locally_from_pool`, `replace_collaboration_session_locally_in_tx`, `start_local_session_from_pool`, `stop_collaboration_session_locally_from_pool`
-// These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `LocalCopyLogRow`, `LocalReplacementStatus`, `SessionRow`, `SessionSummaryRow`
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `from_row`, `from_row`, `from_row`
+// These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `LocalCopyLogRow`, `SessionRow`, `SessionSummaryRow`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `from_row`, `from_row`, `from_row`
 
 Future<Session> createSession({required String title}) =>
     RustLib.instance.api.crateApiSessionsCreateSession(title: title);
 
 /// Starts a new writable local session atomically.
 ///
-/// Any currently active local-only session is closed in the same transaction
-/// that inserts the replacement. Collaboration replicas stay untouched, so a
-/// recorder can leave an on-device shared-session cache available while
-/// starting an independent local net. If insertion fails, the transaction
-/// rolls back the close as well.
+/// Opening another recorder does not end existing sessions. Only an explicit
+/// end action changes their lifecycle.
 Future<Session> startLocalSession({required String title}) =>
     RustLib.instance.api.crateApiSessionsStartLocalSession(title: title);
 
@@ -45,9 +42,8 @@ Future<void> closeSession({required String sessionId}) =>
 
 /// Reopens a closed, local-only session on this device.
 ///
-/// Collaboration sessions must be reopened through the synchronized
-/// collaboration API. To keep the local recorder unambiguous, any other
-/// active local-only session is closed in the same transaction.
+/// Collaboration sessions must be reopened through the synchronized API.
+/// Other sessions are not ended when this one is resumed.
 Future<Session> reopenLocalSession({required String sessionId}) =>
     RustLib.instance.api
         .crateApiSessionsReopenLocalSession(sessionId: sessionId);
@@ -84,11 +80,9 @@ Future<Session> stopCollaborationSessionLocally({required String sessionId}) =>
     RustLib.instance.api
         .crateApiSessionsStopCollaborationSessionLocally(sessionId: sessionId);
 
-/// Closes a session only on this device and returns its canonical local row.
-///
-/// A local-only session keeps its identifier. A collaboration replica is
-/// replaced by a closed local-only session with new session and log identifiers
-/// so the server session, membership, and other devices remain untouched.
+/// Ends a local-only session without changing its identity or records.
+/// Collaboration replicas must use the shared lifecycle API. Reject them in
+/// this transaction rather than silently detaching and losing pending data.
 Future<Session> closeSessionLocally({required String sessionId}) =>
     RustLib.instance.api
         .crateApiSessionsCloseSessionLocally(sessionId: sessionId);

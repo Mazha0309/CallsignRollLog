@@ -97,11 +97,12 @@ void main() {
     expect(fallbackBindingChecks, 0);
   });
 
-  test('device-only close follows a replacement closed local history row',
+  test('end rejects a collaboration replica before invoking the local closer',
       () async {
     final requested = <String>[];
     final provider = SessionProvider(
       sessionListLoader: () async => [source],
+      sessionBindingChecker: (_) async => true,
       localSessionCloser: (sessionId) async {
         requested.add(sessionId);
         return closedLocal;
@@ -110,14 +111,37 @@ void main() {
     addTearDown(provider.dispose);
     await provider.ready;
 
-    final result = await provider.closeSessionLocally(source.sessionId);
+    await expectLater(
+      provider.closeSessionLocally(source.sessionId),
+      throwsA(isA<StateError>().having(
+          (e) => e.message, 'message', 'LOCAL_CLOSE_COLLABORATION_FORBIDDEN')),
+    );
+    expect(requested, isEmpty);
+    expect(provider.currentSessionId, source.sessionId);
+    expect(provider.currentSession, same(source));
+  });
 
-    expect(requested, [source.sessionId]);
-    expect(result.status, 'closed');
-    expect(provider.currentSessionId, closedLocal.sessionId);
+  test('ending local recording keeps the same identity and persists its status',
+      () async {
+    final ended = Session(
+      sessionId: source.sessionId,
+      title: source.title,
+      status: 'closed',
+      createdAt: source.createdAt,
+      updatedAt: '2026-10-04T12:00:00Z',
+      closedAt: '2026-10-04T12:00:00Z',
+    );
+    final provider = SessionProvider(
+      sessionListLoader: () async => [source],
+      sessionBindingChecker: (_) async => false,
+      localSessionCloser: (_) async => ended,
+    );
+    addTearDown(provider.dispose);
+    await provider.ready;
+    await provider.closeSessionLocally(source.sessionId);
+    expect(provider.currentSessionId, source.sessionId);
     expect(provider.currentSession?.status, 'closed');
-    final prefs = await SharedPreferences.getInstance();
-    expect(prefs.getString('current_session_id'), closedLocal.sessionId);
+    expect(provider.currentSession?.createdAt, source.createdAt);
   });
 
   test('deleting the selected local replica clears the safe selection',
@@ -144,6 +168,7 @@ void main() {
     final provider = SessionProvider(
       sessionListLoader: () async => [source],
       localSessionCloser: (_) async => otherClosed,
+      sessionBindingChecker: (_) async => false,
     );
     addTearDown(provider.dispose);
     await provider.ready;
@@ -176,7 +201,22 @@ void main() {
     expect(prefs.getString('current_session_id'), otherActive.sessionId);
   });
 
-  test('startup inactivity maintenance adopts an atomically closed session',
+  test('default provider does not automatically end an idle session', () async {
+    var sweeps = 0;
+    final provider = SessionProvider(
+      sessionListLoader: () async => [source],
+      inactiveLocalSessionCloser: () async {
+        sweeps++;
+        return [closedLocal];
+      },
+    );
+    addTearDown(provider.dispose);
+    await provider.ready;
+    expect(sweeps, 0);
+    expect(provider.currentSession?.status, 'active');
+  });
+
+  test('explicitly enabled legacy inactivity maintenance adopts its result',
       () async {
     var sweeps = 0;
     final provider = SessionProvider(

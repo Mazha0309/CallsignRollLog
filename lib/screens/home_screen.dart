@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 
 import 'package:provider/provider.dart';
 import 'package:openlogtool/l10n/l10n.dart';
+import 'package:openlogtool/models/controller_display.dart';
 import 'package:openlogtool/providers/collaboration_provider.dart';
+import 'package:openlogtool/providers/account_share_provider.dart';
+import 'package:openlogtool/screens/social_screen.dart';
 import 'package:openlogtool/providers/log_provider.dart';
 import 'package:openlogtool/providers/session_provider.dart';
 import 'package:openlogtool/providers/server_provider.dart';
@@ -18,6 +21,14 @@ import 'package:openlogtool/widgets/log_table.dart';
 import 'package:openlogtool/widgets/settings_panel.dart';
 import 'package:openlogtool/widgets/primary_navigation_rail.dart';
 import 'package:openlogtool/utils/app_snack_bar.dart';
+import 'package:openlogtool/widgets/invitation_notice.dart';
+import 'package:openlogtool/widgets/share_invitations_panel.dart';
+import 'package:openlogtool/widgets/session_sharing_dialog.dart';
+import 'package:openlogtool/models/account_share_dto.dart';
+import 'package:openlogtool/providers/shared_workbench_provider.dart';
+import 'package:openlogtool/src/bridge/models/session.dart';
+import 'package:openlogtool/utils/server_url.dart';
+import 'package:openlogtool/widgets/settings/server_account_settings.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -28,7 +39,12 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
+  final _settingsPanelKey = GlobalKey<SettingsPanelState>();
+  late final VoidCallback _disposeUrlSync;
   ServerProvider? _serverProvider;
+  SessionProvider? _sessionsProvider;
+  String? _observedLocalSession;
+  String? _handledConnectionLink;
   int _observedAuthenticationNoticeRevision = 0;
 
   /// 启动时 URL 已指定页面：优先恢复 URL，而不是跳转 sessions。
@@ -36,6 +52,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   /// 首帧完成前路由回调只改字段，不调用 setState。
   bool _syncReady = false;
+  Future<void>? _urlSessionRestore;
 
   static const _destinations = <_AppDestination>[
     _AppDestination(_AppSection.workbench, Icons.radio_outlined, Icons.radio),
@@ -48,7 +65,13 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    UrlSync.init(onRouteChanged: _onRouteChanged);
+    _disposeUrlSync = UrlSync.init(
+      onRouteChanged: _onRouteChanged,
+      onBackWithinPage: () =>
+          mounted &&
+          _selectedIndex == 3 &&
+          (_settingsPanelKey.currentState?.popCategory() ?? false),
+    );
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _syncReady = true;
       _initSession();
@@ -58,11 +81,24 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    final sessions = context.read<SessionProvider>();
+    if (!identical(sessions, _sessionsProvider)) {
+      _sessionsProvider?.removeListener(_handleLocalSessionChanged);
+      _sessionsProvider = sessions..addListener(_handleLocalSessionChanged);
+      _observedLocalSession = sessions.currentSessionId;
+    }
     final server = context.read<ServerProvider>();
     if (identical(server, _serverProvider)) return;
     _serverProvider?.removeListener(_handleServerStateChanged);
     _serverProvider = server..addListener(_handleServerStateChanged);
     _handleServerStateChanged();
+  }
+
+  void _handleLocalSessionChanged() {
+    final next = _sessionsProvider?.currentSessionId;
+    if (next == _observedLocalSession) return;
+    _observedLocalSession = next;
+    context.read<AccountShareProvider?>()?.closeSharedSession();
   }
 
   void _handleServerStateChanged() {
@@ -100,11 +136,33 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _onRouteChanged(SyncRoute route) {
     if (!mounted) return;
+    final serverLink = validatedServerConnectionInput(route.server ?? '');
+    if (serverLink != null && serverLink != _handledConnectionLink) {
+      _handledConnectionLink = serverLink;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        Navigator.push<void>(
+            context,
+            MaterialPageRoute(
+                builder: (context) => Scaffold(
+                      appBar:
+                          AppBar(title: Text(context.l10n.serverSettingsTitle)),
+                      body: SingleChildScrollView(
+                          padding: const EdgeInsets.all(16),
+                          child: ServerAccountSettings(
+                              cardPadding: 16,
+                              initialConnectionInput: serverLink)),
+                    )));
+      });
+    }
     if (route.page != null) _restoredFromUrl = true;
     final index = homeIndexForPage(route.page);
     final currentSessionId = context.read<SessionProvider>().currentSessionId;
+    if (route.session != null) {
+      context.read<AccountShareProvider?>()?.closeSharedSession();
+    }
     if (route.session != null && route.session != currentSessionId) {
-      _restoreSessionFromUrl(route.session!);
+      _urlSessionRestore = _restoreSessionFromUrl(route.session!);
     }
     if (index == _selectedIndex && route.session == null) return;
     if (_syncReady) {
@@ -119,7 +177,10 @@ class _HomeScreenState extends State<HomeScreen> {
     final sessions = context.read<SessionProvider>();
     final logs = context.read<LogProvider>();
     try {
+      await sessions.ready;
+      if (!mounted) return;
       await logs.reloadForSession(sessionId, propagateErrors: true);
+      if (!mounted) return;
       await sessions.switchToSession(sessionId);
     } catch (e) {
       debugPrint('[HomeScreen] URL session restore failed: $e');
@@ -128,7 +189,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void dispose() {
+    _disposeUrlSync();
     _serverProvider?.removeListener(_handleServerStateChanged);
+    _sessionsProvider?.removeListener(_handleLocalSessionChanged);
     ControllerWindowService.closeAll().catchError((Object error) {
       debugPrint('[ControllerWindow] close failed: $error');
     });
@@ -139,6 +202,9 @@ class _HomeScreenState extends State<HomeScreen> {
     final sp = context.read<SessionProvider>();
     final lp = context.read<LogProvider>();
     await sp.ready;
+    // Initial query links survive bootstrap now. Do not reload the previously
+    // selected session over the session being restored from the link.
+    await _urlSessionRestore;
     if (!mounted) return;
     if (!_restoredFromUrl && sp.currentSessionId == null) {
       setState(() => _selectedIndex = 1);
@@ -150,17 +216,32 @@ class _HomeScreenState extends State<HomeScreen> {
   void _onItemTapped(int index) {
     FocusManager.instance.primaryFocus?.unfocus();
     final sessionProvider = context.read<SessionProvider>();
-    final destination =
-        index == 0 && sessionProvider.currentSessionId == null ? 1 : index;
-    if (destination == _selectedIndex) return;
-    setState(() => _selectedIndex = destination);
+    final blockedWorkbench = index == 0 &&
+        sessionProvider.currentSessionId == null &&
+        context.read<AccountShareProvider?>()?.openedSharedSession == null;
+    final destination = blockedWorkbench ? 1 : index;
+    if (blockedWorkbench) {
+      ScaffoldMessenger.of(context).showLoggedSnackBar(
+        SnackBar(content: Text(context.l10n.createOrJoinSessionFirst)),
+      );
+    }
+    if (destination != _selectedIndex) {
+      setState(() => _selectedIndex = destination);
+    }
     UrlSync.push(
       pageForHomeIndex(destination),
-      destination == 0 ? sessionProvider.currentSessionId : null,
+      destination == 0 &&
+              context.read<AccountShareProvider?>()?.openedSharedSession == null
+          ? sessionProvider.currentSessionId
+          : null,
     );
   }
 
   Future<bool> _handleSystemBack() async {
+    if (_selectedIndex == 3 &&
+        (_settingsPanelKey.currentState?.popCategory() ?? false)) {
+      return true;
+    }
     if (FocusManager.instance.primaryFocus?.hasFocus ?? false) {
       FocusManager.instance.primaryFocus?.unfocus();
       return true;
@@ -171,6 +252,47 @@ class _HomeScreenState extends State<HomeScreen> {
     }
     return false;
   }
+
+  void _openInvitations() {
+    final sharing = context.read<AccountShareProvider>();
+    if (sharing.pendingShareCount > 0 && sharing.supportsBatchSharing) {
+      showSessionSharingDialog(context);
+    } else if (sharing.supportsFriends && sharing.pendingShareCount == 0) {
+      Navigator.push<void>(
+          context,
+          MaterialPageRoute(
+            builder: (_) => SocialScreen(
+                initialTab: 1,
+                onSessionOpened: () {
+                  if (mounted) _onItemTapped(0);
+                }),
+          ));
+    } else {
+      showDialog<void>(
+          context: context,
+          builder: (c) => AlertDialog(
+                title: Text(c.l10n.socialMessages),
+                content: const SizedBox(
+                    width: 520,
+                    child:
+                        SingleChildScrollView(child: ShareInvitationsPanel())),
+                actions: [
+                  TextButton(
+                      onPressed: () => Navigator.pop(c),
+                      child: Text(c.l10n.close))
+                ],
+              ));
+    }
+  }
+
+  void _openSocialRequests() => Navigator.push<void>(
+      context,
+      MaterialPageRoute(
+          builder: (_) => SocialScreen(
+              initialTab: 1,
+              onSessionOpened: () {
+                if (mounted) _onItemTapped(0);
+              })));
 
   @override
   Widget build(BuildContext context) {
@@ -187,12 +309,14 @@ class _HomeScreenState extends State<HomeScreen> {
           if (mounted) setState(() => _selectedIndex = 0);
           UrlSync.push(
             pageForHomeIndex(0),
-            context.read<SessionProvider>().currentSessionId,
+            context.read<AccountShareProvider?>()?.openedSharedSession == null
+                ? context.read<SessionProvider>().currentSessionId
+                : null,
           );
         },
       ),
       const DataWorkspacePage(),
-      const SettingsPage(),
+      SettingsPage(panelKey: _settingsPanelKey, handlesSystemBack: false),
     ];
     return PopScope<Object?>(
       canPop: false,
@@ -216,54 +340,83 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           centerTitle: false,
           actions: [
+            if (context.watch<AccountShareProvider?>()?.supportsFriends ==
+                    true ||
+                context.watch<AccountShareProvider?>()?.supportsLegacySharing ==
+                    true)
+              IconButton(
+                key: const Key('global-invitations'),
+                tooltip: context.l10n.socialMessages,
+                icon: Badge(
+                  backgroundColor: Colors.red.shade700,
+                  textColor: Colors.white,
+                  isLabelVisible: context
+                          .watch<AccountShareProvider>()
+                          .pendingInboundCount >
+                      0,
+                  label: Text(
+                      '${context.watch<AccountShareProvider>().pendingInboundCount}'),
+                  child: const Icon(Icons.notifications_outlined),
+                ),
+                onPressed: _openInvitations,
+              ),
             _AppBarSyncStatus(
               onPressed: () => _onItemTapped(1),
             ),
             const SizedBox(width: 8),
           ],
         ),
-        body: LayoutBuilder(
-          builder: (context, constraints) {
-            final content = IndexedStack(
-              index: _selectedIndex,
-              children: pages,
-            );
-            final showSidebar = constraints.maxWidth >= 720;
-            final isDesktop = constraints.maxWidth >= 1200;
-            // Keep the page stack at a stable element position when crossing the
-            // mobile/sidebar breakpoint. Reparenting the focused TextField while
-            // Windows is dispatching WM_SIZE can tear down its native IME
-            // connection in the middle of that callback.
-            return Row(
-              children: [
-                if (showSidebar)
-                  PrimaryNavigationRail(
-                    isDesktop: isDesktop,
-                    expanded: primarySidebarExpanded,
-                    selectedIndex: _selectedIndex,
-                    onDestinationSelected: _onItemTapped,
-                    onExpandedChanged: context
-                        .read<SettingsProvider>()
-                        .setPrimarySidebarExpanded,
-                    destinations: [
-                      for (final destination in _destinations)
-                        NavigationRailDestination(
-                          icon: Icon(destination.icon),
-                          selectedIcon: Icon(destination.selectedIcon),
-                          label: Text(destination.label(context.l10n)),
-                        ),
-                    ],
-                  )
-                else
-                  const SizedBox.shrink(),
-                Expanded(
-                  key: const ValueKey('home-page-stack'),
-                  child: content,
-                ),
-              ],
-            );
-          },
-        ),
+        body: Column(children: [
+          InvitationNotice(
+            onOpen: _openInvitations,
+            onOpenRequests: _openSocialRequests,
+            keyboardVisible: MediaQuery.viewInsetsOf(context).bottom > 0,
+          ),
+          Expanded(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final content = IndexedStack(
+                  index: _selectedIndex,
+                  children: pages,
+                );
+                final showSidebar = constraints.maxWidth >= 720;
+                final isDesktop = constraints.maxWidth >= 1200;
+                // Keep the page stack at a stable element position when crossing the
+                // mobile/sidebar breakpoint. Reparenting the focused TextField while
+                // Windows is dispatching WM_SIZE can tear down its native IME
+                // connection in the middle of that callback.
+                return Row(
+                  children: [
+                    if (showSidebar)
+                      PrimaryNavigationRail(
+                        isDesktop: isDesktop,
+                        expanded: primarySidebarExpanded,
+                        selectedIndex: _selectedIndex,
+                        onDestinationSelected: _onItemTapped,
+                        onExpandedChanged: context
+                            .read<SettingsProvider>()
+                            .setPrimarySidebarExpanded,
+                        destinations: [
+                          for (final destination in _destinations)
+                            NavigationRailDestination(
+                              icon: Icon(destination.icon),
+                              selectedIcon: Icon(destination.selectedIcon),
+                              label: Text(destination.label(context.l10n)),
+                            ),
+                        ],
+                      )
+                    else
+                      const SizedBox.shrink(),
+                    Expanded(
+                      key: const ValueKey('home-page-stack'),
+                      child: content,
+                    ),
+                  ],
+                );
+              },
+            ),
+          )
+        ]),
         bottomNavigationBar: MediaQuery.sizeOf(context).width < 720
             ? NavigationBar(
                 key: const Key('mobile-navigation'),
@@ -311,9 +464,91 @@ class _WorkbenchPage extends StatelessWidget {
   final bool saveShortcutEnabled;
 
   @override
-  Widget build(BuildContext context) => AddRecordPage(
+  Widget build(BuildContext context) {
+    final sharing = context.watch<AccountShareProvider?>();
+    final shared = sharing?.openedSharedSession;
+    if (shared != null) {
+      return SharedSessionWorkbench(
+        key: ValueKey('${sharing!.accountScope}:${shared.identity}'),
+        session: shared,
         onOpenSessions: onOpenSessions,
         saveShortcutEnabled: saveShortcutEnabled,
+      );
+    }
+    return AddRecordPage(
+      onOpenSessions: onOpenSessions,
+      saveShortcutEnabled: saveShortcutEnabled,
+    );
+  }
+}
+
+class SharedSessionWorkbench extends StatelessWidget {
+  const SharedSessionWorkbench(
+      {super.key,
+      required this.session,
+      required this.onOpenSessions,
+      required this.saveShortcutEnabled});
+  final SharedSessionDto session;
+  final VoidCallback onOpenSessions;
+  final bool saveShortcutEnabled;
+  @override
+  Widget build(BuildContext context) => MultiProvider(
+        providers: [
+          ChangeNotifierProvider<LogProvider>(
+              create: (context) => SharedWorkbenchProvider(
+                  context.read<AccountShareProvider>(), session)),
+          // No local membership, live draft, offline queue, or management API is
+          // inherited by a record-only grant, even if the session IDs coincide.
+          ChangeNotifierProvider(create: (_) => CollaborationProvider()),
+        ],
+        child: Builder(builder: (context) {
+          final logs = context.watch<LogProvider>() as SharedWorkbenchProvider;
+          final current = logs.session;
+          return AddRecordPage(
+            sessionOverride: Session(
+                sessionId: current.sessionId,
+                title: current.title,
+                status: current.status,
+                createdAt: current.createdAt,
+                updatedAt: current.updatedAt),
+            statusHeader: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Card(
+                      child: ListTile(
+                    leading: const Icon(Icons.folder_shared_outlined),
+                    title: Text(current.title),
+                    subtitle: Text(
+                        '${context.l10n.sharedSessionFrom(current.grantorUsername)} · '
+                        '${logs.currentSessionReadOnly ? context.l10n.roleViewer : context.l10n.shareEditLogs}'),
+                    trailing: Wrap(children: [
+                      IconButton(
+                          onPressed: logs.loading || logs.writing
+                              ? null
+                              : logs.refresh,
+                          icon: const Icon(Icons.refresh),
+                          tooltip: context.l10n.refresh),
+                      IconButton(
+                          onPressed: () => context
+                              .read<AccountShareProvider>()
+                              .closeSharedSession(),
+                          icon: const Icon(Icons.close),
+                          tooltip: context.l10n.close),
+                    ]),
+                  )),
+                  if (logs.loading) const LinearProgressIndicator(),
+                  if (logs.error != null)
+                    Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Text(sharingErrorText(context, logs.error!),
+                            style: TextStyle(
+                                color: Theme.of(context).colorScheme.error))),
+                ]),
+            onOpenSessions: onOpenSessions,
+            saveShortcutEnabled: saveShortcutEnabled,
+            allowUndo: false,
+          );
+        }),
       );
 }
 
@@ -642,10 +877,16 @@ class AddRecordPage extends StatelessWidget {
     super.key,
     this.onOpenSessions,
     this.saveShortcutEnabled = true,
+    this.sessionOverride,
+    this.statusHeader,
+    this.allowUndo = true,
   });
 
   final VoidCallback? onOpenSessions;
   final bool saveShortcutEnabled;
+  final Session? sessionOverride;
+  final Widget? statusHeader;
+  final bool allowUndo;
 
   @override
   Widget build(BuildContext context) {
@@ -660,7 +901,8 @@ class AddRecordPage extends StatelessWidget {
     BuildContext context,
     LogProvider logProvider,
   ) {
-    final currentSession = context.watch<SessionProvider>().currentSession;
+    final currentSession =
+        sessionOverride ?? context.watch<SessionProvider>().currentSession;
     if (currentSession == null) return _buildNoSessionState(context);
 
     final sessionClosed = currentSession.status != 'active';
@@ -715,7 +957,7 @@ class AddRecordPage extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    context.l10n.noCurrentSessionHint,
+                    context.l10n.workbenchNoSessionHint,
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: colors.onSurfaceVariant,
@@ -728,7 +970,7 @@ class AddRecordPage extends StatelessWidget {
                       key: const Key('open-sessions-from-empty-workbench'),
                       onPressed: onOpenSessions,
                       icon: const Icon(Icons.groups_outlined),
-                      label: Text(context.l10n.navSessions),
+                      label: Text(context.l10n.goCreateSession),
                     ),
                   ],
                 ],
@@ -750,7 +992,7 @@ class AddRecordPage extends StatelessWidget {
     final stackedContent = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const _WorkbenchStatusBar(),
+        statusHeader ?? const _WorkbenchStatusBar(),
         if (readOnly) ...[
           const SizedBox(height: 8),
           Container(
@@ -767,7 +1009,11 @@ class AddRecordPage extends StatelessWidget {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    context.watch<SessionProvider>().currentSession?.status !=
+                    (sessionOverride ??
+                                    context
+                                        .watch<SessionProvider>()
+                                        .currentSession)
+                                ?.status !=
                             'active'
                         ? context.l10n.historySessionReadOnly
                         : context.l10n.sharedDraftReadOnly,
@@ -791,6 +1037,7 @@ class AddRecordPage extends StatelessWidget {
           keepTrailingInlineOnCompact: true,
           child: LogForm(
             key: ValueKey('log-form-$currentSessionId'),
+            sessionId: currentSessionId,
             readOnly: readOnly,
             saveShortcutEnabled: saveShortcutEnabled,
           ),
@@ -831,7 +1078,7 @@ class AddRecordPage extends StatelessWidget {
               ],
             ),
           ),
-          trailing: _buildLogActions(context, readOnly),
+          trailing: allowUndo ? _buildLogActions(context, readOnly) : null,
           child: LogTable(
             readOnly: readOnly,
             conflictedLogIds: conflictedLogIds,
@@ -844,7 +1091,7 @@ class AddRecordPage extends StatelessWidget {
     );
     return LayoutBuilder(
       builder: (context, constraints) => SingleChildScrollView(
-        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.manual,
         padding: EdgeInsets.fromLTRB(
           constraints.maxWidth < 600 ? 12 : 20,
           12,
@@ -868,11 +1115,13 @@ class AddRecordPage extends StatelessWidget {
 
   Widget _currentOrdinalBadge(BuildContext context, int savedCount) {
     final colors = Theme.of(context).colorScheme;
-    final ordinal = context
-            .watch<CollaborationProvider>()
-            .liveDraftSnapshot
-            ?.currentOrdinal ??
-        savedCount + 1;
+    final ordinal = resolveVisibleRecordOrdinal(
+      snapshotOrdinal: context
+          .watch<CollaborationProvider>()
+          .liveDraftSnapshot
+          ?.currentOrdinal,
+      savedCount: savedCount,
+    );
     return Container(
       key: const Key('current-ordinal-badge'),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
@@ -947,14 +1196,17 @@ class AddRecordPage extends StatelessWidget {
 }
 
 class SettingsPage extends StatelessWidget {
-  const SettingsPage({super.key});
+  const SettingsPage({super.key, this.panelKey, this.handlesSystemBack = true});
+
+  final GlobalKey<SettingsPanelState>? panelKey;
+  final bool handlesSystemBack;
 
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
         final isNarrow = constraints.maxWidth < 600;
-        return SingleChildScrollView(
+        return Padding(
           padding: EdgeInsets.symmetric(
             horizontal: isNarrow ? 8 : 24,
             vertical: isNarrow ? 12 : 24,
@@ -962,7 +1214,10 @@ class SettingsPage extends StatelessWidget {
           child: Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 1120),
-              child: const SettingsPanel(),
+              child: SettingsPanel(
+                key: panelKey,
+                handlesSystemBack: handlesSystemBack,
+              ),
             ),
           ),
         );

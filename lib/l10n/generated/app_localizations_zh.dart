@@ -9,6 +9,473 @@ class AppLocalizationsZh extends AppLocalizations {
   AppLocalizationsZh([String locale = 'zh']) : super(locale);
 
   @override
+  String get interfaceScaleTitle => '界面缩放';
+
+  @override
+  String get interfaceScaleHint => '整体缩放按钮、文字、表格和弹窗（80%–150%），仅保存在当前设备。';
+
+  @override
+  String get interfaceScaleUp => '放大界面';
+
+  @override
+  String get interfaceScaleDown => '缩小界面';
+
+  @override
+  String get interfaceScaleReset => '恢复 100%';
+
+  @override
+  String get shareInboxTitle => '收到的共享邀请';
+
+  @override
+  String get shareInboxEmpty => '暂无待处理的共享邀请';
+
+  @override
+  String shareInvitationFrom(String username) {
+    return '$username 向你发来了共享邀请';
+  }
+
+  @override
+  String get shareAcceptedHint => '已接受共享邀请，可以在“历史会话 → 共享”中查看。当前记录会话不会切换。';
+
+  @override
+  String get newInvitationNotice => '收到新的邀请或申请';
+
+  @override
+  String get viewInvitations => '查看邀请';
+
+  @override
+  String pendingInvitations(int count) {
+    return '$count 条邀请或申请待处理';
+  }
+
+  @override
+  String get dismissInvitationNotice => '暂时收起提示，邀请仍保留';
+
+  @override
+  String get shareSessionsTitle => '共享会话';
+
+  @override
+  String get shareSelected => '多选会话';
+
+  @override
+  String get shareAll => '持续共享全部';
+
+  @override
+  String get shareAllHint => '包含当前和以后新建的所有本人会话。新建或离线修改的本地会话完成云同步后，对方即可看到。';
+
+  @override
+  String get shareSelectedHint => '只共享勾选的本人会话；不会自动包含以后新建的会话，也不会转共享别人的记录。';
+
+  @override
+  String get shareViewOnly => '仅查看';
+
+  @override
+  String get shareEditLogs => '允许新增、修改记录';
+
+  @override
+  String get shareDeleteLogs => '另外允许删除记录';
+
+  @override
+  String get sharePermissionHint => '删除整个会话、结束会话和转授权仍由所有者控制；已结束的会话只能查看。';
+
+  @override
+  String get shareRecipientHint => '选择好友，或输入同一服务器上的用户名';
+
+  @override
+  String get shareSend => '发送共享邀请';
+
+  @override
+  String get shareManage => '已发出的共享';
+
+  @override
+  String get shareRevoke => '撤销共享';
+
+  @override
+  String get shareRevokeHint => '撤销后，对方将无法继续通过这项授权查看或操作你的会话。已加入的独立协作不受影响。';
+
+  @override
+  String get shareSaved => '共享设置已保存';
+
+  @override
+  String get shareSyncFirst => '请先在个人云同步中确认配对或解决冲突，再重试共享。不会自动覆盖云端数据。';
+
+  @override
+  String get shareSyncLocal => '同步本机记录';
+
+  @override
+  String get shareNeedsSelection => '请选择接收人，并至少勾选一个会话；也可以选择持续共享全部。';
+
+  @override
+  String get shareAccessChanged => '账号或共享权限已变化，请关闭后重新打开。';
+
+  @override
+  String get shareConflict => '记录已被其他人修改，请刷新后重新编辑，避免覆盖对方的修改。';
+
+  @override
+  String get shareLoadFailed => '共享数据加载失败，请检查网络后重试。';
+
+  @override
+  String get shareOperationFailed => '操作未完成，请检查连接和当前权限后重试。';
+
+  @override
+  String get shareExisting => '已向该用户发出共享，请在下面的共享管理中修改。';
+
+  @override
+  String get shareAddRecord => '新增记录';
+
+  @override
+  String get shareRecordsHint => '正在浏览共享记录，不会切换你当前的记录会话。';
+
+  @override
+  String get shareUpgradeRequired => '请先升级服务器以使用多选共享与操作授权。';
+
+  @override
+  String get shareSelectVisible => '全选搜索结果';
+
+  @override
+  String get shareClearSelection => '清空选择';
+
+  @override
+  String get socialSearch => '搜索';
+
+  @override
+  String get socialSearchHint => '输入用户名或注册呼号';
+
+  @override
+  String get socialSearchScope => '仅搜索当前服务器上的用户，不会搜索或公开个人记录。';
+
+  @override
+  String get socialSearchStart => '输入至少 2 个字符，搜索后选择要添加的人。';
+
+  @override
+  String get socialSearchEmpty => '没有找到匹配的用户，请确认对方在同一服务器注册。';
+
+  @override
+  String get socialSearchMore => '结果较多，请输入更完整的用户名。';
+
+  @override
+  String get socialSearchFailed => '搜索失败，请检查连接后重试。';
+
+  @override
+  String get socialSearchUpgrade => '此服务器尚不支持用户搜索，请先升级服务端。';
+
+  @override
+  String get socialSearchRateLimited => '搜索太频繁，请稍后再试。';
+
+  @override
+  String get socialAlreadyFriend => '已是好友';
+
+  @override
+  String get socialRequestSent => '申请已发送';
+
+  @override
+  String get socialRequestIncoming => '对方已申请加你为好友';
+
+  @override
+  String get socialRequestClosed => '申请已结束';
+
+  @override
+  String get socialJoinMode => '加入方式';
+
+  @override
+  String get socialJoinInviteOnly => '仅邀请';
+
+  @override
+  String get socialJoinApproval => '好友申请，审批后加入';
+
+  @override
+  String get socialJoinDirect => '好友直接加入';
+
+  @override
+  String get socialDirectRole => '直接加入的新成员权限';
+
+  @override
+  String get socialDirectJoinWarning =>
+      '开启后，同一服务器上的好友无需审批即可加入，并查看这个会话已有和新增的全部记录。仅影响此会话，其他会话仍然私有。';
+
+  @override
+  String get socialDirectJoinExistingHint =>
+      '此权限只适用于之后直接加入的成员，已有成员的权限不变。被移出的成员需要重新邀请或审批。';
+
+  @override
+  String get socialDirectJoinConfirm => '确认开放';
+
+  @override
+  String get socialDirectJoin => '直接加入';
+
+  @override
+  String get socialDirectJoinRemoved => '你已被移出此会话，请联系负责人重新邀请。';
+
+  @override
+  String get detailsType => '记录方式';
+
+  @override
+  String get detailsLocal => '本地记录 · 无需服务器';
+
+  @override
+  String get detailsShared => '共同记录 · 保留本机副本';
+
+  @override
+  String get detailsStatus => '会话状态';
+
+  @override
+  String get detailsRecords => '本机已保存记录';
+
+  @override
+  String get detailsCreated => '创建时间';
+
+  @override
+  String get detailsUpdated => '更新时间';
+
+  @override
+  String get detailsEnded => '结束时间';
+
+  @override
+  String get detailsId => '会话 ID';
+
+  @override
+  String get sessionPeopleTitle => '参与者与邀请';
+
+  @override
+  String get sessionPeopleHint => '在这里选择谁可以加入、处理邀请和申请。好友默认不开放记录；公开页面单独管理。';
+
+  @override
+  String get sessionPendingRequests => '本会话的邀请与申请';
+
+  @override
+  String get legacyInviteCodes => '邀请码（兼容旧版）';
+
+  @override
+  String get collaborationTechnicalDetails => '连接与诊断详情';
+
+  @override
+  String get collaborationOverviewOnline => '已连接，正在与参与者同步记录。';
+
+  @override
+  String get collaborationOverviewOffline => '连接暂时不可用，已有记录仍保留在本机。';
+
+  @override
+  String get collaborationOverviewAttention => '有待处理的记录或同步问题，请打开“同步”查看。';
+
+  @override
+  String collaborationOverviewPending(int count) {
+    return '已保存到本机，$count 项修改等待同步。';
+  }
+
+  @override
+  String get historySessionCollaborationCloseRequired =>
+      '这是共同记录，请在“协作与成员”中结束共同记录或离开协作；不能把它作为本地会话结束。';
+
+  @override
+  String get collaborationLifecycleHint =>
+      '切换页面或暂时断网不会退出协作。发起人可以结束共同记录，参与者可以离开协作；已有记录会保留。';
+
+  @override
+  String get hubLocalStart => '新建会话即可开始记录，无需服务器或账号。记录保存在本机，可随时查看和导出。';
+
+  @override
+  String get hubLocalHint => '本地记录可独立使用；同步与多人协作按需启用。';
+
+  @override
+  String get hubOptionalOnline => '同步与协作（可选）';
+
+  @override
+  String get hubOptionalOnlineHint => '需要多设备同步或与搭档共同记录时，再连接服务器。';
+
+  @override
+  String get hubConfigureServer => '设置可选服务器';
+
+  @override
+  String get hubOnlineConnected => '好友与协作使用当前服务器，本地记录仍可独立使用。';
+
+  @override
+  String get hubEnableCollaboration => '邀请搭档一起记录';
+
+  @override
+  String get hubConfirmUpload => '上传此会话并开启协作';
+
+  @override
+  String get hubUploadExplanation =>
+      '这会把当前会话及其中已有的记录上传到下面的服务器，并开始协作同步。此操作只上传当前会话，不改变其他会话的同步设置。会话仍为私有，之后再选择要邀请的好友；此操作不会发布公开页面。';
+
+  @override
+  String get hubContextChanged => '服务器、账号或当前会话已切换，请关闭后重新操作。';
+
+  @override
+  String get hubAlreadyMember => '对方已经加入这个会话，可在参与者管理中查看。';
+
+  @override
+  String get hubInvitationHint => '对方接受后才能查看此会话的记录，不会开放你的其他会话。';
+
+  @override
+  String get hubContinueRecording => '继续记录';
+
+  @override
+  String get hubViewRecords => '查看记录';
+
+  @override
+  String get hubSessionDetails => '会话详细信息';
+
+  @override
+  String get hubHistoryHint => '查看本机已有记录。“已结束”只按会话状态筛选，不代表公开归档。';
+
+  @override
+  String get hubAllRecords => '全部';
+
+  @override
+  String get hubMyRecords => '我的记录';
+
+  @override
+  String get hubTogetherRecords => '共同记录';
+
+  @override
+  String get hubEndedRecords => '已结束';
+
+  @override
+  String get socialTitle => '好友与邀请';
+
+  @override
+  String get socialAddFriend => '添加好友';
+
+  @override
+  String get socialFriends => '好友';
+
+  @override
+  String get socialMessages => '消息';
+
+  @override
+  String get socialSessions => '会话';
+
+  @override
+  String get socialIntro => '添加搭档为好友，再邀请他们一起点名。好友关系不会自动开放个人记录。';
+
+  @override
+  String get socialUsername => '对方的用户名（注册时使用的呼号）';
+
+  @override
+  String get socialSend => '发送申请';
+
+  @override
+  String get socialInvite => '邀请参与';
+
+  @override
+  String get socialApply => '申请加入';
+
+  @override
+  String get socialAccept => '接受';
+
+  @override
+  String get socialReject => '拒绝';
+
+  @override
+  String get socialPending => '等待对方处理';
+
+  @override
+  String get socialAccepted => '已接受';
+
+  @override
+  String get socialView => '只能查看';
+
+  @override
+  String get socialEdit => '共同记录';
+
+  @override
+  String get socialOpen => '打开会话';
+
+  @override
+  String get socialPrivate => '仅邀请可加入';
+
+  @override
+  String get socialDiscoverable => '好友可见，可申请加入';
+
+  @override
+  String get socialVisibilityHint => '好友可见的会话会出现在这里。加入方式由负责人设置，成为成员后才能查看记录。';
+
+  @override
+  String get socialNoFriends => '还没有好友，搜索搭档的用户名或注册呼号来添加。';
+
+  @override
+  String get socialNoMessages => '暂无邀请或申请';
+
+  @override
+  String get socialNoSessions => '暂无好友开放的会话。你也可以把当前会话用于协作。';
+
+  @override
+  String get socialPublish => '开启当前会话协作';
+
+  @override
+  String get socialRemove => '删除好友';
+
+  @override
+  String get socialRemoveHint => '会取消彼此待处理的邀请和申请。已加入的会话成员由会话负责人单独管理。';
+
+  @override
+  String get socialBlock => '屏蔽';
+
+  @override
+  String get socialUnblock => '取消屏蔽';
+
+  @override
+  String get socialBlocked => '已屏蔽';
+
+  @override
+  String get socialDone => '操作已完成';
+
+  @override
+  String get socialFriendRequest => '好友申请';
+
+  @override
+  String get socialInvitation => '会话邀请';
+
+  @override
+  String get socialApplication => '加入申请';
+
+  @override
+  String get socialSent => '我发出的';
+
+  @override
+  String get socialReceived => '收到的';
+
+  @override
+  String get socialManage => '管理参与者';
+
+  @override
+  String get socialConnect => '连接服务器并登录后，即可添加好友。';
+
+  @override
+  String get socialUpgrade => '此服务器尚不支持好友功能，请更新服务器。';
+
+  @override
+  String get socialLoadFailed => '暂时无法刷新，请重试。';
+
+  @override
+  String get socialChooseFriend => '选择好友';
+
+  @override
+  String get socialErrorUser => '没有找到这个用户名。请确认对方已在同一服务器注册。';
+
+  @override
+  String get socialErrorFriends => '请先添加对方为好友。';
+
+  @override
+  String get socialErrorClosed => '这条申请已处理或已过期，请刷新。';
+
+  @override
+  String get socialErrorSelf => '不能添加自己为好友。';
+
+  @override
+  String get socialErrorBlocked => '目前无法向这个用户发送请求。';
+
+  @override
+  String get socialServerLink => '复制服务器连接信息';
+
+  @override
+  String get socialServerLinkHint => '可粘贴服务器地址或服务器网页链接，连接后再登录。';
+
+  @override
+  String get socialLegacy => '旧版共享';
+
+  @override
   String get navWorkbench => '点名台';
 
   @override
@@ -116,13 +583,22 @@ class AppLocalizationsZh extends AppLocalizations {
   String get noCurrentSession => '当前没有点名会话';
 
   @override
-  String get noCurrentSessionHint => '创建一个点名会话后即可开始记录。';
+  String get noCurrentSessionHint => '创建一个点名会话，或加入协作后即可开始记录。';
+
+  @override
+  String get workbenchNoSessionHint => '请先到会话页新建会话，或加入协作后再开始记录。';
+
+  @override
+  String get createOrJoinSessionFirst => '请先新建会话或加入协作';
+
+  @override
+  String get goCreateSession => '去新建会话';
 
   @override
   String get sessionActive => '进行中';
 
   @override
-  String get sessionClosed => '已关闭';
+  String get sessionClosed => '已结束';
 
   @override
   String savedPositions(int count) {
@@ -190,19 +666,19 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get historySessionCloseTitle => '仅在本机关闭会话';
+  String get historySessionCloseTitle => '结束记录';
 
   @override
   String historySessionCloseConfirmation(String title) {
-    return '仅在本机关闭“$title”吗？关闭后会作为只读本地历史保留。如果这是协作副本，本机将停止同步并丢弃未同步队列、冲突、离线待复核记录及未提交草稿的本机副本；服务器共享会话、成员及其他设备不受影响。';
+    return '结束“$title”的记录吗？已有记录会保留，可随时查看或恢复记录。此操作不会删除数据。';
   }
 
   @override
-  String get historySessionClosed => '已在本机关闭会话';
+  String get historySessionClosed => '记录已结束，已有记录已保留';
 
   @override
   String historySessionCloseFailed(String error) {
-    return '在本机关闭会话失败：$error';
+    return '结束记录失败：$error';
   }
 
   @override
@@ -221,7 +697,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String historySessionReopenConfirmation(String title) {
-    return '重新激活“$title”并切换到该会话吗？当前进行中的其他本地会话将自动关闭，协作会话不受影响。目标如果是协作会话，请在“协作与成员”中重新打开。';
+    return '恢复“$title”并切换过去继续记录吗？其他会话不受影响。协作会话请由发起人在“协作与成员”中恢复。';
   }
 
   @override
@@ -547,46 +1023,24 @@ class AppLocalizationsZh extends AppLocalizations {
   String get callsignRequired => '请输入点名呼号';
 
   @override
-  String get leaveSession => '退出服务器协作';
+  String get leaveSession => '离开协作';
 
   @override
   String get leaveSessionConfirmation =>
-      '这会向服务器提交退出成员关系的请求。成功后本地副本保持只读；如需再次参与，必须重新获得邀请。服务器不可达时请改用本机数据操作。';
+      '离开后你将不再收到此会话的更新，本机已有记录保留为只读，其他成员可继续记录。以后需要重新邀请或申请加入。此操作需要连接服务器；只是暂时离开页面，无需退出协作。';
 
   @override
-  String get convertCollaborationToLocal => '停止本机协作并转为本地会话';
+  String get moreLocalCollaborationActions => '更多操作';
 
   @override
-  String get convertCollaborationToLocalTitle => '停止本机协作并转为本地会话？';
+  String get createEditableLocalCopy => '另存独立会话';
 
   @override
-  String convertCollaborationToLocalConfirmation(String title) {
-    return '将停止本机对“$title”的协作同步，并替换为可编辑的本地会话。仅复制表格中已经保存的记录；未提交的共享实时草稿仍留在服务器上，不会写入本地会话。服务器共享会话、成员和其他设备不受影响。此操作不可撤销。';
-  }
-
-  @override
-  String convertCollaborationToLocalUnsyncedConfirmation(String title) {
-    return '将停止本机对“$title”的协作同步，并保留当前表格中已保存的记录。未同步队列、冲突、离线待复核记录及未提交实时草稿会从本机永久丢弃。服务器共享会话、成员和其他设备不受影响。此操作不可撤销。';
-  }
-
-  @override
-  String get convertCollaborationToLocalSucceeded => '已停止本机协作并转为本地会话';
-
-  @override
-  String get closeCollaborationLocally => '仅在本机关闭';
-
-  @override
-  String get moreLocalCollaborationActions => '更多本机操作';
-
-  @override
-  String get createEditableLocalCopy => '停止协作并创建本地副本';
-
-  @override
-  String get createEditableLocalCopyTitle => '停止本机协作并创建副本？';
+  String get createEditableLocalCopyTitle => '另存独立会话？';
 
   @override
   String createEditableLocalCopyConfirmation(String title) {
-    return '将在本机创建“$title”的独立副本，复制当前表格中所有已保存记录并立即切换过去。新副本可离线编辑，不再与服务器同步；服务器上的共享会话及原本机协作副本不会被关闭或删除。协作待同步队列、冲突及未提交实时草稿会保留在原协作副本，不会复制到新副本。';
+    return '将“$title”当前表格中已保存的记录复制到一个新会话，并切换过去独立记录，无需服务器。原协作会话和你的成员身份不变，稍后仍可切回。未同步队列、冲突、离线待复核记录及未提交草稿保留在原会话，不会复制到新会话，也不会删除。';
   }
 
   @override
@@ -595,7 +1049,7 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get editableLocalCopySucceeded => '已切换到可编辑本地副本';
+  String get editableLocalCopySucceeded => '已另存并切换到独立会话，原协作会话已保留';
 
   @override
   String get collaborationScreenTitle => '协作与成员';
@@ -635,6 +1089,32 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get remoteCommitPendingLocalApplyHint =>
       '远端已经提交；客户端只会恢复本地确认，不会重复创建新修改。';
+
+  @override
+  String get accountSharing => '跨账号共享';
+
+  @override
+  String get accountSharingHint => '先申请再接受。共享会话只读，加入协作仍需口令。';
+
+  @override
+  String get sharedSessionBadge => '共享';
+
+  @override
+  String sharedSessionFrom(String username) {
+    return '来自 $username 的共享';
+  }
+
+  @override
+  String get acceptShare => '接受';
+
+  @override
+  String get pendingInboundShares => '待处理申请';
+
+  @override
+  String get browseSharedSession => '浏览共享会话';
+
+  @override
+  String get joinSharedSession => '口令加入';
 
   @override
   String get joinCollaborationTitle => '加入协作';
@@ -721,22 +1201,22 @@ class AppLocalizationsZh extends AppLocalizations {
   String get readOnlyRevoked => '成员权限已撤销，本地缓存保持只读。';
 
   @override
-  String get readOnlyClosePending => '关闭请求已保存到本地，等待同步确认；冲突时将保持锁定。';
+  String get readOnlyClosePending => '结束请求已保存，等待同步确认；确认前暂时只读。';
 
   @override
   String get readOnlyReopenPending => '重新打开请求已保存到本地，服务器确认前保持只读。';
 
   @override
-  String get readOnlySessionClosed => '协作会话已关闭，本地缓存保持只读。';
+  String get readOnlySessionClosed => '共同记录已结束，已有记录可继续查看。';
 
   @override
   String get readOnlyViewer => '当前账号是只读成员。';
 
   @override
-  String get readOnlyResyncing => '事件游标需要重装规范快照；待同步修改仍保留。';
+  String get readOnlyResyncing => '正在恢复同步，已保存的修改会保留。';
 
   @override
-  String get readOnlyCheckingAccess => '正在确认权限与事件游标，暂时保持只读。';
+  String get readOnlyCheckingAccess => '正在确认你的参与权限，暂时只能查看。';
 
   @override
   String get logNotOwnedReadOnlyHint => '只能修改或删除自己创建的记录。';
@@ -760,40 +1240,40 @@ class AppLocalizationsZh extends AppLocalizations {
   String get sessionTitleQueued => '标题已保存到本地，等待同步确认';
 
   @override
-  String get closeCollaborationSessionTitle => '关闭服务器共享会话';
+  String get closeCollaborationSessionTitle => '结束共同记录';
 
   @override
   String get closeCollaborationSessionMessage =>
-      '这会向服务器提交关闭共享会话的请求。服务器确认后，所有成员都不能继续添加或修改记录；所有者可以稍后重新打开。';
+      '结束后，所有成员都不能继续添加或修改记录，已有记录和成员关系会保留。你可以稍后恢复记录。此操作需要同步到服务器；只是暂时离开，无需结束。';
 
   @override
-  String get closeSharedSession => '关闭服务器共享会话';
+  String get closeSharedSession => '结束共同记录';
 
   @override
   String get closeCollaborationDraftNotEmpty =>
-      '当前点名草稿还有内容。你可以提交这条完整记录，或明确丢弃草稿后再关闭会话。';
+      '当前点名草稿还有内容。请先提交这条完整记录，或明确丢弃草稿后再结束。';
 
   @override
   String get closeCollaborationDraftIncomplete =>
-      '当前草稿缺少时间、主控呼号或点名呼号，不能提交；仍可明确丢弃后关闭。';
+      '当前草稿缺少时间、主控呼号或点名呼号，不能提交；仍可明确丢弃后结束。';
 
   @override
   String closeCollaborationDraftLocked(int count) {
-    return '其他成员或设备仍在编辑 $count 个草稿字段。请等待对方结束编辑并刷新后再关闭。';
+    return '其他成员或设备仍在编辑 $count 个草稿字段。请等待对方完成编辑并刷新后再结束。';
   }
 
   @override
-  String get closeCollaborationDiscardAndClose => '丢弃草稿并关闭';
+  String get closeCollaborationDiscardAndClose => '丢弃草稿并结束';
 
   @override
-  String get closeCollaborationSubmitAndClose => '提交并关闭';
+  String get closeCollaborationSubmitAndClose => '提交并结束';
 
   @override
   String get closeCollaborationQueuedOffline =>
-      '记录仅保存到离线队列，尚未提交到服务器；会话没有关闭。请恢复网络并处理该记录后重试。';
+      '记录仅保存到离线队列，尚未提交到服务器；共同记录尚未结束。请恢复网络并处理该记录后重试。';
 
   @override
-  String get closeSessionQueued => '已提交关闭共享会话请求，等待服务器同步确认';
+  String get closeSessionQueued => '结束共同记录的请求已保存，等待同步确认';
 
   @override
   String get reopenCollaborationSessionTitle => '重新打开协作会话';
@@ -3198,6 +3678,236 @@ class AppLocalizationsZhCn extends AppLocalizationsZh {
   AppLocalizationsZhCn() : super('zh_CN');
 
   @override
+  String get collaborationTechnicalDetails => '连接与诊断详情';
+
+  @override
+  String get collaborationOverviewOnline => '已连接，正在与参与者同步记录。';
+
+  @override
+  String get collaborationOverviewOffline => '连接暂时不可用，已有记录仍保留在本机。';
+
+  @override
+  String get collaborationOverviewAttention => '有待处理的记录或同步问题，请打开“同步”查看。';
+
+  @override
+  String collaborationOverviewPending(int count) {
+    return '已保存到本机，$count 项修改等待同步。';
+  }
+
+  @override
+  String get historySessionCollaborationCloseRequired =>
+      '这是共同记录，请在“协作与成员”中结束共同记录或离开协作；不能把它作为本地会话结束。';
+
+  @override
+  String get collaborationLifecycleHint =>
+      '切换页面或暂时断网不会退出协作。发起人可以结束共同记录，参与者可以离开协作；已有记录会保留。';
+
+  @override
+  String get hubLocalStart => '新建会话即可开始记录，无需服务器或账号。记录保存在本机，可随时查看和导出。';
+
+  @override
+  String get hubLocalHint => '本地记录可独立使用；同步与多人协作按需启用。';
+
+  @override
+  String get hubOptionalOnline => '同步与协作（可选）';
+
+  @override
+  String get hubOptionalOnlineHint => '需要多设备同步或与搭档共同记录时，再连接服务器。';
+
+  @override
+  String get hubConfigureServer => '设置可选服务器';
+
+  @override
+  String get hubOnlineConnected => '好友与协作使用当前服务器，本地记录仍可独立使用。';
+
+  @override
+  String get hubEnableCollaboration => '邀请搭档一起记录';
+
+  @override
+  String get hubConfirmUpload => '上传此会话并开启协作';
+
+  @override
+  String get hubUploadExplanation =>
+      '这会把当前会话及其中已有的记录上传到下面的服务器，并开始协作同步。此操作只上传当前会话，不改变其他会话的同步设置。会话仍为私有，之后再选择要邀请的好友；此操作不会发布公开页面。';
+
+  @override
+  String get hubContextChanged => '服务器、账号或当前会话已切换，请关闭后重新操作。';
+
+  @override
+  String get hubAlreadyMember => '对方已经加入这个会话，可在参与者管理中查看。';
+
+  @override
+  String get hubInvitationHint => '对方接受后才能查看此会话的记录，不会开放你的其他会话。';
+
+  @override
+  String get hubContinueRecording => '继续记录';
+
+  @override
+  String get hubViewRecords => '查看记录';
+
+  @override
+  String get hubSessionDetails => '会话详细信息';
+
+  @override
+  String get hubHistoryHint => '查看本机已有记录。“已结束”只按会话状态筛选，不代表公开归档。';
+
+  @override
+  String get hubAllRecords => '全部';
+
+  @override
+  String get hubMyRecords => '我的记录';
+
+  @override
+  String get hubTogetherRecords => '共同记录';
+
+  @override
+  String get hubEndedRecords => '已结束';
+
+  @override
+  String get socialTitle => '好友与邀请';
+
+  @override
+  String get socialAddFriend => '添加好友';
+
+  @override
+  String get socialFriends => '好友';
+
+  @override
+  String get socialMessages => '消息';
+
+  @override
+  String get socialSessions => '会话';
+
+  @override
+  String get socialIntro => '添加搭档为好友，再邀请他们一起点名。好友关系不会自动开放个人记录。';
+
+  @override
+  String get socialUsername => '对方的用户名（注册时使用的呼号）';
+
+  @override
+  String get socialSend => '发送申请';
+
+  @override
+  String get socialInvite => '邀请参与';
+
+  @override
+  String get socialApply => '申请加入';
+
+  @override
+  String get socialAccept => '接受';
+
+  @override
+  String get socialReject => '拒绝';
+
+  @override
+  String get socialPending => '等待对方处理';
+
+  @override
+  String get socialAccepted => '已接受';
+
+  @override
+  String get socialView => '只能查看';
+
+  @override
+  String get socialEdit => '共同记录';
+
+  @override
+  String get socialOpen => '打开会话';
+
+  @override
+  String get socialPrivate => '仅邀请可加入';
+
+  @override
+  String get socialDiscoverable => '好友可见，可申请加入';
+
+  @override
+  String get socialVisibilityHint => '好友只能看到会话标题，获准加入后才能查看记录。';
+
+  @override
+  String get socialNoFriends => '还没有好友，输入搭档的用户名发送申请。';
+
+  @override
+  String get socialNoMessages => '暂无邀请或申请';
+
+  @override
+  String get socialNoSessions => '暂无好友开放的会话。你也可以把当前会话用于协作。';
+
+  @override
+  String get socialPublish => '开启当前会话协作';
+
+  @override
+  String get socialRemove => '删除好友';
+
+  @override
+  String get socialRemoveHint => '会取消彼此待处理的邀请和申请。已加入的会话成员由会话负责人单独管理。';
+
+  @override
+  String get socialBlock => '屏蔽';
+
+  @override
+  String get socialUnblock => '取消屏蔽';
+
+  @override
+  String get socialBlocked => '已屏蔽';
+
+  @override
+  String get socialDone => '操作已完成';
+
+  @override
+  String get socialFriendRequest => '好友申请';
+
+  @override
+  String get socialInvitation => '会话邀请';
+
+  @override
+  String get socialApplication => '加入申请';
+
+  @override
+  String get socialSent => '我发出的';
+
+  @override
+  String get socialReceived => '收到的';
+
+  @override
+  String get socialManage => '管理参与者';
+
+  @override
+  String get socialConnect => '连接服务器并登录后，即可添加好友。';
+
+  @override
+  String get socialUpgrade => '此服务器尚不支持好友功能，请更新服务器。';
+
+  @override
+  String get socialLoadFailed => '暂时无法刷新，请重试。';
+
+  @override
+  String get socialChooseFriend => '选择好友';
+
+  @override
+  String get socialErrorUser => '没有找到这个用户名。请确认对方已在同一服务器注册。';
+
+  @override
+  String get socialErrorFriends => '请先添加对方为好友。';
+
+  @override
+  String get socialErrorClosed => '这条申请已处理或已过期，请刷新。';
+
+  @override
+  String get socialErrorSelf => '不能添加自己为好友。';
+
+  @override
+  String get socialErrorBlocked => '目前无法向这个用户发送请求。';
+
+  @override
+  String get socialServerLink => '复制服务器连接信息';
+
+  @override
+  String get socialServerLinkHint => '可粘贴服务器地址或服务器网页链接，连接后再登录。';
+
+  @override
+  String get socialLegacy => '旧版共享';
+
+  @override
   String get navWorkbench => '点名台';
 
   @override
@@ -3305,13 +4015,22 @@ class AppLocalizationsZhCn extends AppLocalizationsZh {
   String get noCurrentSession => '当前没有点名会话';
 
   @override
-  String get noCurrentSessionHint => '返回点名台创建会话后即可开始记录。';
+  String get noCurrentSessionHint => '创建一个点名会话，或加入协作后即可开始记录。';
+
+  @override
+  String get workbenchNoSessionHint => '请先到会话页新建会话，或加入协作后再开始记录。';
+
+  @override
+  String get createOrJoinSessionFirst => '请先新建会话或加入协作';
+
+  @override
+  String get goCreateSession => '去新建会话';
 
   @override
   String get sessionActive => '进行中';
 
   @override
-  String get sessionClosed => '已关闭';
+  String get sessionClosed => '已结束';
 
   @override
   String savedPositions(int count) {
@@ -3373,19 +4092,19 @@ class AppLocalizationsZhCn extends AppLocalizationsZh {
   }
 
   @override
-  String get historySessionCloseTitle => '仅在本机关闭会话';
+  String get historySessionCloseTitle => '结束记录';
 
   @override
   String historySessionCloseConfirmation(String title) {
-    return '仅在本机关闭“$title”吗？关闭后会作为只读本地历史保留。如果这是协作副本，本机将停止同步并丢弃未同步队列、冲突、离线待复核记录及未提交草稿的本机副本；服务器共享会话、成员及其他设备不受影响。';
+    return '结束“$title”的记录吗？已有记录会保留，可随时查看或恢复记录。此操作不会删除数据。';
   }
 
   @override
-  String get historySessionClosed => '已在本机关闭会话';
+  String get historySessionClosed => '记录已结束，已有记录已保留';
 
   @override
   String historySessionCloseFailed(String error) {
-    return '在本机关闭会话失败：$error';
+    return '结束记录失败：$error';
   }
 
   @override
@@ -3396,7 +4115,7 @@ class AppLocalizationsZhCn extends AppLocalizationsZh {
 
   @override
   String historySessionReopenConfirmation(String title) {
-    return '重新激活“$title”并切换到该会话吗？当前进行中的其他本地会话将自动关闭，协作会话不受影响。目标如果是协作会话，请在“协作与成员”中重新打开。';
+    return '恢复“$title”并切换过去继续记录吗？其他会话不受影响。协作会话请由发起人在“协作与成员”中恢复。';
   }
 
   @override
@@ -3625,36 +4344,102 @@ class AppLocalizationsZhCn extends AppLocalizationsZh {
   String get callsignRequired => '请输入点名呼号';
 
   @override
-  String get leaveSession => '退出服务器协作';
+  String get leaveSession => '离开协作';
 
   @override
   String get leaveSessionConfirmation =>
-      '这会向服务器提交退出成员关系的请求。成功后本地副本保持只读；如需再次参与，必须重新获得邀请。服务器不可达时请改用本机数据操作。';
+      '离开后你将不再收到此会话的更新，本机已有记录保留为只读，其他成员可继续记录。以后需要重新邀请或申请加入。此操作需要连接服务器；只是暂时离开页面，无需退出协作。';
 
   @override
-  String get convertCollaborationToLocal => '停止本机协作并转为本地会话';
+  String get moreLocalCollaborationActions => '更多操作';
 
   @override
-  String get convertCollaborationToLocalTitle => '停止本机协作并转为本地会话？';
+  String get createEditableLocalCopy => '另存独立会话';
 
   @override
-  String convertCollaborationToLocalConfirmation(String title) {
-    return '将停止本机对“$title”的协作同步，并替换为可编辑的本地会话。仅复制表格中已经保存的记录；未提交的共享实时草稿仍留在服务器上，不会写入本地会话。服务器共享会话、成员和其他设备不受影响。此操作不可撤销。';
+  String get createEditableLocalCopyTitle => '另存独立会话？';
+
+  @override
+  String createEditableLocalCopyConfirmation(String title) {
+    return '将“$title”当前表格中已保存的记录复制到一个新会话，并切换过去独立记录，无需服务器。原协作会话和你的成员身份不变，稍后仍可切回。未同步队列、冲突、离线待复核记录及未提交草稿保留在原会话，不会复制到新会话，也不会删除。';
   }
 
   @override
-  String convertCollaborationToLocalUnsyncedConfirmation(String title) {
-    return '将停止本机对“$title”的协作同步，并保留当前表格中已保存的记录。未同步队列、冲突、离线待复核记录及未提交实时草稿会从本机永久丢弃。服务器共享会话、成员和其他设备不受影响。此操作不可撤销。';
+  String get editableLocalCopySucceeded => '已另存并切换到独立会话，原协作会话已保留';
+
+  @override
+  String get accountSharing => '跨账号共享';
+
+  @override
+  String get accountSharingHint => '先申请再接受。共享会话只读，加入协作仍需口令。';
+
+  @override
+  String get sharedSessionBadge => '共享';
+
+  @override
+  String sharedSessionFrom(String username) {
+    return '来自 $username 的共享';
   }
 
   @override
-  String get convertCollaborationToLocalSucceeded => '已停止本机协作并转为本地会话';
+  String get acceptShare => '接受';
 
   @override
-  String get closeCollaborationLocally => '仅在本机关闭';
+  String get pendingInboundShares => '待处理申请';
 
   @override
-  String get moreLocalCollaborationActions => '更多本机操作';
+  String get browseSharedSession => '浏览共享会话';
+
+  @override
+  String get joinSharedSession => '口令加入';
+
+  @override
+  String get readOnlyClosePending => '结束请求已保存，等待同步确认；确认前暂时只读。';
+
+  @override
+  String get readOnlySessionClosed => '共同记录已结束，已有记录可继续查看。';
+
+  @override
+  String get readOnlyResyncing => '正在恢复同步，已保存的修改会保留。';
+
+  @override
+  String get readOnlyCheckingAccess => '正在确认你的参与权限，暂时只能查看。';
+
+  @override
+  String get closeCollaborationSessionTitle => '结束共同记录';
+
+  @override
+  String get closeCollaborationSessionMessage =>
+      '结束后，所有成员都不能继续添加或修改记录，已有记录和成员关系会保留。你可以稍后恢复记录。此操作需要同步到服务器；只是暂时离开，无需结束。';
+
+  @override
+  String get closeSharedSession => '结束共同记录';
+
+  @override
+  String get closeCollaborationDraftNotEmpty =>
+      '当前点名草稿还有内容。请先提交这条完整记录，或明确丢弃草稿后再结束。';
+
+  @override
+  String get closeCollaborationDraftIncomplete =>
+      '当前草稿缺少时间、主控呼号或点名呼号，不能提交；仍可明确丢弃后结束。';
+
+  @override
+  String closeCollaborationDraftLocked(int count) {
+    return '其他成员或设备仍在编辑 $count 个草稿字段。请等待对方完成编辑并刷新后再结束。';
+  }
+
+  @override
+  String get closeCollaborationDiscardAndClose => '丢弃草稿并结束';
+
+  @override
+  String get closeCollaborationSubmitAndClose => '提交并结束';
+
+  @override
+  String get closeCollaborationQueuedOffline =>
+      '记录仅保存到离线队列，尚未提交到服务器；共同记录尚未结束。请恢复网络并处理该记录后重试。';
+
+  @override
+  String get closeSessionQueued => '结束共同记录的请求已保存，等待同步确认';
 
   @override
   String get confirm => '确认';

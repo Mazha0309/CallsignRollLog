@@ -30,3 +30,32 @@ String normalizeServerUrl(String value) {
     path: path,
   ).toString();
 }
+
+/// Interpret a newly pasted portal URL without changing persisted server identity.
+String serverUrlFromConnectionInput(String value) {
+  final uri = Uri.tryParse(value.trim());
+  if (uri == null || !['https', 'http'].contains(uri.scheme)) {
+    return normalizeServerUrl(value);
+  }
+  final entry =
+      RegExp(r'/(?:connect|client|app|admin)(?:/.*)?$').firstMatch(uri.path);
+  return normalizeServerUrl(entry == null
+      ? value
+      : uri
+          .replace(
+              path: uri.path.substring(0, entry.start), query: '', fragment: '')
+          .toString());
+}
+
+/// Only addresses, never credentials or executable/custom URL schemes.
+String? validatedServerConnectionInput(String value) {
+  if (value.length > 4096) return null;
+  final uri = Uri.tryParse(value.trim());
+  if (uri == null ||
+      !['https', 'http'].contains(uri.scheme) ||
+      uri.host.isEmpty ||
+      uri.userInfo.isNotEmpty) {
+    return null;
+  }
+  return serverUrlFromConnectionInput(value);
+}

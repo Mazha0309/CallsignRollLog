@@ -3,6 +3,8 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 import 'package:openlogtool/models/account_dto.dart';
+import 'package:openlogtool/models/account_share_dto.dart';
+import 'package:openlogtool/models/social_dto.dart';
 import 'package:openlogtool/models/collaboration_dto.dart';
 import 'package:openlogtool/models/live_draft.dart';
 import 'package:openlogtool/models/personal_cloud_dto.dart';
@@ -331,6 +333,171 @@ final class ServerApi {
     });
   }
 
+  Future<List<SharedSessionDto>> listSharedSessions() async {
+    final response =
+        await _authorizedRequest('GET', '/account/shared-sessions');
+    return _parseResponse(response, (json) {
+      final object = _jsonObject(json, 'sharedSessions');
+      final values = _jsonArray(object['items'], 'items');
+      return List.unmodifiable(values.map(SharedSessionDto.fromJson));
+    });
+  }
+
+  Future<SocialSnapshot> getSocialSnapshot() async {
+    final response = await _authorizedRequest('GET', '/social');
+    return _parseResponse(response,
+        (json) => SocialSnapshot.fromJson(_jsonObject(json, 'social')));
+  }
+
+  Future<SocialUserSearchPage> searchSocialUsers(String query) async {
+    final response = await _authorizedRequest('GET', '/social/users',
+        queryParameters: {'query': query.trim()});
+    return _parseResponse(response,
+        (json) => SocialUserSearchPage.fromJson(_jsonObject(json, 'users')));
+  }
+
+  Future<void> socialMutation(
+    String method,
+    String path, {
+    Map<String, Object?> body = const {},
+    required String idempotencyKey,
+  }) async {
+    final response = await _authorizedRequest(method, '/social$path',
+        body: body, headers: _idempotencyHeaders(idempotencyKey));
+    _throwForError(response);
+  }
+
+  Future<List<AccountShareGrantDto>> listSessionShares(String box) async {
+    final response = await _authorizedRequest(
+      'GET',
+      '/account/session-shares',
+      queryParameters: {'box': box},
+    );
+    return _parseResponse(response, (json) {
+      final object = _jsonObject(json, 'sessionShares');
+      final values = _jsonArray(object['items'], 'items');
+      return List.unmodifiable(values.map(AccountShareGrantDto.fromJson));
+    });
+  }
+
+  Future<List<ShareSessionRef>> listShareCandidates() async {
+    final items = <ShareSessionRef>[];
+    for (var page = 1;; page++) {
+      final response = await _authorizedRequest(
+          'GET', '/account/session-catalog',
+          queryParameters: {'page': '$page', 'pageSize': '100'});
+      final object =
+          _parseResponse(response, (json) => _jsonObject(json, 'catalog'));
+      for (final raw in _jsonArray(object['items'], 'items')) {
+        final row = _jsonObject(raw, 'session');
+        if (row['source'] == 'personal' || row['role'] == 'owner') {
+          items.add(ShareSessionRef.fromJson(row));
+        }
+      }
+      if (page >= (object['totalPages'] as num? ?? 0)) break;
+    }
+    return items;
+  }
+
+  Future<void> accountShareMutation(
+    String method,
+    String path, {
+    required Map<String, Object?> body,
+    required String idempotencyKey,
+  }) async {
+    final response = await _authorizedRequest(method, '/account$path',
+        body: body, headers: _idempotencyHeaders(idempotencyKey));
+    _throwForError(response);
+  }
+
+  Future<SharedRecordsPage> sharedRecordsPage(SharedSessionDto session,
+      {int page = 1, String query = ''}) async {
+    final response = await _authorizedRequest('GET',
+        '/account/shared-sessions/${_segment(session.source)}/${_segment(session.sessionId)}/logs',
+        queryParameters: {
+          'page': '$page',
+          'pageSize': '50',
+          'sort': 'timeDesc',
+          if (session.grantId.isNotEmpty) 'grantId': session.grantId,
+          if (query.isNotEmpty) 'q': query
+        });
+    return _parseResponse(response,
+        (json) => SharedRecordsPage.fromJson(_jsonObject(json, 'records')));
+  }
+
+  Future<AccountShareGrantDto> createSessionShare({
+    required String granteeUsername,
+    required String idempotencyKey,
+  }) async {
+    final response = await _authorizedRequest(
+      'POST',
+      '/account/session-shares',
+      body: {
+        'granteeUsername': granteeUsername,
+        'includePersonal': true,
+        'includeOwned': true,
+        'includeEditor': true,
+        'canJoinAs': 'editor',
+      },
+      headers: _idempotencyHeaders(idempotencyKey),
+    );
+    return _parseResponse(
+      response,
+      (json) => AccountShareGrantDto.fromJson(
+        _jsonObject(json, 'createSessionShare')['share'] ?? json,
+      ),
+    );
+  }
+
+  Future<AccountShareGrantDto> acceptSessionShare({
+    required String shareId,
+    required String idempotencyKey,
+  }) async {
+    final response = await _authorizedRequest(
+      'POST',
+      '/account/session-shares/${_segment(shareId)}/accept',
+      body: const <String, Object?>{},
+      headers: _idempotencyHeaders(idempotencyKey),
+    );
+    return _parseResponse(
+      response,
+      (json) => AccountShareGrantDto.fromJson(
+        _jsonObject(json, 'acceptSessionShare')['share'] ?? json,
+      ),
+    );
+  }
+
+  Future<List<Map<String, Object?>>> listSharedSessionLogs({
+    required String source,
+    required String sessionId,
+  }) async {
+    final response = await _authorizedRequest(
+      'GET',
+      '/account/shared-sessions/${_segment(source)}/${_segment(sessionId)}/logs',
+    );
+    return _parseResponse(response, (json) {
+      final object = _jsonObject(json, 'sharedSessionLogs');
+      final values = _jsonArray(object['items'], 'items');
+      return [
+        for (final value in values) Map<String, Object?>.from(value as Map),
+      ];
+    });
+  }
+
+  Future<void> joinWithShare({
+    required String sessionId,
+    required String passphrase,
+    required String idempotencyKey,
+  }) async {
+    final response = await _authorizedRequest(
+      'POST',
+      '/sessions/${_segment(sessionId)}/join-with-share',
+      body: {'passphrase': passphrase},
+      headers: _idempotencyHeaders(idempotencyKey),
+    );
+    _throwForError(response);
+  }
+
   Future<CollaborationSessionDto> putSession({
     required String sessionId,
     required String title,
@@ -368,11 +535,16 @@ final class ServerApi {
     required String sessionId,
     required int expectedLogCount,
     required String idempotencyKey,
+    int? personalSnapshotRevision,
   }) async {
     final response = await _authorizedRequest(
       'POST',
       '/sessions/${_segment(sessionId)}/activate',
-      body: {'expectedLogCount': expectedLogCount},
+      body: {
+        'expectedLogCount': expectedLogCount,
+        if (personalSnapshotRevision != null)
+          'personalSnapshotRevision': personalSnapshotRevision
+      },
       headers: _idempotencyHeaders(idempotencyKey),
     );
     return _parseResponse(response, ActivateSessionResultDto.fromJson);
@@ -456,7 +628,18 @@ final class ServerApi {
     return _parseResponse(response, WebSocketTicketDto.fromJson);
   }
 
-  Uri collaborationWebSocketUri(String ticket) {
+  Future<Uri> socialWebSocketTicketUri() async {
+    final response =
+        await _authorizedRequest('POST', '/social/ws-ticket', body: const {});
+    final ticket = _parseResponse(response,
+        (json) => _jsonObject(json, 'socialTicket')['ticket'] as String);
+    return _webSocketUri(ticket, 'social');
+  }
+
+  Uri collaborationWebSocketUri(String ticket) =>
+      _webSocketUri(ticket, 'collaboration');
+
+  Uri _webSocketUri(String ticket, String channel) {
     final normalized = ticket.trim();
     if (normalized.isEmpty) {
       throw ArgumentError.value(ticket, 'ticket', 'must not be empty');
@@ -468,7 +651,7 @@ final class ServerApi {
         : '';
     return _apiBaseUri.replace(
       scheme: _apiBaseUri.scheme == 'https' ? 'wss' : 'ws',
-      path: '$rootPath/ws/collaboration',
+      path: '$rootPath/ws/$channel',
       queryParameters: {'ticket': normalized},
       fragment: null,
     );

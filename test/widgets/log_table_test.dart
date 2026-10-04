@@ -39,7 +39,7 @@ void main() {
         syncId: 'fresh-row',
         sessionId: 'table-session',
         time: '2026-07-13T12:00:00Z',
-        controller: 'BG5CTRL',
+        controller: 'BG5CRL',
         callsign: 'BG5FRESH',
         rstSent: '59',
         rstRcvd: '59',
@@ -56,7 +56,7 @@ void main() {
       LogEntry(
         sessionId: 'table-session',
         time: '2026-07-13T12:00:00Z',
-        controller: 'BG5CTRL',
+        controller: 'BG5CRL',
         callsign: 'BG5FRESH',
         report: '59',
         rstRcvd: '59',

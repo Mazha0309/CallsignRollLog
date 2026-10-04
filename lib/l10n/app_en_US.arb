@@ -1,4 +1,98 @@
 {
+  "collaborationTechnicalDetails": "Connection & diagnostics",
+  "collaborationOverviewOnline": "Connected. Record updates are being shared with participants.",
+  "collaborationOverviewOffline": "The connection is unavailable. Existing records are still on this device.",
+  "collaborationOverviewAttention": "Some records or sync issues need attention. Open Sync to review them.",
+  "collaborationOverviewPending": "Saved on this device. {count} changes are waiting to sync.",
+  "@collaborationOverviewPending": {"placeholders":{"count":{"type":"int"}}},
+  "readOnlyResyncing": "Restoring synchronization. Saved changes will be kept.",
+  "readOnlyCheckingAccess": "Checking your participation permissions. Viewing only for now.",
+  "historySessionCollaborationCloseRequired": "This is a collaborative session. Use Collaboration & members to end shared recording or leave; it cannot be ended as a local session.",
+  "createEditableLocalCopy": "Save independent copy",
+  "createEditableLocalCopyTitle": "Save an independent session?",
+  "createEditableLocalCopyConfirmation": "Copy the saved table records from “{title}” into a new session and switch to it for independent recording, without a server. Your original collaborative session and membership stay unchanged; you can switch back later. Pending sync operations, conflicts, offline records awaiting review and unsubmitted drafts stay in the original session. They are neither copied nor deleted.",
+  "editableLocalCopySucceeded": "Switched to the independent copy. The original collaboration was kept.",
+  "closeCollaborationSessionTitle": "End shared recording",
+  "closeCollaborationSessionMessage": "All members will stop adding or editing records. Existing records and membership will be kept, and you can resume recording later. This change must sync to the server. You do not need to end recording just to leave this page.",
+  "closeSharedSession": "End shared recording",
+  "closeCollaborationDraftNotEmpty": "The current check-in draft has content. Submit the complete record or explicitly discard the draft before ending recording.",
+  "closeCollaborationDraftIncomplete": "The draft is missing the time, controller callsign or check-in callsign. It cannot be submitted, but can be explicitly discarded before ending recording.",
+  "closeCollaborationDraftLocked": "Other members or devices are editing {count} draft fields. Wait for them to finish and refresh before ending recording.",
+  "closeCollaborationDiscardAndClose": "Discard draft and end",
+  "closeCollaborationSubmitAndClose": "Submit and end",
+  "closeCollaborationQueuedOffline": "The record is only saved in the offline queue and has not reached the server. Shared recording has not ended. Reconnect and resolve the record before trying again.",
+  "closeSessionQueued": "The request to end shared recording was saved and is awaiting sync confirmation.",
+  "readOnlyClosePending": "The end request is awaiting sync confirmation. Records are temporarily read-only.",
+  "readOnlySessionClosed": "Shared recording has ended. Existing records remain available to view.",
+  "collaborationLifecycleHint": "Switching pages or temporarily going offline does not leave the collaboration. The owner can end shared recording; participants can leave. Existing records are kept.",
+  "hubLocalStart": "Create a session to start recording. No server or account is required; records are saved on this device and can be viewed or exported.",
+  "hubLocalHint": "Local recording works on its own. Sync and collaboration are optional.",
+  "hubOptionalOnline": "Sync and collaboration (optional)",
+  "hubOptionalOnlineHint": "Connect a server when you want multi-device sync or to record with others.",
+  "hubConfigureServer": "Set up an optional server",
+  "hubOnlineConnected": "Friends and collaboration use your connected server. Local recording remains independent.",
+  "hubEnableCollaboration": "Record with a friend",
+  "hubConfirmUpload": "Upload this session and enable collaboration",
+  "hubUploadExplanation": "This uploads the current session and its existing records to the server below and starts collaboration sync. Other local sessions are not uploaded by this action. The session stays private; choose friends to invite afterwards. No public page is created.",
+  "hubContextChanged": "The server, account or current session changed. Close this dialog and try again.",
+  "hubAlreadyMember": "This person has already joined. You can find them in participant management.",
+  "hubInvitationHint": "They can view this session's records after accepting. Your other sessions are not shared.",
+  "hubContinueRecording": "Continue recording",
+  "hubViewRecords": "View records",
+  "hubSessionDetails": "Session details",
+  "hubHistoryHint": "Browse existing records on this device. Ended sessions are a status filter, not public archives.",
+  "hubAllRecords": "All",
+  "hubMyRecords": "My records",
+  "hubTogetherRecords": "Shared records",
+  "hubEndedRecords": "Ended",
+  "socialTitle": "Friends & invitations",
+  "socialAddFriend": "Add friend",
+  "socialFriends": "Friends",
+  "socialMessages": "Messages",
+  "socialSessions": "Sessions",
+  "socialIntro": "Add your partners as friends, then invite them to a session. Personal records remain private.",
+  "socialUsername": "Username (callsign used at registration)",
+  "socialSend": "Send request",
+  "socialInvite": "Invite",
+  "socialApply": "Request to join",
+  "socialAccept": "Accept",
+  "socialReject": "Decline",
+  "socialPending": "Awaiting response",
+  "socialAccepted": "Accepted",
+  "socialView": "View only",
+  "socialEdit": "Record together",
+  "socialOpen": "Open session",
+  "socialPrivate": "Invite only",
+  "socialDiscoverable": "Friends can discover and request to join",
+  "socialVisibilityHint": "Friends see the session title. Records are available only after approval.",
+  "socialNoFriends": "No friends yet. Send a request using your partner's username.",
+  "socialNoMessages": "No invitations or requests",
+  "socialNoSessions": "No sessions available. You can also enable collaboration for your current session.",
+  "socialPublish": "Enable collaboration for current session",
+  "socialRemove": "Remove friend",
+  "socialRemoveHint": "Pending requests between you will be cancelled. Existing session memberships are managed separately by the session owner.",
+  "socialBlock": "Block",
+  "socialUnblock": "Unblock",
+  "socialBlocked": "Blocked",
+  "socialDone": "Done",
+  "socialFriendRequest": "Friend request",
+  "socialInvitation": "Session invitation",
+  "socialApplication": "Join request",
+  "socialSent": "Sent by me",
+  "socialReceived": "Received",
+  "socialManage": "Manage participants",
+  "socialConnect": "Connect to a server and sign in to add friends.",
+  "socialUpgrade": "Update this server to enable friends.",
+  "socialLoadFailed": "Could not refresh. Please retry.",
+  "socialChooseFriend": "Choose a friend",
+  "socialErrorUser": "Username not found. Check that your partner registered on the same server.",
+  "socialErrorFriends": "Please add each other as friends first.",
+  "socialErrorClosed": "This request is closed or expired. Please refresh.",
+  "socialErrorSelf": "You cannot add yourself.",
+  "socialErrorBlocked": "Requests to this user are unavailable.",
+  "socialServerLink": "Copy server connection",
+  "socialServerLinkHint": "Paste a server address or a server portal link, then sign in.",
+  "socialLegacy": "Legacy sharing",
   "@@locale": "en_US",
   "navWorkbench": "Net Desk",
   "navSessions": "Sessions",
@@ -26,17 +120,40 @@
   "newRecordNameHint": "Enter a name for this record (optional)",
   "automaticName": "automatic name",
   "newRecordStarted": "Started new record: {name}",
-  "@newRecordStarted": {"placeholders": {"name": {"type": "String"}}},
+  "@newRecordStarted": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "createNewRecordFailed": "Could not create a new record: {error}",
-  "@createNewRecordFailed": {"placeholders": {"error": {"type": "String"}}},
+  "@createNewRecordFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "currentOrdinal": "Current #{ordinal}",
   "sessionsTitle": "Sessions",
   "sessionsSubtitle": "Manage this net, collaborating scribes, and controller displays.",
   "noCurrentSession": "No current net session",
-  "noCurrentSessionHint": "Create a session from the Net Desk to start logging.",
+  "noCurrentSessionHint": "Create a net session, or join a collaboration, to start logging.",
+  "workbenchNoSessionHint": "Create a session on the Sessions page, or join a collaboration, before logging.",
+  "createOrJoinSessionFirst": "Create a session or join a collaboration first",
+  "goCreateSession": "Create a session",
   "sessionActive": "Active",
-  "sessionClosed": "Closed",
+  "sessionClosed": "Ended",
   "savedPositions": "{count} saved",
+  "accountSharing": "Account sharing",
+  "accountSharingHint": "Request then accept. Shared sessions are read-only until you join with the passphrase.",
+  "sharedSessionBadge": "Shared",
+  "sharedSessionFrom": "Shared from {username}",
+  "acceptShare": "Accept",
+  "pendingInboundShares": "Pending requests",
+  "browseSharedSession": "Browse shared session",
+  "joinSharedSession": "Join with passphrase",
   "localSession": "Local session",
   "manageCollaboration": "Collaboration & members",
   "openLiveShare": "Live Share",
@@ -53,13 +170,13 @@
   "historySessionCurrent": "Current session",
   "historySessionSwitched": "Opened session: {title}",
   "historySessionOpenFailed": "Could not open session: {error}",
-  "historySessionCloseTitle": "Close only on this device",
-  "historySessionCloseConfirmation": "Close “{title}” only on this device? It will remain as read-only local history. If it is a collaboration replica, this device stops synchronizing and discards pending synchronization, conflicts, offline review records, and the local copy of any unsubmitted draft. The shared server session, members, and other devices are not affected.",
-  "historySessionClosed": "Session closed on this device",
-  "historySessionCloseFailed": "Could not close session on this device: {error}",
+  "historySessionCloseTitle": "End recording",
+  "historySessionCloseConfirmation": "End recording in “{title}”? Existing records will be kept. You can view them or resume recording later. No data will be deleted.",
+  "historySessionClosed": "Recording ended. Existing records were kept.",
+  "historySessionCloseFailed": "Failed to end recording: {error}",
   "historySessionReopenAction": "Reactivate",
   "historySessionReopenTitle": "Reactivate local session",
-  "historySessionReopenConfirmation": "Reactivate “{title}” and switch to it? Any other active local session will be closed automatically; collaboration sessions are not affected. Reopen a collaboration target from Collaboration & members.",
+  "historySessionReopenConfirmation": "Resume recording in “{title}” and switch to it? Other sessions stay unchanged. Collaborative sessions must be resumed by their owner in Collaboration & members.",
   "historySessionReopened": "Reactivated and switched to session: {title}",
   "historySessionReopenFailed": "Could not reactivate local session: {error}",
   "historySessionReopenedLogsUnavailable": "Session “{title}” was reactivated, but its logs could not be loaded. It is temporarily read-only; retry loading.",
@@ -127,17 +244,9 @@
   "resolutionSubmitDuplicate": "Submit as duplicate",
   "resolutionCopyCurrent": "Copy to current draft",
   "callsignRequired": "Enter a callsign",
-  "leaveSession": "Leave server collaboration",
-  "leaveSessionConfirmation": "This sends a membership-leave request to the server. After it succeeds, the local replica remains read-only and a new invitation is required to participate again. If the server is unreachable, use a local-device action instead.",
-  "convertCollaborationToLocal": "Stop collaboration on this device and convert to a local session",
-  "convertCollaborationToLocalTitle": "Stop collaboration on this device?",
-  "convertCollaborationToLocalConfirmation": "This stops collaboration synchronization for “{title}” on this device and replaces it with an editable local session. Only records already saved in the table are copied. An unsubmitted shared live draft stays on the server and is not added to the local session. The shared server session, its members, and other devices are not affected. This cannot be undone.",
-  "@convertCollaborationToLocalConfirmation": {"placeholders": {"title": {"type": "String"}}},
-  "convertCollaborationToLocalUnsyncedConfirmation": "This stops synchronization for “{title}” on this device and keeps records already saved in the table. Pending synchronization, conflicts, offline review records, and an unsubmitted live draft are permanently discarded from this device. The shared server session, members, and other devices are not affected. This cannot be undone.",
-  "@convertCollaborationToLocalUnsyncedConfirmation": {"placeholders": {"title": {"type": "String"}}},
-  "convertCollaborationToLocalSucceeded": "Stopped collaboration on this device and converted to a local session",
-  "closeCollaborationLocally": "Close only on this device",
-  "moreLocalCollaborationActions": "More local actions",
+  "leaveSession": "Leave collaboration",
+  "leaveSessionConfirmation": "You will stop receiving updates for this session. Records already on this device will remain read-only, and other members can continue. To join again, you will need a new invitation or approved application. A server connection is required. You do not need to leave just to close this page.",
+  "moreLocalCollaborationActions": "More actions",
   "confirm": "Confirm",
   "duplicateCallsignWarningSetting": "Duplicate callsign warning",
   "duplicateCallsignWarningHint": "Warn before saving the same callsign again in this net, while still allowing it.",
@@ -345,7 +454,13 @@
   "aiEditProfile": "Edit profile",
   "aiDeleteProfileTitle": "Delete AI profile",
   "aiDeleteProfileMessage": "Delete “{name}” and its on-device credential?",
-  "@aiDeleteProfileMessage": {"placeholders": {"name": {"type": "String"}}},
+  "@aiDeleteProfileMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "aiProfileName": "Profile name",
   "aiBaseUrl": "API base URL",
   "aiModelName": "Model name",
@@ -364,7 +479,13 @@
   "aiInvalidJson": "Invalid JSON",
   "aiInvalidBaseUrl": "Enter a valid HTTP(S) API address",
   "aiSettingsFailed": "AI settings operation failed: {error}",
-  "@aiSettingsFailed": {"placeholders": {"error": {"type": "String"}}},
+  "@aiSettingsFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "aiProtocolAudioTranscriptions": "Audio transcription multipart",
   "aiProtocolChatAudio": "Chat input_audio",
   "aiProtocolChatText": "Chat text extraction",
@@ -377,20 +498,44 @@
   "aiWorkbenchUnavailable": "Recognition is unavailable while this record is read-only or busy.",
   "aiReadyStatus": "Tap the microphone to capture one check-in.",
   "aiRecordingStatus": "Recording {elapsed}",
-  "@aiRecordingStatus": {"placeholders": {"elapsed": {"type": "String"}}},
+  "@aiRecordingStatus": {
+    "placeholders": {
+      "elapsed": {
+        "type": "String"
+      }
+    }
+  },
   "aiLiveTranscriptTitle": "Live recognized fields",
   "aiLiveStructuredWaiting": "Building enough context for a complete check-in. Recognized fields will appear here.",
   "aiLiveStructuredUpdating": "Organizing fields from everything recognized so far…",
   "aiLiveTranscriptionRetrying": "Live recognition temporarily failed. The complete content will still be retried after recording stops: {error}",
-  "@aiLiveTranscriptionRetrying": {"placeholders": {"error": {"type": "String"}}},
+  "@aiLiveTranscriptionRetrying": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "aiRecognizingStatus": "Recognizing and preparing suggestions…",
   "aiStartRecording": "Record",
   "aiStopAndRecognize": "Recognize",
   "aiMicrophonePermissionDenied": "Microphone permission was not granted.",
   "aiRecordingFailed": "Recording failed: {error}",
-  "@aiRecordingFailed": {"placeholders": {"error": {"type": "String"}}},
+  "@aiRecordingFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "aiRecognitionFailed": "Recognition failed: {error}",
-  "@aiRecognitionFailed": {"placeholders": {"error": {"type": "String"}}},
+  "@aiRecognitionFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "aiReviewTitle": "Review AI suggestions",
   "aiTranscriptTitle": "Transcript",
   "aiCopyTranscript": "Copy transcript",
@@ -398,16 +543,40 @@
   "aiNoStructuredCandidates": "No structured fields were returned. The transcript is still available above.",
   "aiCandidateRecord": "Suggested record",
   "aiCandidateNumber": "Candidate {number}",
-  "@aiCandidateNumber": {"placeholders": {"number": {"type": "int"}}},
+  "@aiCandidateNumber": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
   "aiCandidateHint": "Empty fields are selected automatically. Replacing existing text always requires your explicit selection.",
   "aiApplySelected": "Apply selected",
   "aiCandidatesApplied": "Applied {count} suggested field(s).",
-  "@aiCandidatesApplied": {"placeholders": {"count": {"type": "int"}}},
+  "@aiCandidatesApplied": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "aiCandidatesStale": "These suggestions are no longer safe to apply because the record changed.",
   "aiApplyFailed": "Could not apply AI suggestions: {error}",
-  "@aiApplyFailed": {"placeholders": {"error": {"type": "String"}}},
+  "@aiApplyFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "aiWillReplaceValue": "Will replace: {value}",
-  "@aiWillReplaceValue": {"placeholders": {"value": {"type": "String"}}},
+  "@aiWillReplaceValue": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
   "aiWillFillEmpty": "Will fill an empty field",
   "aiReplacementNeedsConfirmation": "Select to confirm replacement",
   "aiCandidateUnchanged": "Already matches",
@@ -440,22 +609,55 @@
   "aiDictionaryNeedsAssistant": "Configure and enable the text assistant in Settings first.",
   "aiDictionaryNoSuggestions": "No dictionary changes were suggested.",
   "aiDictionaryApplied": "Applied {count} dictionary suggestion(s).",
-  "@aiDictionaryApplied": {"placeholders": {"count": {"type": "int"}}},
+  "@aiDictionaryApplied": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "aiDictionaryFailed": "Dictionary AI operation failed: {error}",
-  "@aiDictionaryFailed": {"placeholders": {"error": {"type": "String"}}},
+  "@aiDictionaryFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "aiDictionaryOptimizing": "Optimizing dictionaries",
   "aiDictionaryRecognizing": "Recognizing historical terms",
   "aiDictionaryPreparing": "Preparing local data…",
   "aiDictionaryProgress": "Completed {completed} / {total}",
-  "@aiDictionaryProgress": {"placeholders": {"completed": {"type": "int"}, "total": {"type": "int"}}},
+  "@aiDictionaryProgress": {
+    "placeholders": {
+      "completed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "aiDictionaryReviewTitle": "Review dictionary suggestions",
   "aiDictionaryReviewHint": "Generated from {recordCount} historical record(s) and the current dictionaries. Only selected changes will be written.",
-  "@aiDictionaryReviewHint": {"placeholders": {"recordCount": {"type": "int"}}},
+  "@aiDictionaryReviewHint": {
+    "placeholders": {
+      "recordCount": {
+        "type": "int"
+      }
+    }
+  },
   "aiDictionaryActionAdd": "Add",
   "aiDictionaryActionRename": "Rename",
   "aiDictionaryActionMerge": "Merge",
   "aiDictionaryUsedCount": "Used {count} time(s) in history",
-  "@aiDictionaryUsedCount": {"placeholders": {"count": {"type": "int"}}},
+  "@aiDictionaryUsedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "aiDictionaryMergeWarning": "Merging hides the source term and is not selected by default. Historical records are unchanged.",
   "aiDictionaryApplySelected": "Apply selected suggestions"
 }

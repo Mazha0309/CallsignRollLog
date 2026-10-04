@@ -1,23 +1,154 @@
 import 'package:flutter/foundation.dart';
 import 'package:openlogtool/utils/app_snack_bar.dart';
 import 'package:flutter/material.dart';
+import 'package:openlogtool/widgets/session_sharing_dialog.dart';
+import 'package:openlogtool/widgets/share_invitation_badge.dart';
 import 'package:openlogtool/l10n/l10n.dart';
 import 'package:openlogtool/models/controller_display.dart';
+import 'package:openlogtool/providers/account_share_provider.dart';
 import 'package:openlogtool/providers/collaboration_provider.dart';
 import 'package:openlogtool/providers/log_provider.dart';
+import 'package:openlogtool/providers/server_provider.dart';
 import 'package:openlogtool/providers/session_provider.dart';
 import 'package:openlogtool/providers/settings_provider.dart';
 import 'package:openlogtool/screens/collaboration_screen.dart';
+import 'package:openlogtool/screens/social_screen.dart';
 import 'package:openlogtool/screens/controller_display_screen.dart';
 import 'package:openlogtool/services/controller_window_service.dart';
 import 'package:openlogtool/services/collaboration_sync.dart';
 import 'package:openlogtool/widgets/collaboration_local_session_action.dart';
 import 'package:openlogtool/widgets/session_history_dialog.dart';
+import 'package:openlogtool/widgets/session_friend_actions.dart';
+import 'package:openlogtool/widgets/session_details_panel.dart';
 import 'package:openlogtool/widgets/session_title_editor.dart';
+import 'package:openlogtool/widgets/settings/server_account_settings.dart';
 import 'package:openlogtool/widgets/settings/settings_ui.dart';
 import 'package:provider/provider.dart';
 
-/// “会话”区的统一入口。详细成员、邀请和冲突管理继续复用协作页面。
+class _OptionalServerSettings extends StatelessWidget {
+  const _OptionalServerSettings();
+
+  @override
+  Widget build(BuildContext context) => ListView(
+        padding: const EdgeInsets.all(16),
+        children: const [ServerAccountSettings(cardPadding: 16)],
+      );
+}
+
+class _EnableCollaborationButton extends StatefulWidget {
+  const _EnableCollaborationButton(
+      {required this.onEnabled, required this.publish});
+  final Future<void> Function() onEnabled;
+  final Future<bool> Function() publish;
+
+  @override
+  State<_EnableCollaborationButton> createState() =>
+      _EnableCollaborationButtonState();
+}
+
+class _EnableCollaborationButtonState
+    extends State<_EnableCollaborationButton> {
+  bool _working = false;
+
+  @override
+  Widget build(BuildContext context) => OutlinedButton.icon(
+        key: const Key('enable-current-session-collaboration'),
+        onPressed: _working || context.watch<CollaborationProvider>().isBusy
+            ? null
+            : () async {
+                setState(() => _working = true);
+                final publish = widget.publish;
+                final onEnabled = widget.onEnabled;
+                try {
+                  if (await publish()) {
+                    await onEnabled();
+                  }
+                } catch (error) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                        content: Text(context.l10n.operationFailed('$error'))));
+                  }
+                } finally {
+                  if (mounted) setState(() => _working = false);
+                }
+              },
+        icon: const Icon(Icons.group_add_outlined),
+        label: Text(context.l10n.hubEnableCollaboration),
+      );
+}
+
+class _CurrentSessionInviteButton extends StatefulWidget {
+  const _CurrentSessionInviteButton({
+    super.key,
+    required this.sessionId,
+    required this.publish,
+    required this.invite,
+  });
+
+  final String sessionId;
+  final Future<bool> Function() publish;
+  final Future<void> Function() invite;
+
+  @override
+  State<_CurrentSessionInviteButton> createState() =>
+      _CurrentSessionInviteButtonState();
+}
+
+class _CurrentSessionInviteButtonState
+    extends State<_CurrentSessionInviteButton> {
+  bool _working = false;
+
+  Future<void> _invite() async {
+    if (_working) return;
+    final server = context.read<ServerProvider>();
+    final sessions = context.read<SessionProvider>();
+    final collaboration = context.read<CollaborationProvider>();
+    final sessionId = widget.sessionId;
+    final revision = server.contextRevision;
+    final origin = server.serverUrl;
+    final accountId = server.accountId;
+    bool isCurrent() =>
+        mounted &&
+        server.isLoggedIn &&
+        server.contextRevision == revision &&
+        server.serverUrl == origin &&
+        server.accountId == accountId &&
+        sessions.currentSession?.sessionId == sessionId &&
+        sessions.currentSession?.status == 'active';
+    setState(() => _working = true);
+    try {
+      if (collaboration.binding == null && !await widget.publish()) return;
+      if (!isCurrent() ||
+          collaboration.binding?.sessionId != sessionId ||
+          !collaboration.isOwner) {
+        return;
+      }
+      await widget.invite();
+    } catch (error) {
+      if (mounted && isCurrent()) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(context.l10n.operationFailed('$error'))));
+      }
+    } finally {
+      if (mounted) setState(() => _working = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final collaboration = context.watch<CollaborationProvider>();
+    final social = context.watch<AccountShareProvider>();
+    return FilledButton.tonalIcon(
+      key: const Key('invite-current-session-friend'),
+      onPressed:
+          _working || collaboration.isBusy || social.busy ? null : _invite,
+      icon: const Icon(Icons.person_add_outlined),
+      label: Text(context.l10n.socialInvite),
+    );
+  }
+}
+
+/// 本地记录为主入口，同步、好友及协作按需启用。
 class SessionHubPage extends StatelessWidget {
   const SessionHubPage({super.key, this.onSessionOpened});
 
@@ -97,7 +228,7 @@ class SessionHubPage extends StatelessWidget {
                   ),
                   child: session == null
                       ? Text(
-                          context.l10n.noCurrentSessionHint,
+                          context.l10n.hubLocalStart,
                           style:
                               Theme.of(context).textTheme.bodyMedium?.copyWith(
                                     color: Theme.of(context)
@@ -115,6 +246,10 @@ class SessionHubPage extends StatelessWidget {
                           settings: settings,
                         ),
                 ),
+                if (context.watch<ServerProvider>().isLoggedIn) ...[
+                  const SizedBox(height: 16),
+                  _buildOptionalOnlineSection(context, cardPadding),
+                ],
                 if (session != null &&
                     (supportsControllerDesktopWindows || kIsWeb)) ...[
                   const SizedBox(height: 16),
@@ -179,7 +314,7 @@ class SessionHubPage extends StatelessWidget {
                   key: const Key('session-history-section'),
                   icon: Icons.history_outlined,
                   title: context.l10n.historySessions,
-                  description: context.l10n.historySessionsHint,
+                  description: context.l10n.hubHistoryHint,
                   padding: cardPadding,
                   child: SessionHistoryPanel(
                     key: ValueKey(
@@ -194,12 +329,144 @@ class SessionHubPage extends StatelessWidget {
                     ),
                   ),
                 ),
+                if (!context.watch<ServerProvider>().isLoggedIn) ...[
+                  const SizedBox(height: 16),
+                  _buildOptionalOnlineSection(context, cardPadding),
+                ],
               ],
             ),
           ),
         ),
       ],
     );
+  }
+
+  Widget _buildOptionalOnlineSection(BuildContext context, double padding) {
+    final server = context.watch<ServerProvider>();
+    final collaboration = context.watch<CollaborationProvider>();
+    final session = context.watch<SessionProvider>().currentSession;
+    final l = context.l10n;
+    if (!server.isLoggedIn) {
+      return Card(
+        key: const Key('optional-online-section'),
+        child: ExpansionTile(
+          key: const Key('optional-online-expand'),
+          leading: const Icon(Icons.cloud_outlined),
+          title: Text(l.hubOptionalOnline),
+          subtitle: Text(l.hubOptionalOnlineHint),
+          childrenPadding: EdgeInsets.all(padding),
+          children: [
+            Text(l.hubLocalStart),
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              key: const Key('configure-optional-server'),
+              onPressed: () => Navigator.push<void>(
+                  context,
+                  MaterialPageRoute(
+                    builder: (c) => Scaffold(
+                      appBar: AppBar(title: Text(c.l10n.serverSettingsTitle)),
+                      body: const _OptionalServerSettings(),
+                    ),
+                  )),
+              icon: const Icon(Icons.settings_outlined),
+              label: Text(l.hubConfigureServer),
+            ),
+          ],
+        ),
+      );
+    }
+    return SettingsSectionCard(
+      key: const Key('optional-online-section'),
+      icon: Icons.cloud_outlined,
+      title: l.hubOptionalOnline,
+      description: l.hubOnlineConnected,
+      padding: padding,
+      child: Wrap(spacing: 8, runSpacing: 8, children: [
+        if (context.watch<AccountShareProvider>().supportsFriends)
+          OutlinedButton.icon(
+            key: const Key('open-friends'),
+            onPressed: () => Navigator.push<void>(
+                context,
+                MaterialPageRoute(
+                    builder: (_) => SocialScreen(
+                        onSessionOpened: onSessionOpened,
+                        initialTab: context
+                                .read<AccountShareProvider>()
+                                .pendingSocialRequests
+                                .isNotEmpty
+                            ? 1
+                            : 0))),
+            icon: RequestBadge(
+                count: context
+                    .watch<AccountShareProvider>()
+                    .pendingSocialRequests
+                    .length,
+                child: const Icon(Icons.people_outline)),
+            label: Text(context.l10n.socialTitle),
+          ),
+        if (context.watch<AccountShareProvider>().supportsLegacySharing &&
+            (context.watch<AccountShareProvider>().supportsBatchSharing ||
+                !context.watch<AccountShareProvider>().supportsFriends ||
+                context.watch<AccountShareProvider>().inbox.isNotEmpty ||
+                context
+                    .watch<AccountShareProvider>()
+                    .sharedSessions
+                    .isNotEmpty))
+          OutlinedButton.icon(
+            key: const Key('open-account-sharing'),
+            onPressed: () => _openAccountSharing(context),
+            icon: const ShareInvitationBadge(
+              child: Icon(Icons.share_outlined),
+            ),
+            label:
+                Text(context.watch<AccountShareProvider>().supportsBatchSharing
+                    ? context.l10n.shareSessionsTitle
+                    : context.watch<AccountShareProvider>().supportsFriends
+                        ? context.l10n.socialLegacy
+                        : context.l10n.accountSharing),
+          ),
+        OutlinedButton.icon(
+          key: const Key('join-collaboration'),
+          onPressed: collaboration.isBusy
+              ? null
+              : () => _joinCollaboration(
+                    context,
+                    onSessionOpened,
+                  ),
+          icon: const Icon(Icons.group_add),
+          label: Text(context.l10n.joinCollaborationTitle),
+        ),
+        if (session?.status == 'active' &&
+            collaboration.binding == null &&
+            !context.watch<AccountShareProvider>().supportsFriends &&
+            (server.serverInfo?.features.contains('sessionPublishing') ??
+                false))
+          _EnableCollaborationButton(
+            publish: () => confirmAndPublishCurrentSession(context),
+            onEnabled: () async {
+              if (context.mounted &&
+                  context.read<AccountShareProvider>().supportsFriends) {
+                await _inviteCurrentSession(context);
+              }
+            },
+          ),
+      ]),
+    );
+  }
+
+  static Future<void> _inviteCurrentSession(BuildContext context) async {
+    final session = context.read<SessionProvider>().currentSession;
+    if (session == null) return;
+    final result = await showSessionInvitationDialog(context,
+        sessionId: session.sessionId, sessionTitle: session.title);
+    if (!context.mounted) return;
+    if (result == SessionInvitationResult.friends) {
+      await Navigator.push<void>(
+          context, MaterialPageRoute(builder: (_) => const SocialScreen()));
+    } else if (result == SessionInvitationResult.sent) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(context.l10n.socialPending)));
+    }
   }
 
   Widget _buildSessionHeaderActions(
@@ -250,7 +517,7 @@ class SessionHubPage extends StatelessWidget {
             ),
           ),
         ],
-        FilledButton.tonalIcon(
+        FilledButton.icon(
           key: const Key('create-session'),
           onPressed: () => _createSession(
             context,
@@ -272,43 +539,59 @@ class SessionHubPage extends StatelessWidget {
     required SettingsProvider settings,
   }) {
     final colors = Theme.of(context).colorScheme;
+    final server = context.watch<ServerProvider>();
+    final social = context.watch<AccountShareProvider>();
     final collaborationSession = collaboration.binding?.sessionId == sessionId;
+    final showInvite = server.isLoggedIn &&
+        social.supportsFriends &&
+        sessionStatus == 'active' &&
+        !collaboration.canonicalSessionClosed &&
+        ((collaborationSession && collaboration.isOwner) ||
+            (collaboration.binding == null &&
+                (server.serverInfo?.features.contains('sessionPublishing') ??
+                    false)));
+    final canRecord = sessionStatus == 'active' &&
+        !context.watch<LogProvider>().currentSessionReadOnly;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          decoration: BoxDecoration(
-            color: colors.surfaceContainerHighest.withValues(alpha: 0.55),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Row(
-            children: [
-              Icon(
-                Icons.tag_outlined,
-                size: 18,
-                color: colors.onSurfaceVariant,
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: SelectableText(
-                  sessionId,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: colors.onSurfaceVariant,
-                        fontWeight: FontWeight.w600,
-                      ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 16),
         Wrap(
+          key: const Key('current-session-actions'),
           spacing: 8,
           runSpacing: 8,
           children: [
-            if (!collaborationSession && sessionStatus == 'active')
+            if (onSessionOpened != null)
               FilledButton.icon(
+                key: const Key('continue-current-session'),
+                onPressed: collaboration.isBusy ? null : onSessionOpened,
+                icon: Icon(
+                    canRecord ? Icons.edit_note : Icons.visibility_outlined),
+                label: Text(canRecord
+                    ? context.l10n.hubContinueRecording
+                    : context.l10n.hubViewRecords),
+              ),
+            if (showInvite)
+              _CurrentSessionInviteButton(
+                key: ValueKey('current-session-invite-$sessionId'),
+                sessionId: sessionId,
+                publish: () => confirmAndPublishCurrentSession(context),
+                invite: () => _inviteCurrentSession(context),
+              ),
+            if (collaborationSession)
+              OutlinedButton.icon(
+                key: const Key('open-collaboration-management'),
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute<void>(
+                    builder: (_) =>
+                        const CollaborationScreen(focusParticipants: true),
+                  ),
+                ),
+                icon: const Icon(Icons.group_outlined),
+                label: Text(context.l10n.manageCollaboration),
+              ),
+            if (!collaborationSession && sessionStatus == 'active')
+              OutlinedButton.icon(
                 key: const Key('close-current-local-session'),
                 onPressed: () => _closeCurrentLocalSession(
                   context,
@@ -345,30 +628,21 @@ class SessionHubPage extends StatelessWidget {
                 icon: const Icon(Icons.play_circle_outline),
                 label: Text(context.l10n.reopenSession),
               ),
-            FilledButton.icon(
-              key: const Key('open-collaboration-management'),
-              onPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute<void>(
-                  builder: (_) => const CollaborationScreen(),
-                ),
-              ),
-              icon: const Icon(Icons.group_outlined),
-              label: Text(context.l10n.manageCollaboration),
-            ),
-            FilledButton.tonalIcon(
-              key: const Key('open-live-share-management'),
-              onPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute<void>(
-                  builder: (_) => const CollaborationScreen(
-                    focusPublicShare: true,
+            if (collaborationSession &&
+                context.watch<ServerProvider>().isLoggedIn)
+              OutlinedButton.icon(
+                key: const Key('open-live-share-management'),
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute<void>(
+                    builder: (_) => const CollaborationScreen(
+                      focusPublicShare: true,
+                    ),
                   ),
                 ),
+                icon: const Icon(Icons.public),
+                label: Text(context.l10n.openLiveShare),
               ),
-              icon: const Icon(Icons.public),
-              label: Text(context.l10n.openLiveShare),
-            ),
             if (collaborationSession)
               const CollaborationLocalSessionAction()
             else
@@ -393,6 +667,20 @@ class SessionHubPage extends StatelessWidget {
                 label: Text(context.l10n.enterControllerScreen),
               ),
           ],
+        ),
+        if (!collaborationSession) ...[
+          const SizedBox(height: 16),
+          Text(context.l10n.hubLocalHint,
+              style: Theme.of(context)
+                  .textTheme
+                  .bodySmall
+                  ?.copyWith(color: colors.onSurfaceVariant)),
+        ],
+        SessionDetailsPanel(
+          key: const Key('current-session-details'),
+          session: context.watch<SessionProvider>().currentSession!,
+          recordCount: context.watch<LogProvider>().logCount,
+          collaborative: collaborationSession,
         ),
       ],
     );
@@ -434,6 +722,14 @@ class SessionHubPage extends StatelessWidget {
         draft['fields'] = draftFields.toJson();
         snapshotJson['draft'] = draft;
       }
+      snapshotJson['currentOrdinal'] = resolveVisibleRecordOrdinal(
+        snapshotOrdinal: snapshot.currentOrdinal,
+        savedCount: logs.logCount,
+      );
+      snapshotJson['totalRecords'] = resolveVisibleRecordCount(
+        snapshotTotalRecords: snapshot.totalRecords,
+        savedCount: logs.logCount,
+      );
       return ControllerDisplayDto.fromLiveDraftJson(
         snapshotJson,
         sessionTitle: sessionTitle,
@@ -442,8 +738,8 @@ class SessionHubPage extends StatelessWidget {
     }
     return ControllerDisplayDto(
       sessionTitle: sessionTitle,
-      currentOrdinal: logs.logCount + 1,
-      totalRecords: logs.logCount,
+      currentOrdinal: resolveVisibleRecordOrdinal(savedCount: logs.logCount),
+      totalRecords: resolveVisibleRecordCount(savedCount: logs.logCount),
       current: ControllerRecordDisplay(
         controller: previous?.controller ?? '',
         rstSent: '59',
@@ -464,6 +760,170 @@ class SessionHubPage extends StatelessWidget {
           builder: (_) => const _LiveControllerDisplayRoute(),
         ),
       );
+
+  static Future<void> _openAccountSharing(BuildContext context) async {
+    final sharing = context.read<AccountShareProvider>();
+    if (sharing.supportsBatchSharing) return showSessionSharingDialog(context);
+    await sharing.refresh();
+    if (!context.mounted) return;
+    final username = TextEditingController();
+    try {
+      await showDialog<void>(
+        context: context,
+        builder: (dialogContext) {
+          final current = dialogContext.watch<AccountShareProvider>();
+          return AlertDialog(
+            title: Text(dialogContext.l10n.accountSharing),
+            content: SizedBox(
+              width: 420,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(dialogContext.l10n.accountSharingHint),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: username,
+                    decoration: InputDecoration(
+                      labelText: dialogContext.l10n.usernameLabel,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(dialogContext.l10n.pendingInboundShares),
+                  const SizedBox(height: 8),
+                  if (current.inbox.isEmpty)
+                    Text(dialogContext.l10n.historySessionsEmpty)
+                  else
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(maxHeight: 240),
+                      child: ListView.builder(
+                        shrinkWrap: true,
+                        itemCount: current.inbox.length,
+                        itemBuilder: (context, index) {
+                          final grant = current.inbox[index];
+                          return ListTile(
+                            key: Key('share-inbox-${grant.id}'),
+                            dense: true,
+                            title: Text(grant.grantorUserId),
+                            trailing: TextButton(
+                              onPressed: () async {
+                                await current.acceptRequest(grant.id);
+                              },
+                              child: Text(dialogContext.l10n.acceptShare),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext),
+                child: Text(dialogContext.l10n.cancel),
+              ),
+              FilledButton(
+                onPressed: () async {
+                  final value = username.text.trim();
+                  if (value.isEmpty) return;
+                  await current.createRequest(value);
+                  if (dialogContext.mounted) Navigator.pop(dialogContext);
+                },
+                child: Text(dialogContext.l10n.accountSharing),
+              ),
+            ],
+          );
+        },
+      );
+    } finally {
+      username.dispose();
+    }
+  }
+
+  static Future<void> _joinCollaboration(
+    BuildContext context,
+    VoidCallback? onSessionOpened,
+  ) async {
+    final server = context.read<ServerProvider>();
+    if (!server.isLoggedIn) {
+      ScaffoldMessenger.of(context).showLoggedSnackBar(
+        SnackBar(content: Text(context.l10n.collaborationServerLoginHint)),
+      );
+      return;
+    }
+    var draftCode = '';
+    final code = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          key: const Key('join-collaboration-dialog'),
+          title: Text(dialogContext.l10n.joinCollaborationTitle),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(dialogContext.l10n.joinCollaborationHint),
+              const SizedBox(height: 12),
+              TextFormField(
+                key: const Key('join-collaboration-code'),
+                autofocus: true,
+                textCapitalization: TextCapitalization.characters,
+                decoration: InputDecoration(
+                  labelText: dialogContext.l10n.inviteCodeLabel,
+                  hintText: 'ABCDE-12345',
+                  border: const OutlineInputBorder(),
+                ),
+                textInputAction: TextInputAction.done,
+                onChanged: (value) => setDialogState(() => draftCode = value),
+                onFieldSubmitted: (value) {
+                  final normalized = value.trim();
+                  if (normalized.isNotEmpty) {
+                    Navigator.pop(dialogContext, normalized);
+                  }
+                },
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: Text(dialogContext.l10n.cancel),
+            ),
+            FilledButton.icon(
+              key: const Key('confirm-join-collaboration'),
+              onPressed: draftCode.trim().isEmpty
+                  ? null
+                  : () => Navigator.pop(
+                        dialogContext,
+                        draftCode.trim(),
+                      ),
+              icon: const Icon(Icons.group_add),
+              label: Text(dialogContext.l10n.join),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (code == null || !context.mounted) return;
+    final collaboration = context.read<CollaborationProvider>();
+    try {
+      await collaboration.joinWithCode(code);
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showLoggedSnackBar(
+        SnackBar(content: Text(context.l10n.joinCollaborationSucceeded)),
+      );
+      onSessionOpened?.call();
+    } catch (error) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showLoggedSnackBar(
+        SnackBar(
+          content: Text(context.l10n.operationFailed('$error')),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
+      );
+    }
+  }
 
   static Future<void> _createSession(
     BuildContext context,

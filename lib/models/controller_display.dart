@@ -272,6 +272,23 @@ class ControllerDisplayDto {
       };
 }
 
+int resolveVisibleRecordOrdinal({
+  int? snapshotOrdinal,
+  required int savedCount,
+}) {
+  final nextFromLogs = savedCount + 1;
+  if (snapshotOrdinal == null) return nextFromLogs;
+  return snapshotOrdinal > nextFromLogs ? snapshotOrdinal : nextFromLogs;
+}
+
+int resolveVisibleRecordCount({
+  int? snapshotTotalRecords,
+  required int savedCount,
+}) {
+  if (snapshotTotalRecords == null) return savedCount;
+  return snapshotTotalRecords > savedCount ? snapshotTotalRecords : savedCount;
+}
+
 int _integer(Object? value, {int fallback = 0}) =>
     value is num ? value.toInt() : int.tryParse('$value') ?? fallback;
 

@@ -81,6 +81,84 @@ void main() {
     expect(find.text('没有匹配的词库内容'), findsOneWidget);
   });
 
+  testWidgets('wide panes scroll independently and remember each library',
+      (tester) async {
+    await _pumpManager(tester, _TestDictionaryProvider(deviceCount: 25),
+        width: 1100, height: 300, embedded: true);
+    ScrollController controller(String name) => tester
+        .widget<SingleChildScrollView>(
+            find.byKey(PageStorageKey('library-$name-scroll')))
+        .controller!;
+    final navigation = controller('navigation');
+    final devices = controller('device');
+    expect(navigation.position.maxScrollExtent, greaterThan(0));
+    expect(devices.position.maxScrollExtent, greaterThan(0));
+
+    await tester.drag(find.byKey(const PageStorageKey('library-device-scroll')),
+        const Offset(0, -240));
+    await tester.pumpAndSettle();
+    final deviceOffset = devices.offset;
+    expect(deviceOffset, greaterThan(0));
+    expect(navigation.offset, 0);
+    await tester.drag(
+        find.byKey(const PageStorageKey('library-navigation-scroll')),
+        const Offset(0, -120));
+    await tester.pumpAndSettle();
+    expect(navigation.offset, greaterThan(0));
+    expect(devices.offset, deviceOffset);
+
+    navigation.jumpTo(0);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('library-category-antenna')));
+    await tester.pumpAndSettle();
+    expect(controller('antenna').offset, 0);
+    await tester.drag(
+        find.byKey(const PageStorageKey('library-antenna-scroll')),
+        const Offset(0, -100));
+    await tester.pumpAndSettle();
+    final antennaOffset = controller('antenna').offset;
+    expect(antennaOffset, greaterThan(0));
+    await tester.tap(find.byKey(const Key('library-category-device')));
+    await tester.pumpAndSettle();
+    expect(controller('device').offset, deviceOffset);
+    await tester.tap(find.byKey(const Key('library-category-antenna')));
+    await tester.pumpAndSettle();
+    expect(controller('antenna').offset, antennaOffset);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('compact scaled workspace keeps input focus while scrolling',
+      (tester) async {
+    await _pumpManager(tester, _TestDictionaryProvider(deviceCount: 25),
+        width: 320, height: 568, embedded: true, textScale: 1.4);
+    final field = find.byKey(const Key('add-library-device'));
+    await tester.ensureVisible(field);
+    await tester.enterText(field, 'Draft radio');
+    final focus = FocusManager.instance.primaryFocus;
+    await tester.drag(find.byKey(const PageStorageKey('library-device-scroll')),
+        const Offset(0, -180));
+    await tester.pumpAndSettle();
+    expect(FocusManager.instance.primaryFocus, focus);
+    expect(tester.widget<TextField>(field).controller!.text, 'Draft radio');
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('resizing between split and compact layouts keeps search draft',
+      (tester) async {
+    await _pumpManager(tester, _TestDictionaryProvider(deviceCount: 25),
+        width: 1100, embedded: true);
+    final search = find.byKey(const Key('search-library-device'));
+    await tester.enterText(search, 'Device 1');
+    for (final width in [390.0, 1100.0]) {
+      tester.view.physicalSize = Size(width, 900);
+      await tester.pumpAndSettle();
+      expect(tester.widget<TextField>(search).controller!.text, 'Device 1');
+      expect(find.byKey(const Key('library-wide-workspace')),
+          width > 720 ? findsOneWidget : findsNothing);
+      expect(tester.takeException(), isNull);
+    }
+  });
+
   testWidgets('editing persists before replacing the visible entry',
       (tester) async {
     final provider = _TestDictionaryProvider(deviceCount: 1);
@@ -166,6 +244,8 @@ Future<void> _pumpManager(
   DictionaryProvider provider, {
   required double width,
   double height = 900,
+  bool embedded = false,
+  double textScale = 1,
 }) async {
   tester.view.devicePixelRatio = 1;
   tester.view.physicalSize = Size(width, height);
@@ -176,13 +256,17 @@ Future<void> _pumpManager(
     ChangeNotifierProvider<DictionaryProvider>.value(
       value: provider,
       child: MaterialApp(
+        builder: (context, child) => MediaQuery(
+          data: MediaQuery.of(context).copyWith(
+            textScaler: TextScaler.linear(textScale),
+          ),
+          child: child!,
+        ),
         locale: const Locale('zh', 'CN'),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(
-          body: SingleChildScrollView(
-            child: SizedBox(width: width, child: const DictionaryManager()),
-          ),
+          body: DictionaryManager(embedded: embedded),
         ),
       ),
     ),

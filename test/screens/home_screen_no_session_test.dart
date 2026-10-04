@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:openlogtool/l10n/l10n.dart';
+import 'package:openlogtool/models/account_share_dto.dart';
 import 'package:openlogtool/providers/app_info_provider.dart';
 import 'package:openlogtool/providers/ai_recognition_settings_provider.dart';
+import 'package:openlogtool/providers/account_share_provider.dart';
 import 'package:openlogtool/providers/collaboration_provider.dart';
 import 'package:openlogtool/providers/dictionary_provider.dart';
 import 'package:openlogtool/providers/log_provider.dart';
@@ -14,6 +16,7 @@ import 'package:openlogtool/screens/home_screen.dart';
 import 'package:openlogtool/src/bridge/models/session.dart';
 import 'package:openlogtool/widgets/log_form.dart';
 import 'package:openlogtool/widgets/log_table.dart';
+import 'package:openlogtool/widgets/session_sharing_dialog.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -34,6 +37,9 @@ void main() {
     expect(find.byType(LogTable), findsNothing);
     expect(find.byKey(const Key('current-ordinal-badge')), findsNothing);
     expect(find.text('当前没有点名会话'), findsOneWidget);
+    expect(find.text('请先到会话页新建会话，或加入协作后再开始记录。'), findsOneWidget);
+    expect(find.byKey(const Key('open-sessions-from-empty-workbench')),
+        findsNothing);
     expect(find.byKey(const Key('start-new-record')), findsNothing);
     expect(
       find.byKey(const Key('open-workbench-session-history')),
@@ -41,6 +47,51 @@ void main() {
     );
     expect(find.byKey(const Key('create-session')), findsNothing);
     expect(find.byType(AlertDialog), findsNothing);
+  });
+
+  testWidgets(
+      'workbench exposes live invitation count and opens Messages directly',
+      (tester) async {
+    final sessions = _EmptySessionProvider();
+    await sessions.startNewSession(title: '当前点名');
+    final sharing = _IncomingSharingProvider();
+    await tester
+        .pumpWidget(_HomeScreenTestApp(sessions: sessions, sharing: sharing));
+    await tester.pumpAndSettle();
+    final notification = find.byKey(const Key('global-invitations'));
+    expect(notification, findsOneWidget);
+    expect(find.descendant(of: notification, matching: find.text('2')),
+        findsOneWidget);
+    sharing.incoming = 3;
+    sharing.notifyListeners();
+    await tester.pump();
+    expect(find.descendant(of: notification, matching: find.text('3')),
+        findsOneWidget);
+    await tester.tap(notification);
+    await tester.pumpAndSettle();
+    expect(
+        DefaultTabController.of(tester.element(find.byType(TabBar))).index, 1);
+    expect(find.text('当前点名'), findsNothing);
+  });
+
+  testWidgets('sharing notice opens acceptance without going through Messages',
+      (tester) async {
+    final sessions = _EmptySessionProvider();
+    final sharing = _PendingShareProvider();
+    await tester
+        .pumpWidget(_HomeScreenTestApp(sessions: sessions, sharing: sharing));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('view-incoming-invitations')));
+    await tester.pumpAndSettle();
+    expect(find.byType(SessionSharingDialog), findsOneWidget);
+    expect(find.byType(TabBar), findsNothing);
+    final accept = find.byKey(const Key('accept-share-share-1'));
+    expect(accept.hitTestable(), findsOneWidget);
+    await tester.tap(accept);
+    await tester.pumpAndSettle();
+    expect(sharing.accepted, isTrue);
+    expect(sessions.currentSessionId, isNull);
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('first launch opens Sessions without a startup dialog',
@@ -55,8 +106,11 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(AlertDialog), findsNothing);
+    expect(find.byKey(const Key('global-invitations')), findsNothing);
     expect(find.byKey(const Key('current-session-section')), findsOneWidget);
     expect(find.byKey(const Key('create-session')), findsOneWidget);
+    expect(find.textContaining('无需服务器或账号'), findsOneWidget);
+    expect(find.byKey(const Key('join-collaboration')), findsNothing);
     expect(find.byKey(const Key('session-history-section')), findsOneWidget);
     expect(
       tester
@@ -69,6 +123,51 @@ void main() {
     expect(find.byKey(const Key('workbench-status-bar')), findsNothing);
     expect(find.byIcon(Icons.cloud_off_outlined), findsNothing);
     expect(find.text('单机记录'), findsNothing);
+
+    await tester.tap(find.text('点名台'));
+    await tester.pumpAndSettle();
+
+    expect(
+      tester
+          .widget<NavigationBar>(find.byKey(const Key('mobile-navigation')))
+          .selectedIndex,
+      1,
+    );
+    expect(find.text('请先新建会话或加入协作'), findsOneWidget);
+    expect(find.byKey(const Key('create-session')), findsOneWidget);
+  });
+
+  testWidgets(
+      'phone system back returns from a settings category before leaving settings',
+      (tester) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(
+      _HomeScreenTestApp(sessions: _EmptySessionProvider()),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.descendant(
+      of: find.byKey(const Key('mobile-navigation')),
+      matching: find.text('设置'),
+    ));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('settings-category-appearance')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('settings-category-back')), findsOneWidget);
+
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    expect(
+        tester
+            .widget<NavigationBar>(find.byKey(const Key('mobile-navigation')))
+            .selectedIndex,
+        3);
+    expect(
+        find.byKey(const Key('settings-category-navigation')), findsOneWidget);
+    expect(find.byKey(const Key('settings-category-back')), findsNothing);
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('active workbench keeps the new hierarchy on a phone',
@@ -185,14 +284,16 @@ class _AddRecordTestApp extends StatelessWidget {
 }
 
 class _HomeScreenTestApp extends StatelessWidget {
-  const _HomeScreenTestApp({required this.sessions});
+  const _HomeScreenTestApp({required this.sessions, this.sharing});
 
   final _EmptySessionProvider sessions;
+  final AccountShareProvider? sharing;
 
   @override
   Widget build(BuildContext context) => _TestProviders(
         sessions: sessions,
         includeHomeDependencies: true,
+        sharing: sharing,
         child: const HomeScreen(),
       );
 }
@@ -202,11 +303,13 @@ class _TestProviders extends StatelessWidget {
     required this.sessions,
     required this.child,
     this.includeHomeDependencies = false,
+    this.sharing,
   });
 
   final _EmptySessionProvider sessions;
   final Widget child;
   final bool includeHomeDependencies;
+  final AccountShareProvider? sharing;
 
   @override
   Widget build(BuildContext context) {
@@ -221,6 +324,8 @@ class _TestProviders extends StatelessWidget {
         ),
       ),
       ChangeNotifierProvider(create: (_) => CollaborationProvider()),
+      ChangeNotifierProvider<AccountShareProvider>(
+          create: (_) => sharing ?? AccountShareProvider()),
       ChangeNotifierProvider(
         create: (_) => PersonalCloudProvider(
           exporter: () async => '{"version":1,"sessions":[],"logs":[]}',
@@ -247,6 +352,50 @@ class _TestProviders extends StatelessWidget {
         home: child,
       ),
     );
+  }
+}
+
+class _IncomingSharingProvider extends AccountShareProvider {
+  int incoming = 2;
+  @override
+  bool get supportsFriends => true;
+  @override
+  int get pendingInboundCount => incoming;
+  @override
+  Future<void> refresh() async {}
+}
+
+class _PendingShareProvider extends AccountShareProvider {
+  bool accepted = false;
+  @override
+  bool get supportsFriends => true;
+  @override
+  bool get supportsLegacySharing => true;
+  @override
+  bool get supportsBatchSharing => true;
+  @override
+  List<AccountShareGrantDto> get inbox => accepted
+      ? []
+      : [
+          const AccountShareGrantDto(
+              id: 'share-1',
+              grantorUserId: 'alice',
+              grantorUsername: 'Alice',
+              granteeUserId: 'me',
+              status: 'pending'),
+        ];
+  @override
+  Future<void> refresh() async {}
+  @override
+  Future<List<ShareSessionRef>> loadShareCandidates() async => [];
+  @override
+  Future<void> respondShare(String id, String action,
+      {required String? expectedScope}) async {
+    expect(id, 'share-1');
+    expect(action, 'accept');
+    accepted = true;
+    revision++;
+    notifyListeners();
   }
 }
 

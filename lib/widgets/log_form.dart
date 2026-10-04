@@ -14,6 +14,8 @@ import 'package:openlogtool/providers/settings_provider.dart';
 import 'package:openlogtool/models/log_entry.dart';
 import 'package:openlogtool/models/dictionary_item.dart';
 import 'package:openlogtool/models/live_draft.dart';
+import 'package:openlogtool/utils/dictionary_ranking.dart';
+import 'package:openlogtool/utils/dictionary_usage_store.dart';
 import 'package:openlogtool/utils/field_format_suggestions.dart';
 import 'package:openlogtool/utils/ime_safe_upper_case_formatter.dart';
 import 'package:openlogtool/utils/log_time.dart';
@@ -28,6 +30,7 @@ import 'package:openlogtool/services/app_logger.dart';
 import 'package:openlogtool/widgets/ai_recognition_control.dart';
 import 'package:openlogtool/widgets/autocomplete_options_list.dart';
 import 'package:openlogtool/widgets/callsign_history_field.dart';
+import 'package:openlogtool/widgets/scroll_safe_unfocus.dart';
 import 'package:openlogtool/src/bridge/models/log_entry.dart' as bridge;
 
 /// 日志表单组件
@@ -37,6 +40,7 @@ class LogForm extends StatefulWidget {
     super.key,
     this.readOnly = false,
     this.saveShortcutEnabled = true,
+    this.sessionId,
     this.aiAudioRecorder,
     this.aiRecognitionExecutor,
     this.aiTranscriptionExecutor,
@@ -46,6 +50,7 @@ class LogForm extends StatefulWidget {
 
   final bool readOnly;
   final bool saveShortcutEnabled;
+  final String? sessionId;
   final AiAudioRecorder? aiAudioRecorder;
   final AiRecognitionExecutor? aiRecognitionExecutor;
   final AiTranscriptionExecutor? aiTranscriptionExecutor;
@@ -57,6 +62,10 @@ class LogForm extends StatefulWidget {
 }
 
 class _LogFormState extends State<LogForm> with AutomaticKeepAliveClientMixin {
+  LogEntry? _pendingSubmission;
+  Map<String, String>? _pendingSubmissionFields;
+  LogProvider? _pendingSubmissionProvider;
+  String? _pendingSubmissionSession;
   static final List<DictionaryItem> _heightPresetOptions =
       List<DictionaryItem>.unmodifiable(<DictionaryItem>[
     DictionaryItem(
@@ -94,6 +103,7 @@ class _LogFormState extends State<LogForm> with AutomaticKeepAliveClientMixin {
   };
 
   final _formKey = GlobalKey<FormState>();
+  final _outsideTap = ScrollSafeUnfocus();
   final _controllerController = TextEditingController();
   final _callsignController = TextEditingController();
   final FocusNode _callsignFocusNode = FocusNode();
@@ -125,6 +135,8 @@ class _LogFormState extends State<LogForm> with AutomaticKeepAliveClientMixin {
   /// reassigned when the text itself actually changed.
   String _observedCallsign = '';
   late final Map<String, TextEditingController> _draftControllers;
+  late final Map<String, GlobalKey> _autocompleteOptionKeys;
+  late final DictionaryUsageStore _dictionaryUsage;
   late final Map<String, FocusNode> _draftFocusNodes;
   late final Map<String, VoidCallback> _draftControllerListeners;
   late final Map<String, VoidCallback> _draftFocusListeners;
@@ -132,6 +144,7 @@ class _LogFormState extends State<LogForm> with AutomaticKeepAliveClientMixin {
   final Set<String> _acquiringDraftFields = <String>{};
   bool _disposing = false;
   CollaborationProvider? _collaborationProvider;
+  bool _validationAttempted = false;
   Timer? _lockExpiryTimer;
   bool _applyingSharedDraft = false;
   bool _historyReuseInProgress = false;
@@ -186,6 +199,10 @@ class _LogFormState extends State<LogForm> with AutomaticKeepAliveClientMixin {
       'antenna': _antennaController,
       'height': _heightController,
       'remarks': _remarksController,
+    };
+    _dictionaryUsage = DictionaryUsageStore.shared()..ensureLoaded();
+    _autocompleteOptionKeys = {
+      for (final field in _draftControllers.keys) field: GlobalKey(),
     };
     _draftFocusNodes = {
       for (final field in _draftControllers.keys)
@@ -252,6 +269,7 @@ class _LogFormState extends State<LogForm> with AutomaticKeepAliveClientMixin {
 
   @override
   void dispose() {
+    _outsideTap.dispose();
     _disposing = true;
     _historyPreviewGeneration += 1;
     HardwareKeyboard.instance.removeHandler(_handleGlobalShortcut);
@@ -793,7 +811,7 @@ class _LogFormState extends State<LogForm> with AutomaticKeepAliveClientMixin {
       await dictionaryProvider.addQth(_qthController.text.trim());
     }
     try {
-      await logProvider.updateLogById(existing.id, patch);
+      await logProvider.updateLogFromOriginal(existing, patch);
     } catch (error) {
       if (!mounted) return;
       messenger?.showLoggedSnackBar(
@@ -1085,6 +1103,7 @@ class _LogFormState extends State<LogForm> with AutomaticKeepAliveClientMixin {
             !collaboration.canEditLiveDraft)) {
       return;
     }
+    setState(() => _validationAttempted = true);
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
     setState(() => _submissionInProgress = true);
@@ -1371,7 +1390,21 @@ class _LogFormState extends State<LogForm> with AutomaticKeepAliveClientMixin {
     );
     log.remarks = submittedFields['remarks']!;
 
-    await logProvider.addLog(log, sessionId: sessionProvider.currentSessionId);
+    final targetSession = widget.sessionId ?? sessionProvider.currentSessionId;
+    final retryFields = Map<String, String>.of(submittedFields);
+    if (usesAutomaticTime) retryFields['time'] = '';
+    // On an ambiguous network failure, keep the same ID and automatic time.
+    // Re-clicking Save must not create a second remote record.
+    final retry = identical(_pendingSubmissionProvider, logProvider) &&
+        _pendingSubmissionSession == targetSession &&
+        _pendingSubmissionFields?.length == retryFields.length &&
+        retryFields.entries
+            .every((e) => _pendingSubmissionFields?[e.key] == e.value);
+    _pendingSubmission = retry ? _pendingSubmission ?? log : log;
+    _pendingSubmissionFields = retryFields;
+    _pendingSubmissionProvider = logProvider;
+    _pendingSubmissionSession = targetSession;
+    await logProvider.addLog(_pendingSubmission!, sessionId: targetSession);
     if (!mounted) return;
     _resetForm();
 
@@ -1384,6 +1417,11 @@ class _LogFormState extends State<LogForm> with AutomaticKeepAliveClientMixin {
   }
 
   void _resetForm() {
+    _pendingSubmission = null;
+    _pendingSubmissionFields = null;
+    _pendingSubmissionProvider = null;
+    _pendingSubmissionSession = null;
+    setState(() => _validationAttempted = false);
     _aiRecordEpoch += 1;
     for (final timer in _inlineAiDebounce.values) {
       timer.cancel();
@@ -1419,7 +1457,7 @@ class _LogFormState extends State<LogForm> with AutomaticKeepAliveClientMixin {
     final remoteRevisions =
         collaboration.liveDraftSnapshot?.draft.fieldRevisions;
     return AiDraftSnapshot(
-      sessionId: sessionProvider.currentSessionId ?? '',
+      sessionId: widget.sessionId ?? sessionProvider.currentSessionId ?? '',
       recordEpoch: _aiRecordEpoch,
       captureGeneration: captureGeneration,
       draftId: collaboration.liveDraftSnapshot?.draft.draftId,
@@ -1599,281 +1637,304 @@ class _LogFormState extends State<LogForm> with AutomaticKeepAliveClientMixin {
           key: const Key('history-reuse-guard'),
           absorbing: _historyReuseInProgress || _clearInProgress,
           child: Form(
+            autovalidateMode: _validationAttempted
+                ? AutovalidateMode.onUserInteraction
+                : AutovalidateMode.disabled,
             key: _formKey,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // 使用 Wrap 实现响应式自动换行布局，输入框会根据可用空间自动调整宽度
-                Wrap(
-                  spacing: spacing,
-                  runSpacing: isNarrow ? 8 : spacing,
-                  alignment: WrapAlignment.start,
-                  children: [
-                    SizedBox(
-                      width: primaryFieldWidth,
-                      child: _buildMaterialTextField(
-                        controller: _controllerController,
-                        label: fieldLabel(
-                          'controller',
-                          '${context.l10n.fieldControllerCallsign} *',
+                FocusTraversalGroup(
+                  policy: _LoopingWidgetOrderTraversalPolicy(),
+                  child: Wrap(
+                    spacing: spacing,
+                    runSpacing: isNarrow ? 8 : spacing,
+                    alignment: WrapAlignment.start,
+                    children: [
+                      SizedBox(
+                        width: primaryFieldWidth,
+                        child: _buildMaterialTextField(
+                          controller: _controllerController,
+                          label: fieldLabel(
+                            'controller',
+                            '${context.l10n.fieldControllerCallsign} *',
+                          ),
+                          hintText: context.l10n.inputFieldHint(
+                            context.l10n.fieldControllerCallsign,
+                          ),
+                          validator: (value) {
+                            if (value == null || value.trim().isEmpty) {
+                              return context.l10n.fieldRequired;
+                            }
+                            return null;
+                          },
+                          isCompact: isNarrow,
+                          textInputAction: TextInputAction.next,
+                          focusNode: _draftFocusNodes['controller'],
+                          enabled: fieldEnabled('controller'),
                         ),
-                        hintText: context.l10n.inputFieldHint(
-                          context.l10n.fieldControllerCallsign,
+                      ),
+                      SizedBox(
+                        width: primaryFieldWidth,
+                        child: CallsignHistoryField(
+                          callsignController: _callsignController,
+                          deviceController: _deviceController,
+                          antennaController: _antennaController,
+                          qthController: _qthController,
+                          powerController: _powerController,
+                          heightController: _heightController,
+                          reportController: _reportController,
+                          rstRcvdController: _rstRcvdController,
+                          controllerController: _controllerController,
+                          label: fieldLabel(
+                            'callsign',
+                            context.l10n.fieldCallsign,
+                          ),
+                          hintText: context.l10n.inputFieldHint(
+                            context.l10n.fieldCallsign,
+                          ),
+                          focusNode: _callsignFocusNode,
+                          isCompact: isNarrow,
+                          textInputAction: TextInputAction.next,
+                          enabled: fieldEnabled('callsign'),
+                          historyEnabled:
+                              settingsProvider.callSignQthLinkEnabled,
+                          onReuseRecord: _reuseHistoryRecord,
+                          remotePreview: sharedDraft &&
+                                  !collaboration
+                                      .liveDraftHistoryPreviewOwnedHere
+                              ? collaboration.liveDraftHistoryPreview
+                              : null,
+                          onLocalCandidatesLoaded:
+                              sharedDraft && collaboration.canEditLiveDraft
+                                  ? _publishHistoryPreview
+                                  : null,
+                          onLocalPreviewClosed:
+                              sharedDraft && collaboration.canEditLiveDraft
+                                  ? _dismissHistoryPreview
+                                  : null,
+                          validator: (value) {
+                            if (value == null || value.trim().isEmpty) {
+                              return context.l10n.callsignRequired;
+                            }
+                            return null;
+                          },
                         ),
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return context.l10n.fieldRequired;
-                          }
-                          return null;
-                        },
-                        isCompact: isNarrow,
-                        textInputAction: TextInputAction.next,
-                        focusNode: _draftFocusNodes['controller'],
-                        enabled: fieldEnabled('controller'),
                       ),
-                    ),
-                    SizedBox(
-                      width: primaryFieldWidth,
-                      child: CallsignHistoryField(
-                        callsignController: _callsignController,
-                        deviceController: _deviceController,
-                        antennaController: _antennaController,
-                        qthController: _qthController,
-                        powerController: _powerController,
-                        heightController: _heightController,
-                        reportController: _reportController,
-                        rstRcvdController: _rstRcvdController,
-                        controllerController: _controllerController,
-                        label: fieldLabel(
-                          'callsign',
-                          context.l10n.fieldCallsign,
+                      SizedBox(
+                        width: calculatedFieldWidth,
+                        child: _buildAutocompleteField(
+                          controller: _deviceController,
+                          label: fieldLabel('device', context.l10n.fieldDevice),
+                          hintText: context.l10n.inputFieldHint(
+                            context.l10n.fieldDevice,
+                          ),
+                          options: dictionaryProvider.deviceDict,
+                          upperCase: false,
+                          isCompact: isNarrow,
+                          textInputAction: TextInputAction.next,
+                          draftField: 'device',
+                          enabled: fieldEnabled('device'),
                         ),
-                        hintText: context.l10n.inputFieldHint(
-                          context.l10n.fieldCallsign,
+                      ),
+                      SizedBox(
+                        width: calculatedFieldWidth,
+                        child: _buildAutocompleteField(
+                          controller: _antennaController,
+                          label:
+                              fieldLabel('antenna', context.l10n.fieldAntenna),
+                          hintText: context.l10n.inputFieldHint(
+                            context.l10n.fieldAntenna,
+                          ),
+                          options: dictionaryProvider.antennaDict,
+                          upperCase: false,
+                          isCompact: isNarrow,
+                          textInputAction: TextInputAction.next,
+                          draftField: 'antenna',
+                          enabled: fieldEnabled('antenna'),
                         ),
-                        focusNode: _callsignFocusNode,
-                        isCompact: isNarrow,
-                        textInputAction: TextInputAction.next,
-                        enabled: fieldEnabled('callsign'),
-                        historyEnabled: settingsProvider.callSignQthLinkEnabled,
-                        onReuseRecord: _reuseHistoryRecord,
-                        remotePreview: sharedDraft &&
-                                !collaboration.liveDraftHistoryPreviewOwnedHere
-                            ? collaboration.liveDraftHistoryPreview
-                            : null,
-                        onLocalCandidatesLoaded:
-                            sharedDraft && collaboration.canEditLiveDraft
-                                ? _publishHistoryPreview
-                                : null,
-                        onLocalPreviewClosed:
-                            sharedDraft && collaboration.canEditLiveDraft
-                                ? _dismissHistoryPreview
-                                : null,
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return context.l10n.callsignRequired;
-                          }
-                          return null;
-                        },
                       ),
-                    ),
-                    SizedBox(
-                      width: calculatedFieldWidth,
-                      child: _buildAutocompleteField(
-                        controller: _deviceController,
-                        label: fieldLabel('device', context.l10n.fieldDevice),
-                        hintText: context.l10n.inputFieldHint(
-                          context.l10n.fieldDevice,
+                      SizedBox(
+                        width: calculatedFieldWidth,
+                        child: _buildAutocompleteField(
+                          controller: _powerController,
+                          label: fieldLabel('power', context.l10n.fieldPower),
+                          hintText: context.l10n.inputFieldHint(
+                            context.l10n.fieldPower,
+                          ),
+                          options: const <DictionaryItem>[],
+                          upperCase: false,
+                          isCompact: isNarrow,
+                          textInputAction: TextInputAction.next,
+                          draftField: 'power',
+                          enabled: fieldEnabled('power'),
                         ),
-                        options: dictionaryProvider.deviceDict,
-                        upperCase: false,
-                        isCompact: isNarrow,
-                        textInputAction: TextInputAction.next,
-                        draftField: 'device',
-                        enabled: fieldEnabled('device'),
                       ),
-                    ),
-                    SizedBox(
-                      width: calculatedFieldWidth,
-                      child: _buildAutocompleteField(
-                        controller: _antennaController,
-                        label: fieldLabel('antenna', context.l10n.fieldAntenna),
-                        hintText: context.l10n.inputFieldHint(
-                          context.l10n.fieldAntenna,
+                      SizedBox(
+                        width: calculatedFieldWidth,
+                        child: _buildAutocompleteField(
+                          controller: _qthController,
+                          label: fieldLabel('qth', context.l10n.fieldQth),
+                          hintText: context.l10n.inputFieldHint(
+                            context.l10n.fieldQth,
+                          ),
+                          options: dictionaryProvider.qthDict,
+                          upperCase: false,
+                          isCompact: isNarrow,
+                          textInputAction: TextInputAction.next,
+                          draftField: 'qth',
+                          enabled: fieldEnabled('qth'),
                         ),
-                        options: dictionaryProvider.antennaDict,
-                        upperCase: false,
-                        isCompact: isNarrow,
-                        textInputAction: TextInputAction.next,
-                        draftField: 'antenna',
-                        enabled: fieldEnabled('antenna'),
                       ),
-                    ),
-                    SizedBox(
-                      width: calculatedFieldWidth,
-                      child: _buildAutocompleteField(
-                        controller: _powerController,
-                        label: fieldLabel('power', context.l10n.fieldPower),
-                        hintText: context.l10n.inputFieldHint(
-                          context.l10n.fieldPower,
+                      SizedBox(
+                        width: calculatedFieldWidth,
+                        child: _buildAutocompleteField(
+                          controller: _heightController,
+                          label: fieldLabel('height', context.l10n.fieldHeight),
+                          hintText: context.l10n.inputFieldHint(
+                            context.l10n.fieldHeight,
+                          ),
+                          options: _heightPresetOptions,
+                          upperCase: false,
+                          isCompact: isNarrow,
+                          textInputAction: TextInputAction.next,
+                          draftField: 'height',
+                          enabled: fieldEnabled('height'),
                         ),
-                        options: const <DictionaryItem>[],
-                        upperCase: false,
-                        isCompact: isNarrow,
-                        textInputAction: TextInputAction.next,
-                        draftField: 'power',
-                        enabled: fieldEnabled('power'),
                       ),
-                    ),
-                    SizedBox(
-                      width: calculatedFieldWidth,
-                      child: _buildAutocompleteField(
-                        controller: _qthController,
-                        label: fieldLabel('qth', context.l10n.fieldQth),
-                        hintText: context.l10n.inputFieldHint(
-                          context.l10n.fieldQth,
+                      SizedBox(
+                        width: calculatedFieldWidth,
+                        child: _buildMaterialTextField(
+                          key: const Key('log-time-field'),
+                          controller: _timeController,
+                          label: fieldLabel('time', context.l10n.fieldTime),
+                          hintText: 'HH:mm',
+                          upperCase: false,
+                          validator: (value) => isValidLogTimeInput(
+                            value ?? '',
+                            allowEmpty: true,
+                          )
+                              ? null
+                              : context.l10n.logTimeInvalid,
+                          isCompact: isNarrow,
+                          textInputAction: TextInputAction.next,
+                          focusNode: _draftFocusNodes['time'],
+                          enabled: fieldEnabled('time'),
                         ),
-                        options: dictionaryProvider.qthDict,
-                        upperCase: false,
-                        isCompact: isNarrow,
-                        textInputAction: TextInputAction.next,
-                        draftField: 'qth',
-                        enabled: fieldEnabled('qth'),
                       ),
-                    ),
-                    SizedBox(
-                      width: calculatedFieldWidth,
-                      child: _buildAutocompleteField(
-                        controller: _heightController,
-                        label: fieldLabel('height', context.l10n.fieldHeight),
-                        hintText: context.l10n.inputFieldHint(
-                          context.l10n.fieldHeight,
+                      SizedBox(
+                        width: calculatedFieldWidth,
+                        child: _buildMaterialTextField(
+                          controller: _reportController,
+                          label:
+                              fieldLabel('rstSent', context.l10n.fieldRstSent),
+                          hintText: '59',
+                          upperCase: false,
+                          isCompact: isNarrow,
+                          textInputAction: TextInputAction.next,
+                          focusNode: _draftFocusNodes['rstSent'],
+                          enabled: fieldEnabled('rstSent'),
                         ),
-                        options: _heightPresetOptions,
-                        upperCase: false,
-                        isCompact: isNarrow,
-                        textInputAction: TextInputAction.next,
-                        draftField: 'height',
-                        enabled: fieldEnabled('height'),
                       ),
-                    ),
-                    SizedBox(
-                      width: calculatedFieldWidth,
-                      child: _buildMaterialTextField(
-                        key: const Key('log-time-field'),
-                        controller: _timeController,
-                        label: fieldLabel('time', context.l10n.fieldTime),
-                        hintText: 'HH:mm',
-                        upperCase: false,
-                        validator: (value) => isValidLogTimeInput(
-                          value ?? '',
-                          allowEmpty: true,
-                        )
-                            ? null
-                            : context.l10n.logTimeInvalid,
-                        isCompact: isNarrow,
-                        textInputAction: TextInputAction.next,
-                        focusNode: _draftFocusNodes['time'],
-                        enabled: fieldEnabled('time'),
-                      ),
-                    ),
-                    SizedBox(
-                      width: calculatedFieldWidth,
-                      child: _buildMaterialTextField(
-                        controller: _reportController,
-                        label: fieldLabel('rstSent', context.l10n.fieldRstSent),
-                        hintText: '59',
-                        upperCase: false,
-                        isCompact: isNarrow,
-                        textInputAction: TextInputAction.next,
-                        focusNode: _draftFocusNodes['rstSent'],
-                        enabled: fieldEnabled('rstSent'),
-                      ),
-                    ),
-                    SizedBox(
-                      width: calculatedFieldWidth,
-                      child: _buildMaterialTextField(
-                        controller: _rstRcvdController,
-                        label: fieldLabel('rstRcvd', context.l10n.fieldRstRcvd),
-                        hintText: '59',
-                        upperCase: false,
-                        isCompact: isNarrow,
-                        textInputAction: TextInputAction.next,
-                        focusNode: _draftFocusNodes['rstRcvd'],
-                        enabled: fieldEnabled('rstRcvd'),
-                      ),
-                    ),
-                    SizedBox(
-                      width: primaryFieldWidth,
-                      child: _buildMaterialTextField(
-                        controller: _remarksController,
-                        label: fieldLabel('remarks', context.l10n.fieldRemarks),
-                        hintText: context.l10n.optionalFieldHint(
-                          context.l10n.fieldRemarks,
+                      SizedBox(
+                        width: calculatedFieldWidth,
+                        child: _buildMaterialTextField(
+                          controller: _rstRcvdController,
+                          label:
+                              fieldLabel('rstRcvd', context.l10n.fieldRstRcvd),
+                          hintText: '59',
+                          upperCase: false,
+                          isCompact: isNarrow,
+                          textInputAction: TextInputAction.next,
+                          focusNode: _draftFocusNodes['rstRcvd'],
+                          enabled: fieldEnabled('rstRcvd'),
                         ),
-                        upperCase: false,
-                        isCompact: isNarrow,
-                        textInputAction: TextInputAction.done,
-                        onSubmitted: (_) => _unfocusDraftFields(),
-                        focusNode: _draftFocusNodes['remarks'],
-                        enabled: fieldEnabled('remarks'),
                       ),
-                    ),
-                  ],
+                      SizedBox(
+                        width: primaryFieldWidth,
+                        child: _buildMaterialTextField(
+                          controller: _remarksController,
+                          label:
+                              fieldLabel('remarks', context.l10n.fieldRemarks),
+                          hintText: context.l10n.optionalFieldHint(
+                            context.l10n.fieldRemarks,
+                          ),
+                          upperCase: false,
+                          isCompact: isNarrow,
+                          textInputAction: TextInputAction.done,
+                          onSubmitted: (_) => _unfocusDraftFields(),
+                          focusNode: _draftFocusNodes['remarks'],
+                          enabled: fieldEnabled('remarks'),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
 
                 const SizedBox(height: 12),
 
                 if (aiSettings?.enabled == true &&
                     aiSettings?.activeAsrProfile != null) ...[
-                  AiRecognitionControl(
-                    captureSnapshot: _captureAiDraft,
-                    currentState: (generation) => _currentAiDraftState(
-                      generation,
-                      collaboration,
-                      readOnly,
+                  Focus(
+                    canRequestFocus: false,
+                    skipTraversal: true,
+                    descendantsAreTraversable: false,
+                    child: AiRecognitionControl(
+                      captureSnapshot: _captureAiDraft,
+                      currentState: (generation) => _currentAiDraftState(
+                        generation,
+                        collaboration,
+                        readOnly,
+                      ),
+                      applyFields: (values, expectedSnapshot) =>
+                          _applyAiCandidateFields(
+                        values,
+                        expectedSnapshot,
+                        collaboration,
+                      ),
+                      readOnly: readOnly,
+                      busy: _historyReuseInProgress ||
+                          _clearInProgress ||
+                          _submissionInProgress,
+                      audioRecorder: widget.aiAudioRecorder,
+                      executor: widget.aiRecognitionExecutor,
+                      transcriptionExecutor: widget.aiTranscriptionExecutor ??
+                          AiRecognitionRuntime.transcribe,
+                      fieldExtractionExecutor:
+                          widget.aiFieldExtractionExecutor ??
+                              AiRecognitionRuntime.extractFields,
+                      referenceContextBuilder:
+                          aiSettings?.useLocalReferenceContext == true
+                              ? (transcript) => AiDatabaseContextBuilder.build(
+                                    transcript: transcript,
+                                    devices: dictionaryProvider.deviceDict,
+                                    antennas: dictionaryProvider.antennaDict,
+                                    callsigns: dictionaryProvider.callsignDict,
+                                    qths: dictionaryProvider.qthDict,
+                                    recentLogs:
+                                        context.read<LogProvider>().logs,
+                                  )
+                              : null,
                     ),
-                    applyFields: (values, expectedSnapshot) =>
-                        _applyAiCandidateFields(
-                      values,
-                      expectedSnapshot,
-                      collaboration,
-                    ),
-                    readOnly: readOnly,
-                    busy: _historyReuseInProgress ||
-                        _clearInProgress ||
-                        _submissionInProgress,
-                    audioRecorder: widget.aiAudioRecorder,
-                    executor: widget.aiRecognitionExecutor,
-                    transcriptionExecutor: widget.aiTranscriptionExecutor ??
-                        AiRecognitionRuntime.transcribe,
-                    fieldExtractionExecutor: widget.aiFieldExtractionExecutor ??
-                        AiRecognitionRuntime.extractFields,
-                    referenceContextBuilder:
-                        aiSettings?.useLocalReferenceContext == true
-                            ? (transcript) => AiDatabaseContextBuilder.build(
-                                  transcript: transcript,
-                                  devices: dictionaryProvider.deviceDict,
-                                  antennas: dictionaryProvider.antennaDict,
-                                  callsigns: dictionaryProvider.callsignDict,
-                                  qths: dictionaryProvider.qthDict,
-                                  recentLogs: context.read<LogProvider>().logs,
-                                )
-                            : null,
                   ),
                   const SizedBox(height: 12),
                 ],
 
                 if (sharedDraft &&
                     collaboration.ownedLiveDraftLocks.isNotEmpty) ...[
-                  OutlinedButton.icon(
-                    key: const Key('finish-draft-editing'),
-                    onPressed: _historyReuseInProgress || _clearInProgress
-                        ? null
-                        : _unfocusDraftFields,
-                    icon: const Icon(Icons.keyboard_hide_outlined),
-                    label: Text(context.l10n.finishEditing),
+                  Focus(
+                    canRequestFocus: false,
+                    skipTraversal: true,
+                    descendantsAreTraversable: false,
+                    child: OutlinedButton.icon(
+                      key: const Key('finish-draft-editing'),
+                      onPressed: _historyReuseInProgress || _clearInProgress
+                          ? null
+                          : _unfocusDraftFields,
+                      icon: const Icon(Icons.keyboard_hide_outlined),
+                      label: Text(context.l10n.finishEditing),
+                    ),
                   ),
                   const SizedBox(height: 8),
                 ],
@@ -1888,21 +1949,26 @@ class _LogFormState extends State<LogForm> with AutomaticKeepAliveClientMixin {
                         message: context.l10n.clearEnteredFields,
                         child: SizedBox(
                           height: isNarrow ? 44 : 48,
-                          child: OutlinedButton.icon(
-                            key: const Key('clear-log-fields'),
-                            onPressed: canClear ? _clearEnteredFields : null,
-                            icon: _clearInProgress
-                                ? const SizedBox.square(
-                                    dimension: 18,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                    ),
-                                  )
-                                : const Icon(Icons.backspace_outlined),
-                            label: Text(
-                              context.l10n.clearEnteredFields,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+                          child: Focus(
+                            canRequestFocus: false,
+                            skipTraversal: true,
+                            descendantsAreTraversable: false,
+                            child: OutlinedButton.icon(
+                              key: const Key('clear-log-fields'),
+                              onPressed: canClear ? _clearEnteredFields : null,
+                              icon: _clearInProgress
+                                  ? const SizedBox.square(
+                                      dimension: 18,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                      ),
+                                    )
+                                  : const Icon(Icons.backspace_outlined),
+                              label: Text(
+                                context.l10n.clearEnteredFields,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
                           ),
                         ),
@@ -1914,41 +1980,46 @@ class _LogFormState extends State<LogForm> with AutomaticKeepAliveClientMixin {
                         message: 'Ctrl/⌘ + Enter',
                         child: SizedBox(
                           height: isNarrow ? 44 : 48,
-                          child: FilledButton.icon(
-                            key: const Key('save-log-record'),
-                            onPressed: canSubmit ? _submitForm : null,
-                            icon: _submissionInProgress
-                                ? const SizedBox.square(
-                                    dimension: 18,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
+                          child: Focus(
+                            canRequestFocus: false,
+                            skipTraversal: true,
+                            descendantsAreTraversable: false,
+                            child: FilledButton.icon(
+                              key: const Key('save-log-record'),
+                              onPressed: canSubmit ? _submitForm : null,
+                              icon: _submissionInProgress
+                                  ? const SizedBox.square(
+                                      dimension: 18,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                      ),
+                                    )
+                                  : Icon(
+                                      _historyReuseInProgress
+                                          ? Icons.auto_fix_high
+                                          : readOnly || firstForeignLock != null
+                                              ? Icons.lock_outline
+                                              : Icons.add,
                                     ),
-                                  )
-                                : Icon(
-                                    _historyReuseInProgress
-                                        ? Icons.auto_fix_high
-                                        : readOnly || firstForeignLock != null
-                                            ? Icons.lock_outline
-                                            : Icons.add,
-                                  ),
-                            label: Text(
-                              _submissionInProgress
-                                  ? context.l10n.savingRecord
-                                  : _historyReuseInProgress
-                                      ? context.l10n.reuseDatabaseInformation
-                                      : readOnly
-                                          ? context.l10n.sharedDraftReadOnly
-                                          : firstForeignLock != null
-                                              ? context.l10n.fieldLockedBy(
-                                                  firstForeignLock.username,
-                                                )
-                                              : context.l10n.saveRecord,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            style: ElevatedButton.styleFrom(
-                              padding: EdgeInsets.symmetric(
-                                vertical: isNarrow ? 10 : 14,
+                              label: Text(
+                                _submissionInProgress
+                                    ? context.l10n.savingRecord
+                                    : _historyReuseInProgress
+                                        ? context.l10n.reuseDatabaseInformation
+                                        : readOnly
+                                            ? context.l10n.sharedDraftReadOnly
+                                            : firstForeignLock != null
+                                                ? context.l10n.fieldLockedBy(
+                                                    firstForeignLock.username,
+                                                  )
+                                                : context.l10n.saveRecord,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                padding: EdgeInsets.symmetric(
+                                  vertical: isNarrow ? 10 : 14,
+                                ),
                               ),
                             ),
                           ),
@@ -2005,7 +2076,13 @@ class _LogFormState extends State<LogForm> with AutomaticKeepAliveClientMixin {
           upperCase ? TextCapitalization.characters : TextCapitalization.none,
       inputFormatters:
           upperCase ? const [ImeSafeUpperCaseTextFormatter()] : const [],
-      onTapOutside: (_) => focusNode?.unfocus(),
+      onTapOutside: (event) {
+        if (_autocompleteOptionKeys.values
+            .any((key) => isGlobalOffsetInside(event.position, key))) {
+          return;
+        }
+        _outsideTap.onTapOutside(event, focusNode);
+      },
     );
   }
 
@@ -2045,44 +2122,20 @@ class _LogFormState extends State<LogForm> with AutomaticKeepAliveClientMixin {
           draftField,
           textEditingValue.text,
         );
-        final query = textEditingValue.text.toLowerCase();
-        final scored = <_ScoredOption>[];
-        for (final option in options) {
-          if (!option.matches(textEditingValue.text)) continue;
-          var score = 0;
-          final raw = option.raw.toLowerCase();
-          final pinyin = option.pinyin.toLowerCase();
-          final abbr = option.abbreviation.toLowerCase();
-          if (abbr.startsWith(query)) {
-            score += 1000;
-          } else if (abbr.contains(query)) {
-            score += 500;
-          }
-          if (raw.startsWith(query)) {
-            score += 300;
-          } else if (raw.contains(query)) {
-            score += 100;
-          }
-          if (pinyin.startsWith(query)) {
-            score += 200;
-          } else if (pinyin.contains(query)) {
-            score += 50;
-          }
-          scored.add(_ScoredOption(option, score));
-        }
-        scored.sort((a, b) {
-          if (b.score != a.score) return b.score.compareTo(a.score);
-          return a.option.raw.compareTo(b.option.raw);
-        });
+        final ranked = rankDictionaryMatches(
+          query: textEditingValue.text,
+          options: options,
+          usageCount: (item) => _dictionaryUsage.countFor(item.type, item.raw),
+        );
         return <_FormSuggestion>[
           for (final value in formatValues) _FormSuggestion.format(value),
-          for (final scoredOption in scored.take(20))
-            if (!formatValues.contains(scoredOption.option.raw))
-              _FormSuggestion.local(scoredOption.option),
+          for (final option in ranked)
+            if (!formatValues.contains(option.raw))
+              _FormSuggestion.local(option),
           if (aiSuggestion != null &&
               aiSuggestion.isNotEmpty &&
               !formatValues.contains(aiSuggestion) &&
-              !scored.any((item) => item.option.raw == aiSuggestion))
+              !ranked.any((item) => item.raw == aiSuggestion))
             _FormSuggestion.ai(aiSuggestion),
         ];
       },
@@ -2090,6 +2143,9 @@ class _LogFormState extends State<LogForm> with AutomaticKeepAliveClientMixin {
       onSelected: (_FormSuggestion selection) {
         if (selection.isAi) {
           _acceptedInlineAiValues[draftField] = selection.value;
+        }
+        if (!selection.isAi && !selection.isFormat) {
+          _dictionaryUsage.recordSelection(draftField, selection.value);
         }
         controller.value = TextEditingValue(
           text: selection.value,
@@ -2132,7 +2188,15 @@ class _LogFormState extends State<LogForm> with AutomaticKeepAliveClientMixin {
             textInputAction: textInputAction ?? TextInputAction.next,
             textCapitalization: textCapitalization,
             inputFormatters: inputFormatters,
-            onTapOutside: (_) => fieldFocusNode.unfocus(),
+            onTapOutside: (event) {
+              if (isGlobalOffsetInside(
+                event.position,
+                _autocompleteOptionKeys[draftField]!,
+              )) {
+                return;
+              }
+              _outsideTap.onTapOutside(event, fieldFocusNode);
+            },
           ),
         );
       },
@@ -2147,6 +2211,7 @@ class _LogFormState extends State<LogForm> with AutomaticKeepAliveClientMixin {
         return Align(
           alignment: Alignment.topLeft,
           child: Material(
+            key: _autocompleteOptionKeys[draftField],
             elevation: 3,
             color: theme.colorScheme.surfaceContainer,
             clipBehavior: Clip.antiAlias,
@@ -2244,13 +2309,6 @@ class _LogFormState extends State<LogForm> with AutomaticKeepAliveClientMixin {
   }
 }
 
-class _ScoredOption {
-  final DictionaryItem option;
-  final int score;
-
-  _ScoredOption(this.option, this.score);
-}
-
 class _FormSuggestion {
   factory _FormSuggestion.local(DictionaryItem item) =>
       _FormSuggestion._(item, item.raw, _FormSuggestionKind.local);
@@ -2276,3 +2334,27 @@ class _FormSuggestion {
 enum _FormSuggestionKind { local, format, ai }
 
 enum _DuplicateAction { add, update, cancel }
+
+class _LoopingWidgetOrderTraversalPolicy extends WidgetOrderTraversalPolicy {
+  @override
+  bool next(FocusNode currentNode) => _cycle(currentNode, forward: true);
+
+  @override
+  bool previous(FocusNode currentNode) => _cycle(currentNode, forward: false);
+
+  bool _cycle(FocusNode currentNode, {required bool forward}) {
+    final scope = currentNode.nearestScope;
+    if (scope == null) return false;
+    final nodes = sortDescendants(scope.traversalDescendants, scope)
+        .where((node) => node.canRequestFocus && !node.skipTraversal)
+        .toList(growable: false);
+    if (nodes.isEmpty) return false;
+    final currentIndex = nodes.indexOf(currentNode);
+    final start = currentIndex < 0 ? 0 : currentIndex;
+    final nextIndex = forward
+        ? (start + 1) % nodes.length
+        : (start - 1 + nodes.length) % nodes.length;
+    nodes[nextIndex].requestFocus();
+    return true;
+  }
+}
