@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:openlogtool/l10n/l10n.dart';
+import 'package:openlogtool/models/account_share_dto.dart';
 import 'package:openlogtool/providers/app_info_provider.dart';
 import 'package:openlogtool/providers/ai_recognition_settings_provider.dart';
 import 'package:openlogtool/providers/account_share_provider.dart';
@@ -15,6 +16,7 @@ import 'package:openlogtool/screens/home_screen.dart';
 import 'package:openlogtool/src/bridge/models/session.dart';
 import 'package:openlogtool/widgets/log_form.dart';
 import 'package:openlogtool/widgets/log_table.dart';
+import 'package:openlogtool/widgets/session_sharing_dialog.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -70,6 +72,26 @@ void main() {
     expect(
         DefaultTabController.of(tester.element(find.byType(TabBar))).index, 1);
     expect(find.text('当前点名'), findsNothing);
+  });
+
+  testWidgets('sharing notice opens acceptance without going through Messages',
+      (tester) async {
+    final sessions = _EmptySessionProvider();
+    final sharing = _PendingShareProvider();
+    await tester
+        .pumpWidget(_HomeScreenTestApp(sessions: sessions, sharing: sharing));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('view-incoming-invitations')));
+    await tester.pumpAndSettle();
+    expect(find.byType(SessionSharingDialog), findsOneWidget);
+    expect(find.byType(TabBar), findsNothing);
+    final accept = find.byKey(const Key('accept-share-share-1'));
+    expect(accept.hitTestable(), findsOneWidget);
+    await tester.tap(accept);
+    await tester.pumpAndSettle();
+    expect(sharing.accepted, isTrue);
+    expect(sessions.currentSessionId, isNull);
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('first launch opens Sessions without a startup dialog',
@@ -341,6 +363,40 @@ class _IncomingSharingProvider extends AccountShareProvider {
   int get pendingInboundCount => incoming;
   @override
   Future<void> refresh() async {}
+}
+
+class _PendingShareProvider extends AccountShareProvider {
+  bool accepted = false;
+  @override
+  bool get supportsFriends => true;
+  @override
+  bool get supportsLegacySharing => true;
+  @override
+  bool get supportsBatchSharing => true;
+  @override
+  List<AccountShareGrantDto> get inbox => accepted
+      ? []
+      : [
+          const AccountShareGrantDto(
+              id: 'share-1',
+              grantorUserId: 'alice',
+              grantorUsername: 'Alice',
+              granteeUserId: 'me',
+              status: 'pending'),
+        ];
+  @override
+  Future<void> refresh() async {}
+  @override
+  Future<List<ShareSessionRef>> loadShareCandidates() async => [];
+  @override
+  Future<void> respondShare(String id, String action,
+      {required String? expectedScope}) async {
+    expect(id, 'share-1');
+    expect(action, 'accept');
+    accepted = true;
+    revision++;
+    notifyListeners();
+  }
 }
 
 class _EmptySessionProvider extends SessionProvider {

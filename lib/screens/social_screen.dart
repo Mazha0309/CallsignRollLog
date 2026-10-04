@@ -15,6 +15,7 @@ import 'package:openlogtool/widgets/session_join_policy_control.dart';
 import 'package:openlogtool/widgets/settings/settings_ui.dart';
 import 'package:openlogtool/widgets/session_sharing_dialog.dart';
 import 'package:openlogtool/widgets/share_invitations_panel.dart';
+import 'package:openlogtool/widgets/share_invitation_badge.dart';
 
 class SocialScreen extends StatefulWidget {
   const SocialScreen({super.key, this.onSessionOpened, this.initialTab = 0})
@@ -364,7 +365,8 @@ class _SocialScreenState extends State<SocialScreen> {
                             child: TextButton.icon(
                                 onPressed: () =>
                                     showSessionSharingDialog(context),
-                                icon: const Icon(Icons.share_outlined),
+                                icon: const ShareInvitationBadge(
+                                    child: Icon(Icons.share_outlined)),
                                 label: Text(l.shareSessionsTitle))),
                     ]),
                     _list('sessions', [

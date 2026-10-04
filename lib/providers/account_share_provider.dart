@@ -54,6 +54,8 @@ class AccountShareProvider with ChangeNotifier {
   List<AccountShareGrantDto> get inbox => _inbox;
   List<AccountShareGrantDto> get outgoing => _outgoing;
   Object? get inboxError => _inboxError;
+  int get pendingShareCount =>
+      inbox.where((grant) => grant.status == 'pending').length;
   Set<String> get pendingInboundKeys => {
         for (final grant in inbox)
           if (grant.status == 'pending') 'share:${grant.id}',
@@ -69,8 +71,8 @@ class AccountShareProvider with ChangeNotifier {
       ? [..._social.friendRequests, ..._social.sessionRequests]
               .where((r) => r.recipientId == accountId && r.status == 'pending')
               .length +
-          _inbox.length
-      : _inbox.length;
+          pendingShareCount
+      : pendingShareCount;
   Object? get lastError => _lastError;
 
   bool get isSupported =>

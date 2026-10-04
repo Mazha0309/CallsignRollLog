@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:openlogtool/utils/app_snack_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:openlogtool/widgets/session_sharing_dialog.dart';
+import 'package:openlogtool/widgets/share_invitation_badge.dart';
 import 'package:openlogtool/l10n/l10n.dart';
 import 'package:openlogtool/models/controller_display.dart';
 import 'package:openlogtool/providers/account_share_provider.dart';
@@ -409,13 +410,8 @@ class SessionHubPage extends StatelessWidget {
           OutlinedButton.icon(
             key: const Key('open-account-sharing'),
             onPressed: () => _openAccountSharing(context),
-            icon: Badge(
-              isLabelVisible:
-                  context.watch<AccountShareProvider>().inbox.isNotEmpty,
-              label: Text(
-                '${context.watch<AccountShareProvider>().inbox.length}',
-              ),
-              child: const Icon(Icons.share_outlined),
+            icon: const ShareInvitationBadge(
+              child: Icon(Icons.share_outlined),
             ),
             label:
                 Text(context.watch<AccountShareProvider>().supportsBatchSharing

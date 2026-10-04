@@ -142,6 +142,12 @@ class HistoryFixture extends SessionProvider {
 }
 
 class InboxSharingFixture extends SharingFixture {
+  bool accepted = false;
+  @override
+  List<SharedSessionDto> get sharedSessions => accepted ? [shared] : [];
+  @override
+  List<SessionListEntry> sharedHistoryEntries() =>
+      accepted ? super.sharedHistoryEntries() : [];
   List<AccountShareGrantDto> invitations = [
     const AccountShareGrantDto(
       id: 'incoming',
@@ -163,7 +169,22 @@ class InboxSharingFixture extends SharingFixture {
     expect(id, 'incoming');
     expect(expectedScope, scope);
     response = action;
+    accepted = action == 'accept';
     invitations = [];
+    revision++;
+    notifyListeners();
+  }
+
+  void receiveAgain() {
+    invitations = [
+      const AccountShareGrantDto(
+          id: 'incoming',
+          grantorUserId: 'alice',
+          grantorUsername: 'Alice',
+          granteeUserId: 'me',
+          status: 'pending')
+    ];
+    revision++;
     notifyListeners();
   }
 }
@@ -194,6 +215,86 @@ Future<SessionProvider> pump(
 }
 
 void main() {
+  for (final width in [320.0, 1000.0]) {
+    testWidgets(
+        'first shared invitation lights up Sharing and accepts in history at $width px',
+        (tester) async {
+      tester.view.physicalSize = Size(width, 850);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final sharing = InboxSharingFixture()..invitations = [];
+      final sessions = await pump(tester, sharing,
+          const SingleChildScrollView(child: SessionHistoryPanel()),
+          current: true);
+      final collection = find.byKey(const Key('session-collection-shared'));
+      expect(collection, findsOneWidget);
+      expect(find.byKey(const Key('shared-collection-invitation-badge')),
+          findsNothing);
+      sharing.receiveAgain();
+      await tester.pumpAndSettle();
+      final badge = tester.widget<Badge>(find.descendant(
+          of: find.byKey(const Key('shared-collection-invitation-badge')),
+          matching: find.byType(Badge)));
+      expect(badge.isLabelVisible, isTrue);
+      expect(badge.backgroundColor, Colors.red.shade700);
+      expect(find.descendant(of: collection, matching: find.text('1')),
+          findsOneWidget);
+      expect(
+          find.descendant(
+              of: find.byKey(const Key('history-share-sessions')),
+              matching: find.text('1')),
+          findsOneWidget);
+      await tester.tap(collection);
+      await tester.pumpAndSettle();
+      final accept = find.byKey(const Key('accept-share-incoming'));
+      expect(accept.hitTestable(), findsOneWidget);
+      expect(find.byType(SessionSharingDialog), findsNothing);
+      expect(find.text('Alice 向你发来了共享邀请'), findsOneWidget);
+      await tester.tap(accept);
+      await tester.pumpAndSettle();
+      expect(sharing.response, 'accept');
+      expect(sessions.currentSessionId, 'p1');
+      expect(find.text('好友的记录'), findsOneWidget);
+      expect(find.byKey(const Key('shared-collection-invitation-badge')),
+          findsNothing);
+      expect(
+          tester
+              .widget<Badge>(find.descendant(
+                  of: find.byKey(const Key('history-sharing-invitation-badge')),
+                  matching: find.byType(Badge)))
+              .isLabelVisible,
+          isFalse);
+      sharing.receiveAgain();
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('shared-collection-invitation-badge')),
+          findsOneWidget);
+      await tester.tap(find.byKey(const Key('reject-share-incoming')));
+      await tester.pumpAndSettle();
+      expect(sharing.response, 'reject');
+      expect(find.byKey(const Key('shared-collection-invitation-badge')),
+          findsNothing);
+      expect(tester.takeException(), isNull);
+    });
+  }
+
+  testWidgets('the Sharing action itself has a red count and opens acceptance',
+      (tester) async {
+    final sharing = InboxSharingFixture();
+    await pump(tester, sharing,
+        const SingleChildScrollView(child: SessionHistoryPanel()));
+    final button = find.byKey(const Key('history-share-sessions'));
+    expect(
+        find.descendant(of: button, matching: find.text('1')), findsOneWidget);
+    await tester.tap(button);
+    await tester.pumpAndSettle();
+    final accept = find.byKey(const Key('accept-share-incoming'));
+    expect(accept.hitTestable(), findsOneWidget);
+    await tester.tap(accept);
+    await tester.pumpAndSettle();
+    expect(sharing.response, 'accept');
+  });
+
   testWidgets(
       'Sharing opens with actionable received invitations even when its catalog fails',
       (tester) async {

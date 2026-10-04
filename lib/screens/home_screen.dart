@@ -23,6 +23,7 @@ import 'package:openlogtool/widgets/primary_navigation_rail.dart';
 import 'package:openlogtool/utils/app_snack_bar.dart';
 import 'package:openlogtool/widgets/invitation_notice.dart';
 import 'package:openlogtool/widgets/share_invitations_panel.dart';
+import 'package:openlogtool/widgets/session_sharing_dialog.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -205,7 +206,10 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _openInvitations() {
-    if (context.read<AccountShareProvider>().supportsFriends) {
+    final sharing = context.read<AccountShareProvider>();
+    if (sharing.pendingShareCount > 0 && sharing.supportsBatchSharing) {
+      showSessionSharingDialog(context);
+    } else if (sharing.supportsFriends && sharing.pendingShareCount == 0) {
       Navigator.push<void>(
           context,
           MaterialPageRoute(

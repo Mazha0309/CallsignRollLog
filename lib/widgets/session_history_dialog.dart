@@ -10,6 +10,8 @@ import 'package:openlogtool/src/bridge/rust_api.dart';
 import 'package:openlogtool/src/bridge/models/session.dart';
 import 'package:provider/provider.dart';
 import 'package:openlogtool/widgets/session_sharing_dialog.dart';
+import 'package:openlogtool/widgets/share_invitation_badge.dart';
+import 'package:openlogtool/widgets/share_invitations_panel.dart';
 import 'package:openlogtool/widgets/shared_session_records_dialog.dart';
 
 typedef SessionHistoryLoader = Future<List<Session>> Function();
@@ -480,6 +482,7 @@ class _SessionHistoryPanelState extends State<SessionHistoryPanel> {
   @override
   Widget build(BuildContext context) {
     final currentSessionId = context.watch<SessionProvider>().currentSessionId;
+    final sharing = context.watch<AccountShareProvider>();
     return LayoutBuilder(
       builder: (context, constraints) {
         final compact = constraints.maxWidth < 720;
@@ -502,6 +505,8 @@ class _SessionHistoryPanelState extends State<SessionHistoryPanel> {
                     _SessionCollection.collaboration:
                         context.l10n.hubTogetherRecords,
                   if (_collection == _SessionCollection.shared ||
+                      sharing.supportsLegacySharing ||
+                      sharing.pendingShareCount > 0 ||
                       entries.any((entry) => entry.isShared))
                     _SessionCollection.shared: context.l10n.sharedSessionBadge,
                   _SessionCollection.closed: context.l10n.hubEndedRecords,
@@ -513,18 +518,35 @@ class _SessionHistoryPanelState extends State<SessionHistoryPanel> {
                     for (final collection in collections.entries)
                       ChoiceChip(
                         key: Key('session-collection-${collection.key.name}'),
-                        label: Text(collection.value),
+                        label: Row(mainAxisSize: MainAxisSize.min, children: [
+                          Text(collection.value),
+                          if (collection.key == _SessionCollection.shared &&
+                              sharing.pendingShareCount > 0) ...[
+                            const SizedBox(width: 6),
+                            const ShareInvitationBadge(
+                                key: Key('shared-collection-invitation-badge')),
+                          ],
+                        ]),
                         selected: _collection == collection.key,
-                        onSelected: (_) => setState(() {
-                          _collection = collection.key;
-                          _page = 0;
-                        }),
+                        onSelected: (_) {
+                          setState(() {
+                            _collection = collection.key;
+                            _page = 0;
+                          });
+                          if (collection.key == _SessionCollection.shared) {
+                            unawaited(sharing.refresh());
+                          }
+                        },
                       ),
                   ],
                 );
               },
             ),
             const SizedBox(height: 12),
+            if (_collection == _SessionCollection.shared) ...[
+              const ShareInvitationsPanel(),
+              const SizedBox(height: 12),
+            ],
             Wrap(
               spacing: 10,
               runSpacing: 10,
@@ -560,11 +582,13 @@ class _SessionHistoryPanelState extends State<SessionHistoryPanel> {
                     }),
                   ),
                 ),
-                if (context.watch<AccountShareProvider>().supportsBatchSharing)
+                if (sharing.supportsBatchSharing)
                   OutlinedButton.icon(
                       key: const Key('history-share-sessions'),
                       onPressed: () => showSessionSharingDialog(context),
-                      icon: const Icon(Icons.share_outlined),
+                      icon: const ShareInvitationBadge(
+                          key: Key('history-sharing-invitation-badge'),
+                          child: Icon(Icons.share_outlined)),
                       label: Text(context.l10n.shareSessionsTitle)),
               ],
             ),
