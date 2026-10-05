@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:logging/logging.dart' as logging;
+import 'package:openlogtool/services/crash_report_guidance.dart';
 import 'package:openlogtool/services/key_value_store.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
@@ -182,6 +183,23 @@ class AppLogger extends ChangeNotifier {
         'The previous process did not record a clean shutdown. Review the '
         'preceding entries and the platform crash report if one is available.',
       );
+      try {
+        final locations = await describeCrashReportLocations();
+        if (locations.isNotEmpty) {
+          log(
+            AppLogLevel.info,
+            'Crash artifacts to inspect for the previous run:',
+            source: 'CrashReports',
+          );
+          for (final location in locations) {
+            log(AppLogLevel.info, location, source: 'CrashReports');
+          }
+        }
+      } catch (error) {
+        debugPrintSynchronously(
+          'AppLogger could not locate crash reports: $error',
+        );
+      }
     }
   }
 
