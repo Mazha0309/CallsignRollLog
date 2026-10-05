@@ -36,6 +36,31 @@ void main() {
     expect(entry.searchableText, contains('synchronization failed'));
   });
 
+  test('warns and locates crash reports after an unclean shutdown', () async {
+    final dir = await Directory.systemTemp.createTemp('olt-log-crash-test');
+    addTearDown(() => dir.delete(recursive: true));
+    // A run marker that was never cleared mimics a process that died.
+    await File('${dir.path}/.run-active').writeAsString('2026-01-01T00:00:00Z');
+
+    await AppLogger.instance.init(logDirOverride: dir, trackRunState: true);
+
+    final entries = AppLogger.instance.snapshotEntries();
+    expect(
+      entries.any((entry) => entry.message.contains('clean shutdown')),
+      isTrue,
+    );
+    // Linux always contributes a core-dump hint, so the locator reports at
+    // least one line there; other platforms may legitimately find nothing.
+    if (Platform.operatingSystem == 'linux') {
+      expect(
+        entries.any((entry) => entry.source == 'CrashReports'),
+        isTrue,
+      );
+    }
+    // Drain queued writes before tearDown deletes the temporary directory.
+    await AppLogger.instance.flushForTest();
+  });
+
   test('rotates ring buffer at capacity', () {
     for (var i = 0; i < AppLogger.ringCapacity + 100; i++) {
       AppLogger.instance.info('msg$i');

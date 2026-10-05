@@ -125,13 +125,41 @@ WebClient 可以安装到 OpenLogToolServer 的 `/client/`，首次使用自动�
 - Linux 构建需要 `libsecret-1-dev`，运行需要 `libsecret-1-0` 和可用的 Secret Service/keyring
 - Windows 构建需要 Visual Studio C++ ATL 组件
 
-### Windows 崩溃诊断
+### 崩溃诊断
 
-Windows 原生崩溃会先在兼容目录
-`%LOCALAPPDATA%\OpenLogTool\CrashDumps` 写入 minidump，再交给 Windows
-错误报告处理。Windows 10 默认启用无障碍语义树兼容保护，以规避 Flutter
-在响应式布局重组语义节点时的原生崩溃。确实需要屏幕阅读器的用户可在启动前设置
-`OPENLOGTOOL_ENABLE_WINDOWS_ACCESSIBILITY=1`，重新启用完整 Windows 语义树。
+Dart 层日志（`lib/services/app_logger.dart`）在应用支持目录写 `app.log`，并预留
+`.run-active` 标记：进程非正常退出时，下次启动会记录一条警告，并列出上一次运行
+可能留下的崩溃文件位置（`lib/services/crash_report_guidance.dart`）。Windows 上
+每次启动还会记录一条 `[Accessibility]` 行，说明无障碍兼容保护是否生效，便于事后
+把崩溃与防护状态对应起来。原生崩溃不经过 Dart，不会直接出现在 `app.log`，由各
+平台的捕获机制落盘：
+
+| 平台 | 捕获方式 | 产物位置 |
+|---|---|---|
+| Windows | `windows/runner/crash_handler.cpp`（未处理异常过滤器 + `MiniDumpWriteDump`） | `%LOCALAPPDATA%\OpenLogTool\CrashDumps\*.dmp` |
+| Linux | `linux/runner/crash_handler.cc`（SIGSEGV/SIGBUS/SIGILL/SIGFPE/SIGABRT） | `$XDG_DATA_HOME/openlogtool/crashes/*.txt`（回退 `~/.local/share`） |
+| macOS | 系统崩溃报告（应用未自带处理器） | `~/Library/Logs/DiagnosticReports/*.ips` |
+
+Linux 的文本报告包含信号、可执行路径、回溯（`module(+offset)`）与
+`/proc/self/maps`。Windows 的 minidump 需要匹配构建的 `.pdb` 才能读取。macOS 的
+`.ips` 由系统生成、带符号化回溯；应用只负责在启动时把它的位置报出来。系统级
+core dump（`coredumpctl`、`/var/crash`）由操作系统管理。
+
+#### Windows 无障碍崩溃
+
+Flutter 的 Windows 无障碍桥在处理「节点重新挂载」的语义更新时会解引用空的父
+节点：`AccessibilityBridge::CreateRemoveReparentedNodesUpdate()` 对
+`child->parent()` 的判空只靠 `assert`，该断言在 release 构建中被裁掉，于是变成
+`flutter_windows.dll` 的 `0xc0000005` 原生崩溃（Windows 事件日志 1000）。此缺陷
+影响所有 Windows 版本（含 Windows 11），上游仍未修复（flutter/flutter#175041、
+#186886、#190357）。在修复版引擎发布前，桌面端默认启用无障碍语义树兼容保护，
+把语义树折叠为单个无子节点，避免触发重挂载路径。确实需要屏幕阅读器的用户可在
+启动前设置 `OPENLOGTOOL_ENABLE_WINDOWS_ACCESSIBILITY=1`，重新启用完整 Windows
+语义树。
+
+验收方式：装上带该保护的构建后，在曾崩溃的机器上正常使用，确认
+`%LOCALAPPDATA%\OpenLogTool\CrashDumps` 不再新增 `flutter_windows.dll+0x3A9FA`、
+读 `0x48` 的 minidump；同时 `app.log` 里应有 `[Accessibility]` 的 ACTIVE 记录。
 
 正式 Windows 便携包会在应用目录内携带 Visual C++ CRT 与 Universal CRT，
 不要求系统预先安装 VC++ Redistributable。便携包必须完整解压后运行，不能只复制

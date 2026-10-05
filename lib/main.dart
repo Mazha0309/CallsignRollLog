@@ -61,6 +61,16 @@ Future<void> _bootstrap(List<String> args) async {
       ControllerWindowService.isControllerChildArguments(args);
   await AppLogger.instance.init(trackRunState: !isControllerChild);
   AppLogger.instance.installDebugPrintCapture();
+  // Record whether the Windows accessibility mitigation is active so a later
+  // native crash can be correlated with the guard state.
+  final accessibilityStatus = windowsAccessibilityGuardStatus();
+  if (accessibilityStatus != null) {
+    AppLogger.instance.log(
+      AppLogLevel.info,
+      accessibilityStatus,
+      source: 'Accessibility',
+    );
+  }
   FlutterError.onError = (details) {
     AppLogger.instance.log(
       AppLogLevel.error,

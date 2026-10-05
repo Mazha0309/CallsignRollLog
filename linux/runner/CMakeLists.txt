@@ -7,10 +7,15 @@ project(runner LANGUAGES CXX)
 #
 # Any new source files that you add to the application should be added here.
 add_executable(${BINARY_NAME}
+  "crash_handler.cc"
   "main.cc"
   "my_application.cc"
   "${FLUTTER_MANAGED_DIR}/generated_plugin_registrant.cc"
 )
+
+# Export the runner's symbols so crash reports resolve frame names through
+# backtrace_symbols_fd; engine frames still resolve to module(+offset).
+target_link_options(${BINARY_NAME} PRIVATE "-rdynamic")
 
 # Apply the standard set of build settings. This can be removed for applications
 # that need different build settings.
