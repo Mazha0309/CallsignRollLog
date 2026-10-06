@@ -628,7 +628,7 @@ bash tool/build_web.sh
       // 版本号已在标题区显示，表格里只留能区分文件名的部分；完整名放 title。
       var tagBare=String(tag).replace(/^v/,'');
       function shortName(name){
-        var s=name.replace(/^OpenLogTool-/,'');
+        var s=name.replace(/^(?:CallsignRoll|OpenLogTool)-/,'');
         s=s.split(tagBare).join('').replace(/[0-9a-f]{7}\.\d+-?/g,'');
         s=s.replace(/-{2,}/g,'-').replace(/-\./g,'.').replace(/\.-/g,'.').replace(/^-+|-+$/g,'');
         return s || name;
