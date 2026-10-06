@@ -1,8 +1,8 @@
 # 官网（`site/`）
 
-`CRL · Callsign Roll Log · 呼号点名日志` 的产品主页。**纯静态、零构建、零依赖**（只有 `index.html` 与几个图片资源：`icon.png`、`wechat-zjra.svg` 公众号二维码），因此 GitHub Pages / Cloudflare Pages / Vercel 都能直接托管。
+`CRL · Callsign Roll Log · 呼号点名日志` 的产品主页。**纯静态、零构建**：`index.html`、图片资源（`icon.png`、`wechat-zjra.svg`）与自托管的 `fonts/`。GitHub Pages / Cloudflare Pages / Vercel 都能直接托管。
 
-计划绑定域名：`crl.mazha0309.com`（主域子域，不额外购买）。
+线上地址：<https://crl.mazha0309.com/>（主域子域，不额外购买）。旧地址 `mazha0309.github.io/CallsignRollLog/` 会 301 跳到这里。
 
 ## 本地预览
 
@@ -18,7 +18,7 @@ npx serve site
 
 ### GitHub Pages（Actions，发布 `site/` 的公开文件）
 
-`main` 上改动 `site/` 或 `.github/workflows/pages.yml` 时，`.github/workflows/pages.yml` 把 `index.html`、`icon.png`、`wechat-zjra.svg` 发布到 GitHub Pages。分支部署只接受仓库根目录或 `/docs`，不能直接选 `/site`。
+`main` 上改动 `site/` 或 `.github/workflows/pages.yml` 时，`.github/workflows/pages.yml` 把 `index.html`、`icon.png`、`wechat-zjra.svg`、`fonts/` 发布到 GitHub Pages。分支部署只接受仓库根目录或 `/docs`，不能直接选 `/site`，所以走 Actions。自定义域 `crl.mazha0309.com` 已绑定并强制 HTTPS，证书由 GitHub 自动续期。
 
 ### Cloudflare Pages
 
@@ -32,13 +32,18 @@ npx serve site
 - Root directory：`site`
 - Build command：留空，Output directory：`.`
 
-## 绑定 `crl.mazha0309.com`
+## 域名
 
-平台后台添加自定义域名后，按提示在 DNS 添加记录：
+已绑定 `crl.mazha0309.com`，方式如下：
+
+- DNS（Cloudflare 的 `mazha0309.com` 区）：`CNAME crl → mazha0309.github.io`，**代理关闭（灰色云朵）**。开着橙色代理时 GitHub 无法签发 Let's Encrypt 证书。子域用 CNAME 即可，不要加 A / AAAA，那是根域才需要的。
+- GitHub 仓库 Settings → Pages → Custom domain 填 `crl.mazha0309.com`，保存后等证书签发（最长 24 小时），再勾选 Enforce HTTPS。
+- 由于是 Actions 发布，**不需要** `CNAME` 文件；即使放了也会被忽略。
+
+改到别的平台时对应记录：
 
 - Cloudflare Pages：项目里加 `crl` 子域（主域已在 Cloudflare 时自动建记录）。
 - Vercel：`CNAME crl → cname.vercel-dns.com`
-- GitHub Pages：`CNAME crl → <用户名>.github.io`，并在 `site/` 放一个内容为 `crl.mazha0309.com` 的 `CNAME` 文件。
 
 ## 维护约定
 
