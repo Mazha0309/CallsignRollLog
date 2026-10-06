@@ -258,9 +258,9 @@ class ExportService {
   }) {
     final created = (createdAt ?? DateTime.now()).toUtc();
     final buffer = StringBuffer()
-      ..writeln('ADIF export from OpenLogTool')
+      ..writeln('ADIF export from Callsign Roll Log')
       ..write(_adifField('ADIF_VER', '3.1.4'))
-      ..write(_adifField('PROGRAMID', 'OpenLogTool'))
+      ..write(_adifField('PROGRAMID', 'Callsign Roll Log'))
       ..write(_adifField('PROGRAMVERSION', appVersion))
       ..write(_adifField(
         'CREATED_TIMESTAMP',
@@ -568,7 +568,7 @@ class ExportService {
       );
 
       final footerTexts = [
-        '此表格由 OpenLogTool 生成导出，本项目使用开源协议: GNU Affero General Public License V3',
+        '此表格由 Callsign Roll Log 生成导出，本项目使用开源协议: GNU Affero General Public License V3',
         '项目仓库地址: https://github.com/Mazha0309/OpenLogTool',
         '分享点名记录时无须携带本条说明',
       ];
@@ -667,7 +667,7 @@ class ImportResult {
 }
 
 /// 从 JSON 字符串解析导入数据。
-/// 支持两种格式：OpenLogTool 原生 JSON（数组）和 HamTool 导出格式（含 `currentRecords` 的 Map）。
+/// 支持两种格式：Callsign Roll Log 原生 JSON（数组）和 HamTool 导出格式（含 `currentRecords` 的 Map）。
 ImportResult parseJsonImport(String jsonString) {
   final jsonData = json.decode(jsonString);
   final List<LogEntry> importedLogs;
@@ -713,7 +713,7 @@ ImportResult parseJsonImport(String jsonString) {
       );
     }).toList();
   } else if (jsonData is List) {
-    // OpenLogTool JSON format
+    // Callsign Roll Log JSON format
     importedLogs = jsonData.map((item) {
       String callsign = '';
       String qth = '';

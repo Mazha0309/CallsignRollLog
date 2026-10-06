@@ -176,7 +176,7 @@ void main() {
       );
 
       expect(adif, contains('<ADIF_VER:5>3.1.4'));
-      expect(adif, contains('<PROGRAMID:11>OpenLogTool'));
+      expect(adif, contains('<PROGRAMID:17>Callsign Roll Log'));
       expect(adif, contains('<CALL:6>BG5CRL'));
       expect(adif, contains('<STATION_CALLSIGN:6>BG5CRL'));
       expect(adif, contains('<OPERATOR:6>BG5CRL'));
