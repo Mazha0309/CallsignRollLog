@@ -233,6 +233,9 @@ dl.feat{margin:0;border-top:1px solid var(--rule)}
 dl.feat div{display:grid;grid-template-columns:160px 1fr;gap:24px;padding:22px 0;border-bottom:1px solid var(--rule)}
 dl.feat dt{font-weight:600;font-size:14.5px}
 dl.feat dd{margin:0;font-size:14.5px;line-height:1.8;color:var(--ink-2)}
+.wx{display:flex;align-items:center;gap:22px;flex-wrap:wrap}
+.wxqr{width:124px;height:124px;flex:none;background:#fff;border:1px solid var(--rule);border-radius:10px;padding:6px}
+.wxcap{color:var(--ink-3);font-size:12.5px;line-height:1.65}
 
 table.roles{white-space:normal}
 table.roles th,table.roles td{text-align:left;padding:15px 16px;font-size:14px}
@@ -572,7 +575,10 @@ bash tool/build_web.sh
         <div><dt>客户端</dt><dd><a href="https://github.com/Mazha0309/CallsignRollLog" target="_blank" rel="noopener">Mazha0309/CallsignRollLog</a> · Flutter ＋ Rust，覆盖 Linux / Windows / macOS / Android / Web。</dd></div>
         <div><dt>服务端</dt><dd><a href="https://github.com/Mazha0309/CallsignRollLogServer" target="_blank" rel="noopener">Mazha0309/CallsignRollLogServer</a> · 自建即可启用个人云同步与多人协作。</dd></div>
         <div><dt>协议</dt><dd>GNU Affero General Public License v3.0：可自由使用、修改与分发；若改造后通过网络对外提供服务，同样需要公开修改后的源码。仓库内附完整 <a href="https://github.com/Mazha0309/CallsignRollLog/blob/main/LICENSE" target="_blank" rel="noopener">LICENSE</a>。</dd></div>
-        <div><dt>特别鸣谢</dt><dd><a href="https://mp.weixin.qq.com/mp/profile_ext?action=home&amp;__biz=MzI5NTM3MjE0NA==&amp;scene=124#wechat_redirect" target="_blank" rel="noopener">浙江省业余无线电协会</a>（微信公众号）</dd></div>
+        <div><dt>特别鸣谢</dt><dd class="wx">
+          <span><a href="https://mp.weixin.qq.com/mp/profile_ext?action=home&amp;__biz=MzI5NTM3MjE0NA==&amp;scene=124#wechat_redirect" target="_blank" rel="noopener">浙江省业余无线电协会</a>（微信公众号）<br><span class="wxcap">公众号链接需在微信内打开：在微信里点名称，或用手机微信扫码。</span></span>
+          <img class="wxqr" src="wechat-zjra.svg" alt="浙江省业余无线电协会微信公众号二维码" width="124" height="124" loading="lazy">
+        </dd></div>
       </dl>
     </div>
   </section>
@@ -658,6 +664,9 @@ bash tool/build_web.sh
       if(note)note.textContent='共 '+assets.length+' 个产物，数据来自 GitHub Releases API，随最新发布自动更新。';
     })
     .catch(function(){});
+  if(/MicroMessenger/i.test(navigator.userAgent)){
+    document.querySelectorAll('.wxqr,.wxcap').forEach(function(el){el.style.display='none';});
+  }
 })();
 </script>
 </body>
