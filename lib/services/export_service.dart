@@ -221,6 +221,8 @@ class ExportService {
   static Map<String, String> generateAdifByController(
     List<LogEntry> logs, {
     DateTime? createdAt,
+    String mode = _defaultAdifMode,
+    String band = _defaultAdifBand,
   }) {
     final grouped = <String, List<LogEntry>>{};
     for (final log in logs) {
@@ -234,9 +236,35 @@ class ExportService {
           entry.value,
           createdAt: createdAt,
           stationCallsign: entry.key,
+          mode: mode,
+          band: band,
         ),
     };
   }
+
+  /// 本机记录不含模式与频段字段，导出 ADIF 时由使用者选择。
+  static const String _defaultAdifMode = 'FM';
+  static const String _defaultAdifBand = '2M';
+
+  /// 可选择的是 ADIF 规范里的 MODE / BAND 取值。
+  static const List<String> adifModes = <String>[
+    'FM',
+    'USB',
+    'LSB',
+    'AM',
+    'CW',
+    'RTTY',
+    'FT8',
+    'FT4',
+  ];
+  static const List<String> adifBands = <String>[
+    '2M',
+    '70CM',
+    '6M',
+    '10M',
+    '23CM',
+    '1.25M',
+  ];
 
   static Uint8List generateAdifArchiveBytes(
     Map<String, String> files, {
@@ -255,6 +283,8 @@ class ExportService {
     List<LogEntry> logs, {
     DateTime? createdAt,
     String? stationCallsign,
+    String mode = _defaultAdifMode,
+    String band = _defaultAdifBand,
   }) {
     final created = (createdAt ?? DateTime.now()).toUtc();
     final buffer = StringBuffer()
@@ -279,8 +309,8 @@ class ExportService {
         buffer.write(_adifField('QSO_DATE', _adifDate(qsoTime)));
         buffer.write(_adifField('TIME_ON', _adifTime(qsoTime)));
       }
-      buffer.write(_adifField('MODE', 'FM'));
-      buffer.write(_adifField('BAND', '2M'));
+      buffer.write(_adifField('MODE', mode));
+      buffer.write(_adifField('BAND', band));
       buffer.write(_adifField('RST_SENT', log.report.trim()));
       buffer.write(_adifField('RST_RCVD', log.rstRcvd.trim()));
       final qth = log.qth.trim();
@@ -297,9 +327,17 @@ class ExportService {
     return buffer.toString();
   }
 
+  /// 写出一个 ADIF 字段。
+  ///
+  /// 长度按 **UTF-8 字节数** 声明，而不是字符数：文件本身就是 UTF-8 写出的，
+  /// 按字节切片的导入器（大多数实现）才能取到完整字段。纯 ASCII 时两者相同；
+  /// 中文 QTH / 设备名这类非 ASCII 值只有按字节声明才自洽。
+  ///
+  /// 注：ADI 规范把 String 定义为 ASCII，非 ASCII 值严格来说应用 ADX；这里选择
+  /// 保住数据并保证自身一致，而不是静默丢弃中文。
   static String _adifField(String name, String value) {
     if (value.isEmpty) return '';
-    return '<$name:${value.length}>$value';
+    return '<$name:${utf8.encode(value).length}>$value';
   }
 
   static DateTime? _adifQsoDateTime(String raw, {String? fallback}) {

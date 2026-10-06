@@ -2924,6 +2924,18 @@ class AppLocalizationsZh extends AppLocalizations {
       'ADIF：按主控呼号各生成一份 .adi，可直接导入 LoTW / QRZ；多个主控时打包为 zip。';
 
   @override
+  String get adifExportOptionsTitle => '导出 ADIF';
+
+  @override
+  String get adifExportOptionsHint => '本机记录不含模式与频段，请选择本次导出的取值。';
+
+  @override
+  String get adifModeLabel => '模式';
+
+  @override
+  String get adifBandLabel => '频段';
+
+  @override
   String get excelExportSettingsTitle => '编辑 Excel 导出设置';
 
   @override

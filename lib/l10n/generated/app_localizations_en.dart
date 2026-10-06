@@ -3103,6 +3103,19 @@ class AppLocalizationsEn extends AppLocalizations {
       'ADIF: One .adi file per controller callsign for LoTW/QRZ import. Multiple controllers are packed into a zip.';
 
   @override
+  String get adifExportOptionsTitle => 'Export ADIF';
+
+  @override
+  String get adifExportOptionsHint =>
+      'Local records do not store mode or band. Choose the values for this export.';
+
+  @override
+  String get adifModeLabel => 'Mode';
+
+  @override
+  String get adifBandLabel => 'Band';
+
+  @override
   String get excelExportSettingsTitle => 'Edit Excel export settings';
 
   @override

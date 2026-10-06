@@ -1148,6 +1148,10 @@ class _ExportPanelState extends State<ExportPanel> {
     }
   }
 
+  // 本机记录不含模式/频段；记住上次的选择作为默认值。
+  static String _lastAdifMode = ExportService.adifModes.first;
+  static String _lastAdifBand = ExportService.adifBands.first;
+
   Future<void> _exportAdif(BuildContext context) async {
     final l10n = context.l10n;
     final logProvider = Provider.of<LogProvider>(context, listen: false);
@@ -1161,12 +1165,27 @@ class _ExportPanelState extends State<ExportPanel> {
       return;
     }
 
+    final choice = await showDialog<({String mode, String band})>(
+      context: context,
+      builder: (_) => _AdifExportOptionsDialog(
+        initialMode: _lastAdifMode,
+        initialBand: _lastAdifBand,
+      ),
+    );
+    if (choice == null || !context.mounted) return;
+    _lastAdifMode = choice.mode;
+    _lastAdifBand = choice.band;
+
     try {
       final now = DateTime.now();
       final sessionProvider =
           Provider.of<SessionProvider>(context, listen: false);
-      final files =
-          ExportService.generateAdifByController(logs, createdAt: now);
+      final files = ExportService.generateAdifByController(
+        logs,
+        createdAt: now,
+        mode: choice.mode,
+        band: choice.band,
+      );
       if (files.isEmpty) {
         _showSnackBar(l10n.noDataToExport);
         return;
@@ -1515,6 +1534,77 @@ class _ExportPanelState extends State<ExportPanel> {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// 导出 ADIF 前的模式 / 频段选择。
+///
+/// 本机记录不保存这两项，所以每次导出由使用者指定；默认沿用上次的选择。
+class _AdifExportOptionsDialog extends StatefulWidget {
+  const _AdifExportOptionsDialog({
+    required this.initialMode,
+    required this.initialBand,
+  });
+
+  final String initialMode;
+  final String initialBand;
+
+  @override
+  State<_AdifExportOptionsDialog> createState() =>
+      _AdifExportOptionsDialogState();
+}
+
+class _AdifExportOptionsDialogState extends State<_AdifExportOptionsDialog> {
+  late String _mode = widget.initialMode;
+  late String _band = widget.initialBand;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return AlertDialog(
+      key: const Key('adif-export-options'),
+      title: Text(l10n.adifExportOptionsTitle),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(l10n.adifExportOptionsHint),
+          const SizedBox(height: AppSpace.md),
+          DropdownButtonFormField<String>(
+            key: const Key('adif-export-mode'),
+            initialValue: _mode,
+            decoration: InputDecoration(labelText: l10n.adifModeLabel),
+            items: [
+              for (final mode in ExportService.adifModes)
+                DropdownMenuItem(value: mode, child: Text(mode)),
+            ],
+            onChanged: (value) => setState(() => _mode = value ?? _mode),
+          ),
+          const SizedBox(height: AppSpace.sm),
+          DropdownButtonFormField<String>(
+            key: const Key('adif-export-band'),
+            initialValue: _band,
+            decoration: InputDecoration(labelText: l10n.adifBandLabel),
+            items: [
+              for (final band in ExportService.adifBands)
+                DropdownMenuItem(value: band, child: Text(band)),
+            ],
+            onChanged: (value) => setState(() => _band = value ?? _band),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(l10n.cancel),
+        ),
+        FilledButton(
+          key: const Key('adif-export-confirm'),
+          onPressed: () => Navigator.pop(context, (mode: _mode, band: _band)),
+          child: Text(l10n.confirm),
+        ),
+      ],
     );
   }
 }

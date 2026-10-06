@@ -5350,6 +5350,30 @@ abstract class AppLocalizations {
   /// **'ADIF：按主控呼号各生成一份 .adi，可直接导入 LoTW / QRZ；多个主控时打包为 zip。'**
   String get adifFormatDescription;
 
+  /// No description provided for @adifExportOptionsTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'导出 ADIF'**
+  String get adifExportOptionsTitle;
+
+  /// No description provided for @adifExportOptionsHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'本机记录不含模式与频段，请选择本次导出的取值。'**
+  String get adifExportOptionsHint;
+
+  /// No description provided for @adifModeLabel.
+  ///
+  /// In zh, this message translates to:
+  /// **'模式'**
+  String get adifModeLabel;
+
+  /// No description provided for @adifBandLabel.
+  ///
+  /// In zh, this message translates to:
+  /// **'频段'**
+  String get adifBandLabel;
+
   /// No description provided for @excelExportSettingsTitle.
   ///
   /// In zh, this message translates to:
