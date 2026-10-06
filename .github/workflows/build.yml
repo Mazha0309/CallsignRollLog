@@ -74,13 +74,13 @@ jobs:
           cache: true
 
       - name: Setup Rust
-        uses: dtolnay/rust-toolchain@2c7215f132e9ebf062739d9130488b56d53c060c # master
+        uses: dtolnay/rust-toolchain@6c977a6ca4077a0ceb28ffbe03f59d46e9ac8772 # master
         with:
           toolchain: ${{ env.RUST_VERSION }}
           components: rustfmt
 
       - name: Cache Rust dependencies
-        uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2
+        uses: Swatinem/rust-cache@f0d9c3887740aee45f6153b24b3a6b815192ec16 # v2
         with:
           workspaces: rust -> target
           shared-key: openlogtool
@@ -130,7 +130,7 @@ jobs:
     timeout-minutes: 40
     steps:
       - name: Checkout
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
@@ -141,14 +141,14 @@ jobs:
           cache: true
 
       - name: Setup threaded Rust Web toolchain
-        uses: dtolnay/rust-toolchain@fa04a1451ff1842e2626ccb99004d0195b455a88 # master
+        uses: dtolnay/rust-toolchain@6c977a6ca4077a0ceb28ffbe03f59d46e9ac8772 # master
         with:
           toolchain: ${{ env.RUST_NIGHTLY }}
           components: rust-src
           targets: wasm32-unknown-unknown
 
       - name: Cache Rust Web dependencies
-        uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2
+        uses: Swatinem/rust-cache@f0d9c3887740aee45f6153b24b3a6b815192ec16 # v2
         with:
           workspaces: rust -> target
           shared-key: openlogtool-web-${{ env.RUST_NIGHTLY }}
@@ -270,7 +270,7 @@ jobs:
           persist-credentials: false
 
       - name: Setup Java
-        uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5.6.0
+        uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c # v6.0.0
         with:
           distribution: temurin
           java-version: '17'
@@ -282,13 +282,13 @@ jobs:
           cache: true
 
       - name: Setup Rust and Android targets
-        uses: dtolnay/rust-toolchain@2c7215f132e9ebf062739d9130488b56d53c060c # master
+        uses: dtolnay/rust-toolchain@6c977a6ca4077a0ceb28ffbe03f59d46e9ac8772 # master
         with:
           toolchain: ${{ env.RUST_VERSION }}
           targets: aarch64-linux-android,armv7-linux-androideabi,x86_64-linux-android
 
       - name: Cache Rust dependencies
-        uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2
+        uses: Swatinem/rust-cache@f0d9c3887740aee45f6153b24b3a6b815192ec16 # v2
         with:
           workspaces: rust -> target
           shared-key: openlogtool-android
@@ -498,12 +498,12 @@ jobs:
           cache: true
 
       - name: Setup Rust
-        uses: dtolnay/rust-toolchain@2c7215f132e9ebf062739d9130488b56d53c060c # master
+        uses: dtolnay/rust-toolchain@6c977a6ca4077a0ceb28ffbe03f59d46e9ac8772 # master
         with:
           toolchain: ${{ env.RUST_VERSION }}
 
       - name: Cache Rust dependencies
-        uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2
+        uses: Swatinem/rust-cache@f0d9c3887740aee45f6153b24b3a6b815192ec16 # v2
         with:
           workspaces: rust -> target
           shared-key: openlogtool
@@ -749,12 +749,12 @@ jobs:
           cache: true
 
       - name: Setup Rust
-        uses: dtolnay/rust-toolchain@2c7215f132e9ebf062739d9130488b56d53c060c # master
+        uses: dtolnay/rust-toolchain@6c977a6ca4077a0ceb28ffbe03f59d46e9ac8772 # master
         with:
           toolchain: ${{ env.RUST_VERSION }}
 
       - name: Cache Rust dependencies
-        uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2
+        uses: Swatinem/rust-cache@f0d9c3887740aee45f6153b24b3a6b815192ec16 # v2
         with:
           workspaces: rust -> target
           shared-key: openlogtool-windows
@@ -937,13 +937,13 @@ jobs:
           cache: true
 
       - name: Setup Rust and Darwin targets
-        uses: dtolnay/rust-toolchain@2c7215f132e9ebf062739d9130488b56d53c060c # master
+        uses: dtolnay/rust-toolchain@6c977a6ca4077a0ceb28ffbe03f59d46e9ac8772 # master
         with:
           toolchain: ${{ env.RUST_VERSION }}
           targets: aarch64-apple-darwin,x86_64-apple-darwin
 
       - name: Cache Rust dependencies
-        uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2
+        uses: Swatinem/rust-cache@f0d9c3887740aee45f6153b24b3a6b815192ec16 # v2
         with:
           workspaces: rust -> target
           shared-key: openlogtool-macos-universal
@@ -1069,7 +1069,7 @@ jobs:
     timeout-minutes: 55
     steps:
       - name: Checkout
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
@@ -1080,13 +1080,13 @@ jobs:
           cache: true
 
       - name: Setup Rust and iOS targets
-        uses: dtolnay/rust-toolchain@fa04a1451ff1842e2626ccb99004d0195b455a88 # master
+        uses: dtolnay/rust-toolchain@6c977a6ca4077a0ceb28ffbe03f59d46e9ac8772 # master
         with:
           toolchain: ${{ env.RUST_VERSION }}
           targets: aarch64-apple-ios,aarch64-apple-ios-sim,x86_64-apple-ios
 
       - name: Cache Rust dependencies
-        uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2
+        uses: Swatinem/rust-cache@f0d9c3887740aee45f6153b24b3a6b815192ec16 # v2
         with:
           workspaces: rust -> target
           shared-key: openlogtool-ios
@@ -1206,7 +1206,7 @@ jobs:
           find artifacts -maxdepth 1 -type f -printf '%f\n' | sort
 
       - name: Create GitHub release
-        uses: softprops/action-gh-release@3d0d9888cb7fd7b750713d6e236d1fcb99157228 # v3.0.2
+        uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
         with:
           tag_name: ${{ github.ref_name }}
           name: Callsign Roll Log ${{ github.ref_name }}
