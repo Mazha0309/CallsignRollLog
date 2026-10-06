@@ -16,9 +16,9 @@ npx serve site
 
 ## 部署
 
-### GitHub Pages（从 `main` 的 `/site` 目录）
+### GitHub Pages（Actions，发布 `site/` 的公开文件）
 
-仓库 Settings → Pages → Source 选 `Deploy from a branch`，分支 `main`、目录 `/site`。
+`main` 上改动 `site/` 或 `.github/workflows/pages.yml` 时，`.github/workflows/pages.yml` 把 `index.html`、`icon.png`、`wechat-zjra.svg` 发布到 GitHub Pages。分支部署只接受仓库根目录或 `/docs`，不能直接选 `/site`。
 
 ### Cloudflare Pages
 
