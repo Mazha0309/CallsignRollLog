@@ -1,7 +1,7 @@
-; OpenLogTool Inno Setup Script
+; Callsign Roll Log Inno Setup Script
 ; 支持自定义安装目录、创建桌面快捷方式、开始菜单、卸载程序
 
-#define MyAppName "OpenLogTool"
+#define MyAppName "Callsign Roll Log"
 #ifndef MyAppVersion
 #define MyAppVersion "1.0.0"
 #endif
@@ -19,7 +19,7 @@ DefaultDirName={autopf}\{#MyAppName}
 DefaultGroupName={#MyAppName}
 AllowNoIcons=yes
 OutputDir=installer
-OutputBaseFilename=OpenLogTool-Setup-{#MyAppVersion}
+OutputBaseFilename=CallsignRoll-Setup-{#MyAppVersion}
 Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern

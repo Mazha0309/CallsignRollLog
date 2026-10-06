@@ -1,5 +1,5 @@
 name: openlogtool
-description: OpenLogTool
+description: Callsign Roll Log - 业余无线电点名记录与协作工具
 publish_to: 'none'
 version: 3.0.2-R
 license: AGPL-3.0

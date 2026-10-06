@@ -90,13 +90,13 @@ BEGIN
         BLOCK "040904e4"
         BEGIN
             VALUE "CompanyName", "BG5CRL" "\0"
-            VALUE "FileDescription", "OpenLogTool" "\0"
+            VALUE "FileDescription", "Callsign Roll Log" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
             VALUE "InternalName", "openlogtool" "\0"
             VALUE "LegalCopyright", "Copyright (C) 2026 BG5CRL. All rights reserved." "\0"
             VALUE "OriginalFilename", "openlogtool.exe" "\0"
             // Retained as a legacy data-directory identifier for in-place upgrades.
-            VALUE "ProductName", "OpenLogTool" "\0"
+            VALUE "ProductName", "Callsign Roll Log" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

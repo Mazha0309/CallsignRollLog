@@ -834,11 +834,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'This device uses the in-app full-screen controller display.';
 
   @override
-  String get controllerScreenTitle => 'OpenLogTool Controller Display';
+  String get controllerScreenTitle => 'Callsign Roll Log Controller Display';
 
   @override
   String get controllerFloatingWindowTitle =>
-      'OpenLogTool Controller Floating Window';
+      'Callsign Roll Log Controller Floating Window';
 
   @override
   String get controllerScreenFallbackTitle => 'Net Controller Display';
@@ -1755,7 +1755,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String serverInvalidResponse(String url) {
-    return 'Connected to $url, but it did not return a compatible OpenLogTool Server response.';
+    return 'Connected to $url, but it did not return a compatible Callsign Roll Log Server response.';
   }
 
   @override
@@ -2211,20 +2211,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get fontPreview => 'Preview';
 
   @override
-  String get fontPreviewSample => 'OpenLogTool · CQ CQ · Net log 123';
+  String get fontPreviewSample => 'Callsign Roll Log · CQ CQ · Net log 123';
 
   @override
   String get aboutAppAction => 'About';
 
   @override
-  String get aboutAppTitle => 'About OpenLogTool';
+  String get aboutAppTitle => 'About Callsign Roll Log';
 
   @override
   String get aboutAppTagline => 'Amateur-radio net logging and collaboration';
 
   @override
   String get aboutAppDescription =>
-      'Complete net logging, live-draft collaboration, and controller displays for on-site and remote scribes. OpenLogTool focuses on net-control workflows rather than replacing a personal contact log.';
+      'Complete net logging, live-draft collaboration, and controller displays for on-site and remote scribes. Callsign Roll Log focuses on net-control workflows rather than replacing a personal contact log.';
 
   @override
   String aboutVersionChip(String version) {
@@ -2306,7 +2306,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aboutLicenseName => 'GNU AGPL-3.0';
 
   @override
-  String get aboutLicenseHint => 'OpenLogTool is free and open-source software';
+  String get aboutLicenseHint =>
+      'Callsign Roll Log is free and open-source software';
 
   @override
   String get aboutCopyright => '© 2026 Mazha0309 · BG5CRL';
@@ -2872,7 +2873,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get databaseExportDialogTitle =>
-      'Save OpenLogTool on-device database backup';
+      'Save Callsign Roll Log on-device database backup';
 
   @override
   String get databaseExportSucceeded => 'On-device database backup exported';
@@ -2891,7 +2892,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get databaseImportPickerTitle =>
-      'Select an OpenLogTool on-device database backup';
+      'Select an Callsign Roll Log on-device database backup';
 
   @override
   String get databaseImportNoFileSelected =>
@@ -2946,7 +2947,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String databaseImportInvalid(String error) {
-    return 'The selected file is not a valid OpenLogTool database backup ($error)';
+    return 'The selected file is not a valid Callsign Roll Log database backup ($error)';
   }
 
   @override
@@ -3021,7 +3022,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get dataTransferActionsHint =>
-      'Use JSON for complete data migration and Excel for viewing, sharing, and printing.';
+      'Use JSON for complete data migration, Excel for viewing, sharing, and printing, and ADIF for amateur-radio log programs.';
 
   @override
   String get exportDataTitle => 'Export data';
@@ -3035,6 +3036,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get exportExcel => 'Export Excel';
+
+  @override
+  String get exportAdif => 'Export ADIF';
 
   @override
   String get importDataTitle => 'Import data';
@@ -3093,6 +3097,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get excelFormatDescription =>
       'Excel: An .xlsx workbook with grouped controller rows, color styling, and footer information, suitable for sharing and printing.';
+
+  @override
+  String get adifFormatDescription =>
+      'ADIF: One .adi file per controller callsign for LoTW/QRZ import. Multiple controllers are packed into a zip.';
 
   @override
   String get excelExportSettingsTitle => 'Edit Excel export settings';
@@ -3160,7 +3168,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get footerInformationHint =>
-      'Show OpenLogTool project and license information';
+      'Show Callsign Roll Log project and license information';
 
   @override
   String get restoreDefaultColors => 'Restore default colors';
@@ -3453,7 +3461,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get aiSettingsOptionalMessage =>
-      'Audio is sent directly to the service you configure, not through the OpenLogTool collaboration server. Results are suggestions and never overwrite a scribe\'s active edits automatically.';
+      'Audio is sent directly to the service you configure, not through the Callsign Roll Log collaboration server. Results are suggestions and never overwrite a scribe\'s active edits automatically.';
 
   @override
   String get aiRecognitionEnabled => 'Enable AI-assisted recognition';
@@ -4432,11 +4440,11 @@ class AppLocalizationsEnUs extends AppLocalizationsEn {
       'This device uses the in-app full-screen controller display.';
 
   @override
-  String get controllerScreenTitle => 'OpenLogTool Controller Display';
+  String get controllerScreenTitle => 'Callsign Roll Log Controller Display';
 
   @override
   String get controllerFloatingWindowTitle =>
-      'OpenLogTool Controller Floating Window';
+      'Callsign Roll Log Controller Floating Window';
 
   @override
   String get controllerScreenFallbackTitle => 'Net Controller Display';
@@ -4875,7 +4883,7 @@ class AppLocalizationsEnUs extends AppLocalizationsEn {
 
   @override
   String serverInvalidResponse(String url) {
-    return 'Connected to $url, but it did not return a compatible OpenLogTool Server response.';
+    return 'Connected to $url, but it did not return a compatible Callsign Roll Log Server response.';
   }
 
   @override
@@ -5331,7 +5339,7 @@ class AppLocalizationsEnUs extends AppLocalizationsEn {
   String get fontPreview => 'Preview';
 
   @override
-  String get fontPreviewSample => 'OpenLogTool · CQ CQ · Net log 123';
+  String get fontPreviewSample => 'Callsign Roll Log · CQ CQ · Net log 123';
 
   @override
   String get localCollaborationOperationBusy =>
@@ -5356,7 +5364,7 @@ class AppLocalizationsEnUs extends AppLocalizationsEn {
 
   @override
   String get aiSettingsOptionalMessage =>
-      'Audio is sent directly to the service you configure, not through the OpenLogTool collaboration server. Results are suggestions and never overwrite a scribe\'s active edits automatically.';
+      'Audio is sent directly to the service you configure, not through the Callsign Roll Log collaboration server. Results are suggestions and never overwrite a scribe\'s active edits automatically.';
 
   @override
   String get aiRecognitionEnabled => 'Enable AI-assisted recognition';

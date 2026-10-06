@@ -106,7 +106,7 @@ class _DesktopRailHeader extends StatelessWidget {
                 const SizedBox(width: 20),
                 Expanded(
                   child: Text(
-                    'OpenLogTool',
+                    'Callsign Roll Log',
                     maxLines: 1,
                     overflow: TextOverflow.clip,
                     softWrap: false,

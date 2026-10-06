@@ -390,8 +390,8 @@
   "defaultInformationDetail": "默认信息详细程度",
   "desktopControllerDisplayHint": "本机桌面还可从会话页打开置顶悬浮窗或第二显示器窗口。",
   "inAppControllerDisplayHint": "当前设备使用应用内全屏主控模式。",
-  "controllerScreenTitle": "OpenLogTool 主控屏",
-  "controllerFloatingWindowTitle": "OpenLogTool 主控悬浮窗",
+  "controllerScreenTitle": "Callsign Roll Log 主控屏",
+  "controllerFloatingWindowTitle": "Callsign Roll Log 主控悬浮窗",
   "controllerScreenFallbackTitle": "点名主控屏",
   "savedPositionCount": "已保存 {count} 位",
   "@savedPositionCount": {
@@ -950,7 +950,7 @@
       }
     }
   },
-  "serverInvalidResponse": "已连接 {url}，但它没有返回兼容的 OpenLogTool Server 响应。",
+  "serverInvalidResponse": "已连接 {url}，但它没有返回兼容的 Callsign Roll Log Server 响应。",
   "@serverInvalidResponse": {
     "placeholders": {
       "url": {
@@ -1314,11 +1314,11 @@
   "fontSystemDefault": "系统默认",
   "fontBuiltIn": "内置",
   "fontPreview": "预览",
-  "fontPreviewSample": "OpenLogTool · CQ CQ · 点名记录 123",
+  "fontPreviewSample": "Callsign Roll Log · CQ CQ · 点名记录 123",
   "aboutAppAction": "关于应用",
-  "aboutAppTitle": "关于 OpenLogTool",
+  "aboutAppTitle": "关于 Callsign Roll Log",
   "aboutAppTagline": "业余无线电点名记录与协作工具",
-  "aboutAppDescription": "为现场和远程书记员提供完整点名记录、实时草稿协作与主控显示。OpenLogTool 专注于点名现场工作流，不以替代个人通联日志为目标。",
+  "aboutAppDescription": "为现场和远程书记员提供完整点名记录、实时草稿协作与主控显示。Callsign Roll Log 专注于点名现场工作流，不以替代个人通联日志为目标。",
   "aboutVersionChip": "版本 {version}",
   "@aboutVersionChip": {
     "placeholders": {
@@ -1366,7 +1366,7 @@
   "aboutOpenSourceLicenses": "开源组件许可",
   "aboutOpenSourceLicensesHint": "查看应用使用的第三方组件许可",
   "aboutLicenseName": "GNU AGPL-3.0",
-  "aboutLicenseHint": "OpenLogTool 是自由开源软件",
+  "aboutLicenseHint": "Callsign Roll Log 是自由开源软件",
   "aboutCopyright": "© 2026 Mazha0309 · BG5CRL",
   "aboutLinkOpenFailed": "无法打开链接：{error}",
   "@aboutLinkOpenFailed": {
@@ -1722,7 +1722,7 @@
   },
   "databaseExportTitle": "导出本机数据库",
   "databaseExportHint": "备份会话、记录、词库以及本机协作副本和待同步状态",
-  "databaseExportDialogTitle": "保存 OpenLogTool 本机数据库备份",
+  "databaseExportDialogTitle": "保存 Callsign Roll Log 本机数据库备份",
   "databaseExportSucceeded": "本机数据库备份已导出",
   "databaseExportFailed": "导出本机数据库失败：{error}",
   "@databaseExportFailed": {
@@ -1734,7 +1734,7 @@
   },
   "databaseImportTitle": "导入本机数据库",
   "databaseImportHint": "选择 JSON 备份并预览后，完整替换当前本机数据库",
-  "databaseImportPickerTitle": "选择 OpenLogTool 本机数据库备份",
+  "databaseImportPickerTitle": "选择 Callsign Roll Log 本机数据库备份",
   "databaseImportNoFileSelected": "未选择备份文件，未执行导入",
   "databaseImportPreviewTitle": "确认导入备份",
   "databaseImportBackupVersion": "备份格式版本",
@@ -1760,7 +1760,7 @@
       }
     }
   },
-  "databaseImportInvalid": "所选文件不是有效的 OpenLogTool 数据库备份（{error}）",
+  "databaseImportInvalid": "所选文件不是有效的 Callsign Roll Log 数据库备份（{error}）",
   "@databaseImportInvalid": {
     "placeholders": {
       "error": {
@@ -1814,11 +1814,12 @@
   "dataTransferTitle": "数据导入与导出",
   "dataTransferSubtitle": "备份、迁移或分享当前会话的点名记录，并配置 Excel 输出样式。",
   "dataTransferActionsTitle": "记录文件",
-  "dataTransferActionsHint": "JSON 适合完整数据迁移，Excel 适合查看、分享和打印。",
+  "dataTransferActionsHint": "JSON 适合完整数据迁移，Excel 适合查看、分享和打印，ADIF 适合导入电台日志软件。",
   "exportDataTitle": "导出数据",
   "exportDataHint": "将当前会话中的点名记录导出为文件",
   "exportJson": "导出 JSON",
   "exportExcel": "导出 Excel",
+  "exportAdif": "导出 ADIF",
   "importDataTitle": "导入数据",
   "importDataHint": "从文件导入点名记录到当前会话",
   "importJson": "导入 JSON",
@@ -1837,6 +1838,7 @@
   "fileFormatInformation": "文件格式说明",
   "jsonFormatDescription": "JSON：标准 JSON 数组，包含所有字段数据，适合备份与跨应用迁移。",
   "excelFormatDescription": "Excel：使用 .xlsx 格式，包含分组主控行、颜色样式和底部信息，适合分享与打印。",
+  "adifFormatDescription": "ADIF：按主控呼号各生成一份 .adi，可直接导入 LoTW / QRZ；多个主控时打包为 zip。",
   "excelExportSettingsTitle": "编辑 Excel 导出设置",
   "fileTab": "文件",
   "tableStyleTab": "表格样式",
@@ -1882,7 +1884,7 @@
   "alternatingRowColor": "交替行颜色",
   "alternatingRowColorHint": "使用交替行背景色",
   "footerInformation": "底部说明",
-  "footerInformationHint": "显示 OpenLogTool 项目与许可信息",
+  "footerInformationHint": "显示 Callsign Roll Log 项目与许可信息",
   "restoreDefaultColors": "恢复默认颜色",
   "tableFont": "表格字体",
   "templateVariablesTitle": "模板变量说明",
@@ -2155,7 +2157,7 @@
   "aiSettingsTitle": "AI 辅助识别",
   "aiSettingsDescription": "配置可选的语音识别与字段提取服务。接口、模型与鉴权均由本机独立设置。",
   "aiSettingsOptionalTitle": "可选且默认关闭",
-  "aiSettingsOptionalMessage": "音频将直接发送到你配置的服务，不经过 OpenLogTool 协作服务器。识别结果只作为候选，不会自动覆盖书记员正在编辑的内容。",
+  "aiSettingsOptionalMessage": "音频将直接发送到你配置的服务，不经过 Callsign Roll Log 协作服务器。识别结果只作为候选，不会自动覆盖书记员正在编辑的内容。",
   "aiRecognitionEnabled": "启用 AI 辅助识别",
   "aiRecognitionEnabledHint": "启用后可从点名工作台调用当前语音识别配置。",
   "aiLocalReferenceContext": "结合本地词库与近期记录",

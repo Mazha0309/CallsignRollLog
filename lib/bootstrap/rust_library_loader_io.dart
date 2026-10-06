@@ -30,7 +30,7 @@ ExternalLibrary bundledRustLibrary() {
         ),
       ),
     _ => throw UnsupportedError(
-        'OpenLogTool does not bundle a Rust core for '
+        'Callsign Roll Log does not bundle a Rust core for '
         '${Platform.operatingSystem}.',
       ),
   };

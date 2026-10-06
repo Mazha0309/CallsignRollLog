@@ -22,7 +22,7 @@ void main() {
       find.byKey(const Key('collapse-primary-sidebar')),
     );
     expect(collapse.tooltip, '收起侧边栏');
-    expect(find.text('OpenLogTool'), findsOneWidget);
+    expect(find.text('Callsign Roll Log'), findsOneWidget);
     expect(find.byIcon(Icons.graphic_eq), findsNothing);
     final navigationSurface = tester.widget<Container>(
       find.byKey(const Key('primary-navigation-surface')),
@@ -75,7 +75,7 @@ void main() {
 
     expect(tester.widget<NavigationRail>(find.byType(NavigationRail)).extended,
         isFalse);
-    expect(find.text('OpenLogTool'), findsNothing);
+    expect(find.text('Callsign Roll Log'), findsNothing);
     final expand = tester.widget<IconButton>(
       find.byKey(const Key('expand-primary-sidebar')),
     );

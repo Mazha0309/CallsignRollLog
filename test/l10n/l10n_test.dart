@@ -74,9 +74,9 @@ void main() {
       en.logNotOwnedReadOnlyHint,
       'You can change or delete only records that you created.',
     );
-    expect(zh.aboutAppTitle, '关于 OpenLogTool');
+    expect(zh.aboutAppTitle, '关于 Callsign Roll Log');
     expect(zh.aboutAppDescription, contains('点名现场工作流'));
-    expect(en.aboutAppTitle, 'About OpenLogTool');
+    expect(en.aboutAppTitle, 'About Callsign Roll Log');
     expect(en.aboutAppDescription, contains('net-control workflows'));
     expect(zh.aboutCheckUpdates, '检查更新');
     expect(en.aboutCheckUpdates, 'Check for updates');

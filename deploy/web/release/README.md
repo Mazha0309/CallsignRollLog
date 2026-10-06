@@ -1,4 +1,4 @@
-# OpenLogTool WebClient
+# Callsign Roll Log WebClient
 
 升级后若浏览器仍显示旧版，请打开本部署地址下的 `update.html`，点击“保留本机数据并更新”。更新页及 `update.js` 随每个 Release 包一起提供，不会清除 IndexedDB、OPFS 或本机记录；不要使用浏览器的“清除站点数据”。
 
@@ -35,11 +35,11 @@ require a secure browser context outside `localhost`.
 从其他设备访问时请配置 HTTPS 反向代理；除 `localhost` 外，Rust WASM 工作线程
 需要浏览器安全上下文。
 
-If this WebClient and OpenLogTool Server use different origins, add the
+If this WebClient and Callsign Roll Log Server use different origins, add the
 WebClient origin to the server's `CORS_ORIGINS`, then recreate the server
 container. Native clients do not require this setting.
 
-如果 WebClient 与 OpenLogTool Server 使用不同 Origin，请将 WebClient Origin
+如果 WebClient 与 Callsign Roll Log Server 使用不同 Origin，请将 WebClient Origin
 加入服务端的 `CORS_ORIGINS`，随后重新创建服务端容器。原生客户端无需此设置。
 
 ```dotenv

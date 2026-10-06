@@ -6,7 +6,7 @@ License: AGPL-3.0
 URL: https://github.com/Mazha0309/OpenLogTool
 
 %description
-OpenLogTool is an amateur radio net logging and collaboration client.
+Callsign Roll Log is an amateur radio net logging and collaboration client.
 
 %prep
 

@@ -1,7 +1,7 @@
 [Desktop Entry]
 Type=Application
-Name=OpenLogTool
-Name[zh_CN]=OpenLogTool
+Name=Callsign Roll Log
+Name[zh_CN]=Callsign Roll Log
 Comment=Amateur radio net logging and collaboration client
 Exec=/opt/openlogtool/openlogtool
 Icon=openlogtool

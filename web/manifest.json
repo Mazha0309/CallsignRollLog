@@ -1,11 +1,11 @@
 {
-    "name": "OpenLogTool",
-    "short_name": "OpenLogTool",
+    "name": "Callsign Roll Log",
+    "short_name": "Callsign Roll Log",
     "start_url": "./",
     "display": "standalone",
     "background_color": "#faf8f2",
     "theme_color": "#2196F3",
-    "description": "OpenLogTool amateur radio net logging and collaboration client.",
+    "description": "Callsign Roll Log amateur radio net logging and collaboration client.",
     "prefer_related_applications": false,
     "icons": [
         {
