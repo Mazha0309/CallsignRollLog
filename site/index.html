@@ -153,7 +153,7 @@ html[data-theme=dark] .btn.pri{color:#06121e}
 .ctile .v{font-size:16px;font-weight:700;margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 @media (max-width:900px){.cbody{grid-template-columns:1fr}.ctiles{grid-template-columns:repeat(2,1fr)}}
 
-/* Live Share 公开页：照 OpenLogToolServer/live 的 App.tsx + App.css 还原
+/* Live Share 公开页：照 CallsignRollLogServer/live 的 App.tsx + App.css 还原
    它是另一套视觉（React 端口），自带配色与字体，故在此独立声明 */
 .lv{background:#f4f7fb;border:1px solid #dfe6ef;border-radius:14px;overflow:hidden;color:#172033;
   font-family:Inter,var(--sans);font-size:13px}
@@ -302,7 +302,7 @@ footer{padding:22px 0 40px}
       <a href="#collab">协作</a>
       <a href="#download">下载</a>
       <a href="#build">构建</a>
-      <a href="https://github.com/Mazha0309/OpenLogTool" target="_blank" rel="noopener">源码</a>
+      <a href="#open">开源</a>
     </nav>
     <button class="ic" id="hamb" aria-label="菜单"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
     <button class="ic" id="theme" aria-label="深浅色"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path id="tg" d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
@@ -314,15 +314,15 @@ footer{padding:22px 0 40px}
     <h1>业余无线电<span class="b">点名记录与协作</span>工具</h1>
     <p>专为业余无线电爱好者设计。本地使用不需要服务器、也不需要注册账号：新建会话后即可记录、管理词库、查看历史与导入导出。服务器是可选扩展，用于个人云同步、好友与多人协作——没有服务器不会影响单机记录。</p>
     <div class="meta">
-      <span>版本 <b data-version>v3.0.2-R</b></span>
-      <span>AGPL-3.0</span>
+      <span>版本 <b data-version>v3.0.3-R</b></span>
+      <span>开源 · AGPL-3.0</span>
       <span>Flutter · Rust</span>
       <span>Linux / Windows / macOS / Android / Web</span>
     </div>
     <div class="acts">
       <a class="btn pri" href="#download"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11m0 0 4.5-4.5M12 15l-4.5-4.5M5 20h14"/></svg>下载</a>
-      <a class="btn alt" href="https://github.com/Mazha0309/OpenLogTool" target="_blank" rel="noopener">源码仓库</a>
-      <a class="btn alt" href="https://github.com/Mazha0309/OpenLogTool/blob/main/README.md" target="_blank" rel="noopener">README</a>
+      <a class="btn alt" href="https://github.com/Mazha0309/CallsignRollLog" target="_blank" rel="noopener">源码仓库</a>
+      <a class="btn alt" href="https://github.com/Mazha0309/CallsignRollLog/blob/main/README.md" target="_blank" rel="noopener">README</a>
     </div>
   </div>
 
@@ -453,11 +453,11 @@ footer{padding:22px 0 40px}
         </div>
       </div>
     </div>
-    <div class="mockcap second">Live Share 公开页 · 由服务端 <a href="https://github.com/Mazha0309/OpenLogToolServer" target="_blank" rel="noopener">OpenLogToolServer</a> 提供</div>
+    <div class="mockcap second">Live Share 公开页 · 由服务端 <a href="https://github.com/Mazha0309/CallsignRollLogServer" target="_blank" rel="noopener">CallsignRollLogServer</a> 提供</div>
     <div class="lv">
       <div class="lvtop">
         <img src="icon.png" alt="">
-        <span><span class="bn">OpenLogTool</span><span class="bs">公开实时记录</span></span>
+        <span><span class="bn">Callsign Roll Log</span><span class="bs">公开实时记录</span></span>
         <span class="lvsel"><span>简体中文</span><span>跟随系统</span></span>
       </div>
       <div class="lvbody">
@@ -518,17 +518,17 @@ footer{padding:22px 0 40px}
         <div class="rel">
           <span class="v" data-version>v3.0.2-R</span>
           <span class="d" data-released>读取中…</span>
-          <a href="https://github.com/Mazha0309/OpenLogTool/releases/latest" target="_blank" rel="noopener">在 Releases 查看 →</a>
+          <a href="https://github.com/Mazha0309/CallsignRollLog/releases/latest" target="_blank" rel="noopener">在 Releases 查看 →</a>
         </div>
         <table class="dl">
           <thead><tr><th>平台</th><th>文件（按格式 / 架构）</th><th>大小</th></tr></thead>
           <tbody id="dlbody">
-            <tr><td class="p">Windows</td><td class="f"><a href="https://github.com/Mazha0309/OpenLogTool/releases/latest" target="_blank" rel="noopener">安装包 / 便携 zip</a></td><td class="z">—</td></tr>
-            <tr><td class="p">macOS</td><td class="f"><a href="https://github.com/Mazha0309/OpenLogTool/releases/latest" target="_blank" rel="noopener">universal dmg / zip</a></td><td class="z">—</td></tr>
-            <tr><td class="p">Linux</td><td class="f"><a href="https://github.com/Mazha0309/OpenLogTool/releases/latest" target="_blank" rel="noopener">AppImage / tar.gz / deb / rpm</a></td><td class="z">—</td></tr>
-            <tr><td class="p">Android</td><td class="f"><a href="https://github.com/Mazha0309/OpenLogTool/releases/latest" target="_blank" rel="noopener">APK（按架构 + 通用包）</a></td><td class="z">—</td></tr>
-            <tr><td class="p">iOS</td><td class="f"><a href="https://github.com/Mazha0309/OpenLogTool/releases/latest" target="_blank" rel="noopener">未签名 IPA</a></td><td class="z">—</td></tr>
-            <tr><td class="p">Web</td><td class="f"><a href="https://github.com/Mazha0309/OpenLogTool/releases/latest" target="_blank" rel="noopener">WebClient 包</a></td><td class="z">—</td></tr>
+            <tr><td class="p">Windows</td><td class="f"><a href="https://github.com/Mazha0309/CallsignRollLog/releases/latest" target="_blank" rel="noopener">安装包 / 便携 zip</a></td><td class="z">—</td></tr>
+            <tr><td class="p">macOS</td><td class="f"><a href="https://github.com/Mazha0309/CallsignRollLog/releases/latest" target="_blank" rel="noopener">universal dmg / zip</a></td><td class="z">—</td></tr>
+            <tr><td class="p">Linux</td><td class="f"><a href="https://github.com/Mazha0309/CallsignRollLog/releases/latest" target="_blank" rel="noopener">AppImage / tar.gz / deb / rpm</a></td><td class="z">—</td></tr>
+            <tr><td class="p">Android</td><td class="f"><a href="https://github.com/Mazha0309/CallsignRollLog/releases/latest" target="_blank" rel="noopener">APK（按架构 + 通用包）</a></td><td class="z">—</td></tr>
+            <tr><td class="p">iOS</td><td class="f"><a href="https://github.com/Mazha0309/CallsignRollLog/releases/latest" target="_blank" rel="noopener">未签名 IPA</a></td><td class="z">—</td></tr>
+            <tr><td class="p">Web</td><td class="f"><a href="https://github.com/Mazha0309/CallsignRollLog/releases/latest" target="_blank" rel="noopener">WebClient 包</a></td><td class="z">—</td></tr>
           </tbody>
         </table>
         <p class="hint" id="dlnote">表格由页面读取 GitHub Releases API 生成；无法访问时保留为静态入口。</p>
@@ -544,12 +544,12 @@ footer{padding:22px 0 40px}
           <li><span>克隆仓库并执行 <code>flutter pub get</code></span></li>
           <li><span>按平台构建：<code>flutter build linux|windows|macos</code>，桌面与 Android 会一并编译 Rust 动态库</span></li>
           <li><span>网页版另跑 <code>bash tool/build_web.sh</code></span></li>
-          <li><span>需要协作时再部署 <a href="https://github.com/Mazha0309/OpenLogToolServer" target="_blank" rel="noopener">OpenLogToolServer</a></span></li>
+          <li><span>需要协作时再部署 <a href="https://github.com/Mazha0309/CallsignRollLogServer" target="_blank" rel="noopener">CallsignRollLogServer</a></span></li>
         </ol>
         <div class="term">
           <div class="bar"><span>bash</span><button id="copy" type="button">复制</button></div>
-<pre id="cmd">git clone https://github.com/Mazha0309/OpenLogTool.git
-cd OpenLogTool
+<pre id="cmd">git clone https://github.com/Mazha0309/CallsignRollLog.git
+cd CallsignRollLog
 flutter pub get
 
 <span class="c"># 桌面端（在各自系统执行）</span>
@@ -565,16 +565,27 @@ bash tool/build_web.sh
       </div>
     </div>
   </section>
+  <section id="open">
+    <div class="wrap sec">
+      <div class="side"><div class="no">05</div><h2>开源</h2><p>全部源码以 AGPL-3.0 发布。</p></div>
+      <dl class="feat">
+        <div><dt>客户端</dt><dd><a href="https://github.com/Mazha0309/CallsignRollLog" target="_blank" rel="noopener">Mazha0309/CallsignRollLog</a> · Flutter ＋ Rust，覆盖 Linux / Windows / macOS / Android / Web。</dd></div>
+        <div><dt>服务端</dt><dd><a href="https://github.com/Mazha0309/CallsignRollLogServer" target="_blank" rel="noopener">Mazha0309/CallsignRollLogServer</a> · 自建即可启用个人云同步与多人协作。</dd></div>
+        <div><dt>协议</dt><dd>GNU Affero General Public License v3.0：可自由使用、修改与分发；若改造后通过网络对外提供服务，同样需要公开修改后的源码。仓库内附完整 <a href="https://github.com/Mazha0309/CallsignRollLog/blob/main/LICENSE" target="_blank" rel="noopener">LICENSE</a>。</dd></div>
+        <div><dt>特别鸣谢</dt><dd><a href="https://weixin.sogou.com/weixin?type=1&query=%E6%B5%99%E6%B1%9F%E7%9C%81%E4%B8%9A%E4%BD%99%E6%97%A0%E7%BA%BF%E7%94%B5%E5%8D%8F%E4%BC%9A" target="_blank" rel="noopener">浙江省业余无线电协会</a>（微信公众号）</dd></div>
+      </dl>
+    </div>
+  </section>
 </main>
 
 <footer>
   <div class="wrap foot">
     <span>CRL · Callsign Roll Log · © 2026 Mazha0309 · BG5CRL · AGPL-3.0</span>
     <nav>
-      <a href="https://github.com/Mazha0309/OpenLogTool" target="_blank" rel="noopener">客户端仓库</a>
-      <a href="https://github.com/Mazha0309/OpenLogToolServer" target="_blank" rel="noopener">服务端仓库</a>
-      <a href="https://github.com/Mazha0309/OpenLogTool/releases" target="_blank" rel="noopener">发布</a>
-      <a href="https://github.com/Mazha0309/OpenLogTool/issues" target="_blank" rel="noopener">反馈</a>
+      <a href="https://github.com/Mazha0309/CallsignRollLog" target="_blank" rel="noopener">客户端仓库</a>
+      <a href="https://github.com/Mazha0309/CallsignRollLogServer" target="_blank" rel="noopener">服务端仓库</a>
+      <a href="https://github.com/Mazha0309/CallsignRollLog/releases" target="_blank" rel="noopener">发布</a>
+      <a href="https://github.com/Mazha0309/CallsignRollLog/issues" target="_blank" rel="noopener">反馈</a>
     </nav>
   </div>
 </footer>
@@ -604,7 +615,7 @@ bash tool/build_web.sh
       .catch(function(){copy.textContent='手动复制';});
   });
 
-  var REPO='Mazha0309/OpenLogTool';
+  var REPO='Mazha0309/CallsignRollLog';
   var ORDER=[['Windows',/windows|setup|\.exe$/i],['macOS',/macos|\.dmg$/i],['Linux',/linux|appimage|\.deb$|\.rpm$/i],
              ['Android',/android|\.apk$/i],['iOS',/ios|\.ipa$/i],['Web',/webclient|web/i]];
   function plat(n){for(var i=0;i<ORDER.length;i++){if(ORDER[i][1].test(n))return ORDER[i][0];}return '其他';}
