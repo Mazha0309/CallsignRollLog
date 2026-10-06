@@ -1,6 +1,6 @@
 # 官网（`site/`）
 
-`CRL · Callsign Roll Log · 呼号点名日志` 的产品主页。**纯静态、零构建、零依赖**（仅一个 `index.html` + `logo.svg`），因此 GitHub Pages / Cloudflare Pages / Vercel 都能直接托管。
+`CRL · Callsign Roll Log · 呼号点名日志` 的产品主页。**纯静态、零构建、零依赖**（只有 `index.html` 与几个图片资源：`icon.png`、`wechat-zjra.svg` 公众号二维码），因此 GitHub Pages / Cloudflare Pages / Vercel 都能直接托管。
 
 计划绑定域名：`crl.mazha0309.com`（主域子域，不额外购买）。
 

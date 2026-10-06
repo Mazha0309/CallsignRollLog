@@ -56,6 +56,7 @@ nav a:hover{color:var(--ink);background:var(--sunken)}
 .intro h1{font-size:clamp(23px,2.6vw,30px);font-weight:600;letter-spacing:-.01em;margin:0 0 16px;line-height:1.45}
 .intro h1 .b{color:var(--brand)}
 .intro p{margin:0 0 8px;color:var(--ink-2);max-width:62ch}
+.intro .eyebrow{margin:0 0 10px;font-family:var(--mono);font-size:12px;letter-spacing:.12em;color:var(--ink-3)}
 .meta{display:flex;flex-wrap:wrap;gap:8px 10px;align-items:center;margin:24px 0 0;font-family:var(--mono);font-size:11.5px;color:var(--ink-3)}
 .meta span{padding:2px 8px;border:1px solid var(--rule);border-radius:999px;background:var(--surface)}
 .meta b{color:var(--ink);font-weight:600}
@@ -249,6 +250,7 @@ table.roles td{color:var(--ink-2)}
 .rel .d{font-family:var(--mono);font-size:11.5px;color:var(--ink-3)}
 .rel a{margin-left:auto;font-size:13px;font-weight:600;color:var(--brand)}
 .rel a:hover{text-decoration:underline}
+
 table.dl{white-space:normal}
 table.dl th,table.dl td{text-align:left;padding:9px 16px;font-size:13.5px;vertical-align:top}
 table.dl tr.grp td{border-top:1px solid var(--rule);padding-top:16px}
@@ -258,6 +260,104 @@ table.dl td.f a{color:var(--brand);font-family:var(--mono);font-size:12.5px;line
 table.dl td.f a:hover{text-decoration:underline}
 table.dl td.z{width:92px;font-family:var(--mono);font-size:12px;color:var(--ink-3);white-space:nowrap;text-align:right}
 .hint{margin:10px 0 0;font-size:12.5px;color:var(--ink-3)}
+/* ===== 手机端示例：照 App 真机（点名台）与 Live Share 真机的响应式布局还原 ===== */
+.uimob,.lvmob{display:none}
+.uimob svg,.lvmob svg{flex:none}
+/* 客户端 · 手机 */
+.ma{background:#F4F6F9;border:1px solid #C3C7CF;border-radius:16px;padding:12px}
+.matop{display:flex;align-items:center;gap:8px;font-size:17px;font-weight:800;padding:0 2px 10px;color:#1B2430}
+.matop svg{width:20px;height:20px;color:#36618E}
+.masess,.macard{background:#fff;border:1px solid #E3E6EC;border-radius:12px;padding:11px;margin-bottom:10px}
+.masess{display:flex;align-items:center;gap:10px}
+.mi{width:32px;height:32px;border-radius:9px;background:#E7EEF8;color:#36618E;display:grid;place-items:center}
+.mi svg{width:17px;height:17px}
+.masess b{display:block;font-size:14.5px;color:#1B2430}
+.masess .sub{font-size:12px;color:#6B7078}
+.machip{margin-left:auto;font-size:11.5px;background:#EEF1F6;color:#4A5361;border-radius:999px;padding:4px 9px;white-space:nowrap}
+.mah{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.mah b{font-size:16px;font-weight:800;color:#1B2430}
+.maform{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.maform .w{grid-column:1/-1}
+.maform>div{border:1px solid #C3C7CF;border-radius:9px;padding:4px 9px;min-width:0}
+.maform label{display:block;font-size:10.5px;color:#8A93A3;line-height:1.5}
+.maform span{display:block;font-size:13.5px;color:#1B2430;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.maform .s{display:flex;align-items:center;gap:6px}
+.maform .s svg{width:15px;height:15px;color:#8A93A3;margin-left:auto}
+.maacts{display:flex;gap:8px;margin-top:10px}
+.maacts span{flex:1;border:1px solid #C3C7CF;border-radius:9px;padding:9px 0;text-align:center;font-size:13.5px;color:#43474E}
+.maacts b{flex:1;background:#36618E;color:#fff;border-radius:9px;padding:9px 0;text-align:center;font-size:13.5px}
+.maundo{display:inline-flex;align-items:center;gap:6px;border:1px solid #C3C7CF;border-radius:9px;padding:6px 11px;font-size:12.5px;color:#8A93A3;margin-bottom:9px}
+.maundo svg{width:14px;height:14px}
+.masearch{display:flex;align-items:center;gap:7px;border:1px solid #C3C7CF;border-radius:9px;padding:9px 10px;font-size:13px;color:#6B7078;margin-bottom:9px}
+.masearch svg{width:16px;height:16px}
+.marec{border:1px solid #DCE1E8;border-radius:11px;padding:9px 11px;background:#FBFCFE}
+.marow{display:flex;align-items:center;gap:9px}
+.mano{background:#D7E3F7;color:#3B4858;font-weight:800;font-size:11.5px;border-radius:999px;padding:4px 8px}
+.marow b{flex:1;font-size:16px;font-weight:800;color:#1B2430}
+.marow svg{width:17px;height:17px;color:#8A93A3}
+.mameta{display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:6px;color:#6B7078;font-size:12px}
+.mameta span{display:inline-flex;align-items:center;gap:4px}
+.mameta svg{width:14px;height:14px}
+.matabs{display:flex;background:#fff;border:1px solid #E3E6EC;border-radius:12px;padding:6px 0}
+.matabs span{flex:1;display:grid;justify-items:center;gap:3px;font-size:11px;color:#8A93A3}
+.matabs span svg{width:19px;height:19px}
+.matabs span.on{color:#36618E;font-weight:700}
+/* Live Share · 手机 */
+.lm{background:#f4f7fb;border:1px solid #dfe6ef;border-radius:14px;padding:13px;color:#172033}
+.lmtop{display:flex;align-items:center;gap:8px;padding-bottom:12px;border-bottom:1px solid #dfe6ef}
+.lmtop img{width:30px;height:30px;border-radius:9px}
+.lmtop b{font-size:14.5px;flex:1}
+.lmsel{font-size:12px;border:1px solid #dfe6ef;border-radius:8px;padding:5px 9px;background:#fff}
+.lmhead{padding-top:12px}
+.lme{display:flex;gap:6px;align-items:center;font-size:12px;color:#5b6b82;margin-bottom:5px}
+.lmro{background:#e8eef8;border-radius:6px;padding:2px 7px;font-weight:700;color:#3b5b86}
+.lmhead h4{margin:0 0 9px;font-size:19px;line-height:1.35}
+.lmstate{display:flex;flex-wrap:wrap;gap:7px}
+.lmbadge{background:#e6f0fb;color:#2b5f9e;border-radius:999px;padding:4px 10px;font-size:12px;font-weight:700}
+.lmpill{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:#4c6b52;background:#eaf6ee;border-radius:999px;padding:4px 10px}
+.lmpill i{width:7px;height:7px;border-radius:50%;background:#3f9c5c}
+.lmstats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:13px 0}
+.lmstats article{background:#fff;border:1px solid #dfe6ef;border-radius:11px;padding:11px}
+.lmstats span{display:block;font-size:11.5px;color:#6b7b90;margin-bottom:4px}
+.lmstats strong{font-size:14px}
+.lmlatest{background:#fff;border:1px solid #dfe6ef;border-radius:12px;padding:13px}
+.lmlabel{font-size:11.5px;color:#6b7b90;margin-bottom:9px}
+.lmp{display:flex;align-items:baseline;gap:9px;margin-bottom:10px}
+.lmp .n{font-size:12px;color:#8290a5}
+.lmp strong{font-size:28px;color:#2b5f9e;font-weight:800}
+.lmp time{margin-left:auto;font-size:12px;color:#6b7b90}
+.lmdet,.lmcard dl{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px;margin:0}
+.lmdet dt,.lmcard dt{font-size:11px;color:#8290a5;margin-bottom:2px}
+.lmdet dd,.lmcard dd{margin:0;font-size:13px;overflow-wrap:anywhere}
+.lmhist{margin-top:13px}
+.lmhist>b{display:block;font-size:15px;margin-bottom:9px}
+.lmsearch{display:flex;align-items:center;gap:7px;background:#fff;border:1px solid #dfe6ef;border-radius:10px;padding:9px 10px;font-size:12.5px;color:#6b7b90;margin-bottom:9px}
+.lmsearch svg{width:15px;height:15px}
+.lmcard{background:#fff;border:1px solid #dfe6ef;border-radius:11px;padding:13px}
+.lmh{display:grid;grid-template-columns:auto 1fr auto;align-items:baseline;gap:8px;padding-bottom:10px;border-bottom:1px solid #dfe6ef}
+.lmh .ord{font-size:11px;color:#8290a5}
+.lmh strong{font-size:18px;color:#2b5f9e;font-family:var(--mono)}
+.lmh time{font-size:10.5px;color:#6b7b90}
+.lmcard dl{margin-top:11px}
+@media (max-width:700px){
+  .uimock:not(.ctrl){display:none}
+  .uimob{display:block}
+}
+/* 主控屏 · 手机：竖排、字段两列且不再截断（对齐 ControllerDisplayScreen 的竖屏布局） */
+@media (max-width:620px){
+  .cpanel.wide .ctiles,.cpanel.narrow .ctiles{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .ctile{min-height:0;padding:9px 11px}
+  .ctile .v{font-size:15px;white-space:normal;overflow-wrap:anywhere}
+  .ccallsign{font-size:27px;margin-bottom:12px}
+  .ctop{gap:9px;padding:10px 12px}
+  .ctop .pi svg{width:24px;height:24px}
+  .ctop .ctitle{font-size:16px}
+  .ctop .csum{display:none}
+}
+@media (max-width:720px){
+  .lv{display:none}
+  .lvmob{display:block}
+}
 
 /* 构建 */
 ol.steps{counter-reset:s;list-style:none;margin:0 0 14px;padding:0;border-top:1px solid var(--rule)}
@@ -288,6 +388,13 @@ footer{padding:22px 0 40px}
     border-bottom:1px solid var(--rule);padding:6px 12px 10px}
   #hamb{display:grid}
   .brand .t span{display:none}
+  /* 示例工具栏在窄屏换行，避免标题被挤成竖排 */
+  .uibar{flex-wrap:wrap;row-gap:10px}
+  .uibar b{white-space:nowrap}
+  /* 下载表：文件名允许折行，列宽交还自动布局，避免长文件名撑宽页面 */
+  table.dl th,table.dl td{padding:8px 10px}
+  table.dl td.p,table.dl td.z{width:auto}
+  table.dl td.f a{white-space:normal;overflow-wrap:anywhere}
 }
 @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
 </style>
@@ -314,6 +421,7 @@ footer{padding:22px 0 40px}
 
 <main id="top">
   <div class="wrap intro">
+    <p class="eyebrow">呼号点名日志</p>
     <h1>业余无线电<span class="b">点名记录与协作</span>工具</h1>
     <p>专为业余无线电爱好者设计。本地使用不需要服务器、也不需要注册账号：新建会话后即可记录、管理词库、查看历史与导入导出。服务器是可选扩展，用于个人云同步、好友与多人协作——没有服务器不会影响单机记录。</p>
     <div class="meta">
@@ -331,9 +439,9 @@ footer{padding:22px 0 40px}
 
   <div class="uiwrap">
     <div class="fhead">
-      <span class="k">示例 · 桌面客户端</span>
+      <span class="k">示例 · 客户端</span>
       <h3>记录工作台</h3>
-      <p>主控在点名时逐条录入。下表列名、组件与配色取自应用源码本身。</p>
+      <p>主控在点名时逐条录入。桌面为表格、手机为卡片，与该应用的响应式布局一致；列名、组件与配色取自应用源码本身。</p>
     </div>
     <div class="uimock">
       <div class="uibar">
@@ -456,6 +564,34 @@ footer{padding:22px 0 40px}
         </div>
       </div>
     </div>
+    <div class="uimob">
+      <div class="ma">
+        <div class="matop"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><rect x="3" y="6" width="18" height="12" rx="2.5"/><circle cx="8.5" cy="12" r="2"/><path d="M14 10.5h4M14 13.5h4"/><path d="m6.5 6 9-3.5"/></svg>点名台</div>
+        <div class="masess">
+          <span class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4.5" width="18" height="16" rx="2.5"/><path d="M8 3v3M16 3v3M3 9.5h18"/><circle cx="9" cy="14.5" r="1.5" fill="currentColor" stroke="none"/></svg></span>
+          <div><b>2026年10月6日 13:21</b><span class="sub">进行中</span></div>
+          <span class="machip">仅本地</span>
+        </div>
+        <div class="macard">
+          <div class="mah"><span class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 20h4L18.5 9.5l-4-4L4 16z"/><path d="M13.5 6.5 17.5 10.5"/></svg></span><b>当前记录</b><span class="machip">当前第 2 位</span></div>
+          <div class="maform"><div class="w"><label>主控呼号 *</label><span>BG5CRL</span></div><div class="w"><label>来台呼号</label><div class="s"><span>BG5DBL</span><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></span></div></div><div><label>设备</label><span>森海克斯 GT 12</span></div><div><label>天线</label><span>老鹰 770拉杆</span></div><div><label>功率</label><span>8W</span></div><div><label>QTH</label><span>宁波高新区</span></div><div><label>高度</label><span>8楼</span></div><div><label>时间</label><span>13:21</span></div><div><label>RST 发</label><span>59</span></div><div><label>RST 收</label><span>59</span></div><div class="w"><label>备注</label><span></span></div></div>
+          <div class="maacts"><span>清空已填内容</span><b>＋ 保存记录</b></div>
+        </div>
+        <div class="macard">
+          <div class="mah"><span class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01"/></svg></span><b>已保存记录</b><span class="machip">1 条</span></div>
+          <div class="maundo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4.5V10h5.5"/></svg>恢复最近删除</div>
+          <div class="masearch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>搜索呼号 / QTH / 备注…</div>
+          <article class="marec">
+            <div class="marow"><span class="mano">#1</span><b>BG5DBL</b><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg></div>
+            <div class="mameta"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3 2"/></svg>13:22</span><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>BG5CRL</span><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 4v16M8.5 8 6 20M15.5 8 18 20M7 20h10"/></svg>59/59</span></div>
+          </article>
+        </div>
+        <div class="matabs">
+          <span class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><rect x="3" y="6" width="18" height="12" rx="2.5"/><circle cx="8.5" cy="12" r="2"/><path d="M14 10.5h4M14 13.5h4"/><path d="m6.5 6 9-3.5"/></svg>点名台</span><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="9" cy="8" r="3"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0"/><circle cx="17" cy="9.5" r="2.4"/><path d="M15 19a4.4 4.4 0 0 1 6-3.9"/></svg>会话</span><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><rect x="3.5" y="4.5" width="17" height="6" rx="2"/><rect x="3.5" y="13.5" width="17" height="6" rx="2"/></svg>数据</span><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 3.5v2.2M12 18.3v2.2M4.9 7.8l1.9 1.1M17.2 15.1l1.9 1.1M4.9 16.2l1.9-1.1M17.2 8.9l1.9-1.1"/></svg>设置</span>
+        </div>
+      </div>
+    </div>
+
     <div class="mockcap second">Live Share 公开页 · 由服务端 <a href="https://github.com/Mazha0309/CallsignRollLogServer" target="_blank" rel="noopener">CallsignRollLogServer</a> 提供</div>
     <div class="lv">
       <div class="lvtop">
@@ -510,6 +646,48 @@ footer{padding:22px 0 40px}
           <div class="lvfoot"><span>第 1 / 2 页，共 59 条</span></div>
         </div>
         <p class="lvnote">此页面仅显示已提交的公开记录，不包含正在填写的草稿或成员信息。</p>
+      </div>
+    </div>
+    <div class="lvmob">
+      <div class="lm">
+        <div class="lmtop"><img src="icon.png" alt=""><b>Callsign Roll Log</b><span class="lmsel">简体中文</span></div>
+        <div class="lmhead">
+          <div class="lme"><span class="lmro">只读</span><span>公开会话</span></div>
+          <h4>2026-10-05 夜间点名</h4>
+          <div class="lmstate"><span class="lmbadge">进行中</span><span class="lmpill"><i></i>实时连接正常</span></div>
+        </div>
+        <div class="lmstats">
+          <article><span>已提交记录</span><strong>59</strong></article>
+          <article><span>最近主控</span><strong>BG5CRL</strong></article>
+          <article><span>分享有效期</span><strong>2026/10/08</strong></article>
+          <article><span>最近同步</span><strong>21:21</strong></article>
+        </div>
+        <div class="lmlatest">
+          <div class="lmlabel">最新已提交记录</div>
+          <div class="lmp"><span class="n">#59</span><strong>BG5DBL</strong><time>21:21</time></div>
+          <dl class="lmdet">
+            <div><dt>主控</dt><dd>BG5CRL</dd></div>
+            <div><dt>RST 发 / RST 收</dt><dd>59 / 59</dd></div>
+            <div><dt>QTH</dt><dd>宁波高新区</dd></div>
+            <div><dt>设备</dt><dd>森海克斯 GT 12</dd></div>
+          </dl>
+        </div>
+        <div class="lmhist">
+          <b>历史记录</b>
+          <div class="lmsearch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>搜索呼号、主控或 QTH</div>
+          <article class="lmcard">
+            <div class="lmh"><span class="ord">#59</span><strong>BG5DBL</strong><time>21:21</time></div>
+            <dl>
+              <div><dt>主控</dt><dd>BG5CRL</dd></div>
+              <div><dt>RST 发 / RST 收</dt><dd>59 / 59</dd></div>
+              <div><dt>QTH</dt><dd>宁波高新区</dd></div>
+              <div><dt>设备</dt><dd>森海克斯 GT 12</dd></div>
+              <div><dt>功率</dt><dd>8W</dd></div>
+              <div><dt>天线</dt><dd>老鹰 770拉杆</dd></div>
+              <div><dt>高度</dt><dd>8楼</dd></div>
+            </dl>
+          </article>
+        </div>
       </div>
     </div>
   </div>
