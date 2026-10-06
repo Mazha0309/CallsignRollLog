@@ -224,7 +224,7 @@ tbody tr:last-child td{border-bottom:0}
 section{padding:0}
 /* 全文统一节奏：小标签 + 标题 + 说明在上，内容通栏在下。
    正文分节与示例图共用同一套标题结构，避免两种版式交替造成"拼接"感。 */
-.sec{padding:34px 0}
+.sec{padding-block:34px}
 .sec .side{margin-bottom:22px}
 .sec .side h2{font-size:17px;font-weight:600;margin:0 0 6px}
 .sec .side .no{display:block;font-family:var(--mono);font-size:11px;color:var(--ink-3);margin-bottom:6px;letter-spacing:.1em}
@@ -264,33 +264,17 @@ table.dl td.z{width:92px;font-family:var(--mono);font-size:12px;color:var(--ink-
 .uimob,.lvmob{display:none}
 .uimob svg,.lvmob svg{flex:none}
 /* 客户端 · 手机 */
-.ma{background:#F4F6F9;border:1px solid #C3C7CF;border-radius:16px;padding:12px}
-.matop{display:flex;align-items:center;gap:8px;font-size:17px;font-weight:800;padding:0 2px 10px;color:#1B2430}
-.matop svg{width:20px;height:20px;color:#36618E}
-.masess,.macard{background:#fff;border:1px solid #E3E6EC;border-radius:12px;padding:11px;margin-bottom:10px}
-.masess{display:flex;align-items:center;gap:10px}
-.mi{width:32px;height:32px;border-radius:9px;background:#E7EEF8;color:#36618E;display:grid;place-items:center}
-.mi svg{width:17px;height:17px}
-.masess b{display:block;font-size:14.5px;color:#1B2430}
-.masess .sub{font-size:12px;color:#6B7078}
+.ma{background:#F2F3FA;border:1px solid #C3C7CF;border-radius:14px;padding:14px}
 .machip{margin-left:auto;font-size:11.5px;background:#EEF1F6;color:#4A5361;border-radius:999px;padding:4px 9px;white-space:nowrap}
 .mah{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.mah .mi{width:30px;height:30px;border-radius:9px;background:#DDE7F5;color:#36618E;display:grid;place-items:center;flex:none}
+.mah .mi svg{width:16px;height:16px}
 .mah b{font-size:16px;font-weight:800;color:#1B2430}
-.maform{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.maform .w{grid-column:1/-1}
-.maform>div{border:1px solid #C3C7CF;border-radius:9px;padding:4px 9px;min-width:0}
-.maform label{display:block;font-size:10.5px;color:#8A93A3;line-height:1.5}
-.maform span{display:block;font-size:13.5px;color:#1B2430;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.maform .s{display:flex;align-items:center;gap:6px}
-.maform .s svg{width:15px;height:15px;color:#8A93A3;margin-left:auto}
-.maacts{display:flex;gap:8px;margin-top:10px}
-.maacts span{flex:1;border:1px solid #C3C7CF;border-radius:9px;padding:9px 0;text-align:center;font-size:13.5px;color:#43474E}
-.maacts b{flex:1;background:#36618E;color:#fff;border-radius:9px;padding:9px 0;text-align:center;font-size:13.5px}
 .maundo{display:inline-flex;align-items:center;gap:6px;border:1px solid #C3C7CF;border-radius:9px;padding:6px 11px;font-size:12.5px;color:#8A93A3;margin-bottom:9px}
 .maundo svg{width:14px;height:14px}
 .masearch{display:flex;align-items:center;gap:7px;border:1px solid #C3C7CF;border-radius:9px;padding:9px 10px;font-size:13px;color:#6B7078;margin-bottom:9px}
 .masearch svg{width:16px;height:16px}
-.marec{border:1px solid #DCE1E8;border-radius:11px;padding:9px 11px;background:#FBFCFE}
+.marec{border:1px solid #DCE1E8;border-radius:11px;padding:9px 11px;background:#FBFCFE;margin-top:8px}
 .marow{display:flex;align-items:center;gap:9px}
 .mano{background:#D7E3F7;color:#3B4858;font-weight:800;font-size:11.5px;border-radius:999px;padding:4px 8px}
 .marow b{flex:1;font-size:16px;font-weight:800;color:#1B2430}
@@ -298,10 +282,6 @@ table.dl td.z{width:92px;font-family:var(--mono);font-size:12px;color:var(--ink-
 .mameta{display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:6px;color:#6B7078;font-size:12px}
 .mameta span{display:inline-flex;align-items:center;gap:4px}
 .mameta svg{width:14px;height:14px}
-.matabs{display:flex;background:#fff;border:1px solid #E3E6EC;border-radius:12px;padding:6px 0}
-.matabs span{flex:1;display:grid;justify-items:center;gap:3px;font-size:11px;color:#8A93A3}
-.matabs span svg{width:19px;height:19px}
-.matabs span.on{color:#36618E;font-weight:700}
 /* Live Share · 手机 */
 .lm{background:#f4f7fb;border:1px solid #dfe6ef;border-radius:14px;padding:13px;color:#172033}
 .lmtop{display:flex;align-items:center;gap:8px;padding-bottom:12px;border-bottom:1px solid #dfe6ef}
@@ -343,9 +323,15 @@ table.dl td.z{width:92px;font-family:var(--mono);font-size:12px;color:var(--ink-
   .uimock:not(.ctrl){display:none}
   .uimob{display:block}
 }
-/* 主控屏 · 手机：竖排、字段两列且不再截断（对齐 ControllerDisplayScreen 的竖屏布局） */
-@media (max-width:620px){
+/* 主控屏 · 手机：字段列数与 ControllerDisplayScreen 的 tileWidth 规则一致
+   （≥760 三列 / ≥440 两列 / 否则单列），窄屏不再截断字段值 */
+@media (max-width:760px){
   .cpanel.wide .ctiles,.cpanel.narrow .ctiles{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width:440px){
+  .cpanel.wide .ctiles,.cpanel.narrow .ctiles{grid-template-columns:1fr}
+}
+@media (max-width:620px){
   .ctile{min-height:0;padding:9px 11px}
   .ctile .v{font-size:15px;white-space:normal;overflow-wrap:anywhere}
   .ccallsign{font-size:27px;margin-bottom:12px}
@@ -379,15 +365,15 @@ footer{padding:22px 0 40px}
 .foot nav a{font-size:12.5px;padding:3px 7px}
 
 @media (max-width:860px){
-  .sec{padding:26px 0}
+  .sec{padding-block:26px}
   dl.feat div{grid-template-columns:1fr;gap:2px}
 }
 @media (max-width:620px){
   nav{display:none}
   nav.open{display:flex;position:absolute;top:52px;left:0;right:0;flex-direction:column;background:var(--surface);
     border-bottom:1px solid var(--rule);padding:6px 12px 10px}
-  #hamb{display:grid}
-  .brand .t span{display:none}
+  #hamb{display:grid;margin-left:auto}
+  .brand .t span{display:inline}
   /* 示例工具栏在窄屏换行，避免标题被挤成竖排 */
   .uibar{flex-wrap:wrap;row-gap:10px}
   .uibar b{white-space:nowrap}
@@ -476,6 +462,16 @@ footer{padding:22px 0 40px}
       </div>
     </div>
   </div>
+    <div class="uimob">
+      <div class="ma">
+        <div class="mah"><span class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01"/></svg></span><b>已保存记录</b><span class="machip">59 条</span></div>
+        <div class="maundo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4.5V10h5.5"/></svg>恢复最近删除</div>
+        <div class="masearch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>搜索呼号 / QTH / 备注…</div>
+        <article class="marec"><div class="marow"><span class="mano">#59</span><b>BG5DBL</b><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg></div><div class="mameta"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3 2"/></svg>21:21</span><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>BG5CRL</span><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 4v16M8.5 8 6 20M15.5 8 18 20M7 20h10"/></svg>59/59</span></div></article>
+        <article class="marec"><div class="marow"><span class="mano">#58</span><b>BG5FXY</b><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg></div><div class="mameta"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3 2"/></svg>21:20</span><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>BG5CRL</span><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 4v16M8.5 8 6 20M15.5 8 18 20M7 20h10"/></svg>59/59</span></div></article>
+        </div>
+      </div>
+    </div>
 
   <section id="features">
     <div class="wrap sec">
@@ -495,20 +491,20 @@ footer{padding:22px 0 40px}
       <div class="side"><div class="no">02</div><h2>协作</h2><p>连接自建服务器后启用。</p></div>
       <div>
         <dl class="feat" style="margin-bottom:18px">
-          <div><dt>加入</dt><dd>所有者把会话发布到服务器，他人凭 10 位邀请码加入同一份记录。</dd></div>
-          <div><dt>实时</dt><dd>连续事件补拉 + 鉴权 WebSocket；断线或请求丢失后复用同一 mutationId 恢复。</dd></div>
-          <div><dt>冲突</dt><dd>无重叠修改自动三方 rebase；同字段冲突进入冲突中心，由使用者决定取舍。</dd></div>
-          <div><dt>云同步</dt><dd>个人会话与词库多设备自动合并；个人记录不写入协作会话。</dd></div>
-          <div><dt>主控屏</dt><dd>独立窗口显示当前点名进度，桌面端以独立进程运行，显示窗口出错不会带崩主控台。</dd></div>
-          <div><dt>Live Share</dt><dd>为主控、远程书记员或观众生成只读公开网页，无需登录即可查看当前点名进度；链接可设 1 小时至 7 天自动失效，密钥仅在创建时显示一次。</dd></div>
+        <div><dt>加入</dt><dd>所有者把会话发布到服务器，他人凭 10 位邀请码加入同一份记录。</dd></div>
+        <div><dt>实时</dt><dd>连续事件补拉 + 鉴权 WebSocket；断线或请求丢失后复用同一 mutationId 恢复。</dd></div>
+        <div><dt>冲突</dt><dd>无重叠修改自动三方 rebase；同字段冲突进入冲突中心，由使用者决定取舍。</dd></div>
+        <div><dt>云同步</dt><dd>个人会话与词库多设备自动合并；个人记录不写入协作会话。</dd></div>
+        <div><dt>主控屏</dt><dd>独立窗口显示当前点名进度，桌面端以独立进程运行，显示窗口出错不会带崩主控台。</dd></div>
+        <div><dt>Live Share</dt><dd>为主控、远程书记员或观众生成只读公开网页，无需登录即可查看当前点名进度；链接可设 1 小时至 7 天自动失效，密钥仅在创建时显示一次。</dd></div>
         </dl>
         <table class="roles">
-          <thead><tr><th>角色</th><th>权限</th></tr></thead>
-          <tbody>
-            <tr><td class="o">OWNER</td><td>创建/撤销邀请、调整或移除成员、转移所有权、重命名与关闭会话</td></tr>
-            <tr><td>EDITOR</td><td>新增、修改、删除记录</td></tr>
-            <tr><td>VIEWER</td><td>只读；被撤权或会话关闭后强制只读</td></tr>
-          </tbody>
+        <thead><tr><th>角色</th><th>权限</th></tr></thead>
+        <tbody>
+          <tr><td class="o">OWNER</td><td>创建/撤销邀请、调整或移除成员、转移所有权、重命名与关闭会话</td></tr>
+          <tr><td>EDITOR</td><td>新增、修改、删除记录</td></tr>
+          <tr><td>VIEWER</td><td>只读；被撤权或会话关闭后强制只读</td></tr>
+        </tbody>
         </table>
       </div>
     </div>
@@ -525,73 +521,45 @@ footer{padding:22px 0 40px}
       <div class="ctop">
         <span class="pi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="11.2" r="2.4" fill="currentColor" stroke="none"/><path d="M7.4 8.2a6.5 6.5 0 0 1 9.2 0"/><path d="M4.6 5.2a10.5 10.5 0 0 1 14.8 0"/><path d="M12 14v5.2h-2.6M12 19.2h2.6"/></svg></span>
         <div class="ct">
-          <div class="ctitle">2026-10-05 夜间点名</div>
-          <div class="csum">已保存 59 位 · 更新 21:21:08 · BG5CRL 编辑</div>
+        <div class="ctitle">2026-10-05 夜间点名</div>
+        <div class="csum">已保存 59 位 · 更新 21:21:08 · BG5CRL 编辑</div>
         </div>
         <span class="cstat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 18a4 4 0 0 1 0-8 5.5 5.5 0 0 1 10.6-1.4A3.8 3.8 0 0 1 17.5 18z"/><path d="m9 14 2 2 3.6-3.6"/></svg>已连接</span>
         <span class="cclock">21:21:09</span>
       </div>
       <div class="cbody">
         <div class="cpanel wide">
-          <div class="chead cur"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="12" rx="2"/><circle cx="8.5" cy="14" r="2.2"/><path d="M14 12.5h4M14 16h4"/><path d="m6.5 8 9.5-5"/></svg>当前第 59 位</div>
-          <div class="cpanelbody">
-            <p class="ccallsign">BG5DBL</p>
-            <div class="ctiles">
-              <div class="ctile"><div class="k">时间</div><div class="v">21:21</div></div>
-              <div class="ctile"><div class="k">主控</div><div class="v">BG5CRL</div></div>
-              <div class="ctile"><div class="k">RST 发</div><div class="v">59</div></div>
-              <div class="ctile"><div class="k">RST 收</div><div class="v">59</div></div>
-              <div class="ctile"><div class="k">QTH</div><div class="v">宁波高新区</div></div>
-              <div class="ctile"><div class="k">设备</div><div class="v">森海克斯 GT 12</div></div>
-              <div class="ctile"><div class="k">功率</div><div class="v">8W</div></div>
-              <div class="ctile"><div class="k">天线</div><div class="v">老鹰 770拉杆</div></div>
-              <div class="ctile"><div class="k">高度</div><div class="v">8楼</div></div>
-            </div>
+        <div class="chead cur"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="12" rx="2"/><circle cx="8.5" cy="14" r="2.2"/><path d="M14 12.5h4M14 16h4"/><path d="m6.5 8 9.5-5"/></svg>当前第 59 位</div>
+        <div class="cpanelbody">
+          <p class="ccallsign">BG5DBL</p>
+          <div class="ctiles">
+            <div class="ctile"><div class="k">时间</div><div class="v">21:21</div></div>
+            <div class="ctile"><div class="k">主控</div><div class="v">BG5CRL</div></div>
+            <div class="ctile"><div class="k">RST 发</div><div class="v">59</div></div>
+            <div class="ctile"><div class="k">RST 收</div><div class="v">59</div></div>
+            <div class="ctile"><div class="k">QTH</div><div class="v">宁波高新区</div></div>
+            <div class="ctile"><div class="k">设备</div><div class="v">森海克斯 GT 12</div></div>
+            <div class="ctile"><div class="k">功率</div><div class="v">8W</div></div>
+            <div class="ctile"><div class="k">天线</div><div class="v">老鹰 770拉杆</div></div>
+            <div class="ctile"><div class="k">高度</div><div class="v">8楼</div></div>
           </div>
+        </div>
         </div>
         <div class="cpanel narrow">
-          <div class="chead prev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 12a8.5 8.5 0 1 0 2.8-6.3"/><path d="M3.5 4.8v5.4h5.4"/><path d="M12 8.4V12l2.6 1.8"/></svg>第 58 位</div>
-          <div class="cpanelbody">
-            <div class="ctiles">
-              <div class="ctile"><div class="k">时间</div><div class="v">21:20</div></div>
-              <div class="ctile"><div class="k">主控</div><div class="v">BG5CRL</div></div>
-              <div class="ctile"><div class="k">来台呼号</div><div class="v">BG5FXY</div></div>
-              <div class="ctile"><div class="k">QTH</div><div class="v">杭州联胜路地铁口</div></div>
-              <div class="ctile"><div class="k">设备</div><div class="v">泉盛 UV-K1</div></div>
-              <div class="ctile"><div class="k">天线</div><div class="v">原装天线</div></div>
-            </div>
+        <div class="chead prev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 12a8.5 8.5 0 1 0 2.8-6.3"/><path d="M3.5 4.8v5.4h5.4"/><path d="M12 8.4V12l2.6 1.8"/></svg>第 58 位</div>
+        <div class="cpanelbody">
+          <div class="ctiles">
+            <div class="ctile"><div class="k">时间</div><div class="v">21:20</div></div>
+            <div class="ctile"><div class="k">主控</div><div class="v">BG5CRL</div></div>
+            <div class="ctile"><div class="k">来台呼号</div><div class="v">BG5FXY</div></div>
+            <div class="ctile"><div class="k">QTH</div><div class="v">杭州联胜路地铁口</div></div>
+            <div class="ctile"><div class="k">设备</div><div class="v">泉盛 UV-K1</div></div>
+            <div class="ctile"><div class="k">天线</div><div class="v">原装天线</div></div>
           </div>
         </div>
-      </div>
-    </div>
-    <div class="uimob">
-      <div class="ma">
-        <div class="matop"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><rect x="3" y="6" width="18" height="12" rx="2.5"/><circle cx="8.5" cy="12" r="2"/><path d="M14 10.5h4M14 13.5h4"/><path d="m6.5 6 9-3.5"/></svg>点名台</div>
-        <div class="masess">
-          <span class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4.5" width="18" height="16" rx="2.5"/><path d="M8 3v3M16 3v3M3 9.5h18"/><circle cx="9" cy="14.5" r="1.5" fill="currentColor" stroke="none"/></svg></span>
-          <div><b>2026年10月6日 13:21</b><span class="sub">进行中</span></div>
-          <span class="machip">仅本地</span>
-        </div>
-        <div class="macard">
-          <div class="mah"><span class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 20h4L18.5 9.5l-4-4L4 16z"/><path d="M13.5 6.5 17.5 10.5"/></svg></span><b>当前记录</b><span class="machip">当前第 2 位</span></div>
-          <div class="maform"><div class="w"><label>主控呼号 *</label><span>BG5CRL</span></div><div class="w"><label>来台呼号</label><div class="s"><span>BG5DBL</span><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></span></div></div><div><label>设备</label><span>森海克斯 GT 12</span></div><div><label>天线</label><span>老鹰 770拉杆</span></div><div><label>功率</label><span>8W</span></div><div><label>QTH</label><span>宁波高新区</span></div><div><label>高度</label><span>8楼</span></div><div><label>时间</label><span>13:21</span></div><div><label>RST 发</label><span>59</span></div><div><label>RST 收</label><span>59</span></div><div class="w"><label>备注</label><span></span></div></div>
-          <div class="maacts"><span>清空已填内容</span><b>＋ 保存记录</b></div>
-        </div>
-        <div class="macard">
-          <div class="mah"><span class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01"/></svg></span><b>已保存记录</b><span class="machip">1 条</span></div>
-          <div class="maundo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4.5V10h5.5"/></svg>恢复最近删除</div>
-          <div class="masearch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>搜索呼号 / QTH / 备注…</div>
-          <article class="marec">
-            <div class="marow"><span class="mano">#1</span><b>BG5DBL</b><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg></div>
-            <div class="mameta"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3 2"/></svg>13:22</span><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>BG5CRL</span><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 4v16M8.5 8 6 20M15.5 8 18 20M7 20h10"/></svg>59/59</span></div>
-          </article>
-        </div>
-        <div class="matabs">
-          <span class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><rect x="3" y="6" width="18" height="12" rx="2.5"/><circle cx="8.5" cy="12" r="2"/><path d="M14 10.5h4M14 13.5h4"/><path d="m6.5 6 9-3.5"/></svg>点名台</span><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="9" cy="8" r="3"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0"/><circle cx="17" cy="9.5" r="2.4"/><path d="M15 19a4.4 4.4 0 0 1 6-3.9"/></svg>会话</span><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><rect x="3.5" y="4.5" width="17" height="6" rx="2"/><rect x="3.5" y="13.5" width="17" height="6" rx="2"/></svg>数据</span><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 3.5v2.2M12 18.3v2.2M4.9 7.8l1.9 1.1M17.2 15.1l1.9 1.1M4.9 16.2l1.9-1.1M17.2 8.9l1.9-1.1"/></svg>设置</span>
         </div>
       </div>
     </div>
-
     <div class="mockcap second">Live Share 公开页 · 由服务端 <a href="https://github.com/Mazha0309/CallsignRollLogServer" target="_blank" rel="noopener">CallsignRollLogServer</a> 提供</div>
     <div class="lv">
       <div class="lvtop">
