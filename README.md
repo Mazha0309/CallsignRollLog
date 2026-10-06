@@ -168,7 +168,7 @@ Flutter 的 Windows 无障碍桥在处理「节点重新挂载」的语义更新
 ### 构建
 
 ```bash
-git clone https://github.com/Mazha0309/OpenLogTool.git
+git clone https://github.com/Mazha0309/CallsignRollLog.git
 cd Callsign Roll Log
 flutter pub get
 flutter build linux

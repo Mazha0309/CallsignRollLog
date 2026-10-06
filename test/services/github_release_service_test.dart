@@ -29,7 +29,7 @@ void main() {
       expect(
         result.releaseUri,
         Uri.parse(
-          'https://github.com/Mazha0309/OpenLogTool/releases/tag/v2.2.0-R',
+          'https://github.com/Mazha0309/CallsignRollLog/releases/tag/v2.2.0-R',
         ),
       );
     });

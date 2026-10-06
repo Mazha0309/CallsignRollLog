@@ -3,7 +3,7 @@ Version: 2.8.0
 Release: 1
 Summary: Amateur radio net logging and collaboration client
 License: AGPL-3.0
-URL: https://github.com/Mazha0309/OpenLogTool
+URL: https://github.com/Mazha0309/CallsignRollLog
 
 %description
 Callsign Roll Log is an amateur radio net logging and collaboration client.

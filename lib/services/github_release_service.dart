@@ -59,7 +59,7 @@ final class GitHubReleaseService {
 
   static final Uri latestReleaseApiUri = Uri.https(
     'api.github.com',
-    '/repos/Mazha0309/OpenLogTool/releases/latest',
+    '/repos/Mazha0309/CallsignRollLog/releases/latest',
   );
 
   static const Map<String, String> requestHeaders = {
@@ -151,7 +151,13 @@ final class GitHubReleaseService {
     final releaseUri = Uri(
       scheme: 'https',
       host: 'github.com',
-      pathSegments: ['Mazha0309', 'OpenLogTool', 'releases', 'tag', tagName],
+      pathSegments: [
+        'Mazha0309',
+        'CallsignRollLog',
+        'releases',
+        'tag',
+        tagName
+      ],
     );
 
     return ReleaseUpdateCheck(

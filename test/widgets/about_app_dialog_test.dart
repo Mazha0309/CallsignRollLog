@@ -79,7 +79,7 @@ void main() {
       (tester) async {
     await _setSurface(tester, const Size(800, 760));
     final releaseUri = Uri.parse(
-      'https://github.com/Mazha0309/OpenLogTool/releases/tag/v2.2.0-R',
+      'https://github.com/Mazha0309/CallsignRollLog/releases/tag/v2.2.0-R',
     );
     Uri? openedUri;
 
@@ -161,7 +161,7 @@ void main() {
         currentVersion: '2.1.0-R+42',
         latestVersion: '2.1.0-R',
         releaseUri: Uri.parse(
-          'https://github.com/Mazha0309/OpenLogTool/releases/tag/v2.1.0-R',
+          'https://github.com/Mazha0309/CallsignRollLog/releases/tag/v2.1.0-R',
         ),
         updateAvailable: false,
       ),
