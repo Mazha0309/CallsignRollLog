@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CRL · Callsign Roll Log — 业余无线电点名记录与协作工具</title>
+<meta name="description" content="专为业余无线电爱好者设计的点名记录工具，跨平台运行。本地不需要服务器与账号，服务器是个人云同步与多人协作的可选扩展。AGPL-3.0 开源。">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="icon.png" type="image/png">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap">
+<style>
+:root{
+  --paper:#fbfbfc; --surface:#fff; --sunken:#f2f4f7; --sel:#e9eff7;
+  --ink:#141a22; --ink-2:#586172; --ink-3:#8a93a3;
+  --rule:#e4e7ec; --rule-2:#cbd1da;
+  --brand:#12599f; --brand-2:#1e78d2; --brand-wash:#e8f1fb;
+  --ok:#0f7a45; --ok-wash:#e6f4ec;
+  --sans:"IBM Plex Sans",-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Noto Sans SC",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+html[data-theme=dark]{
+  --paper:#0c1118; --surface:#131c27; --sunken:#0f1822; --sel:#17293c;
+  --ink:#e7edf6; --ink-2:#9ca8ba; --ink-3:#687587;
+  --rule:#1f2a38; --rule-2:#2d3a4b;
+  --brand:#9fcaff; --brand-2:#5aa6f0; --brand-wash:#122436;
+  --ok:#4fd08a; --ok-wash:#0f2a1d;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:60px}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:15.5px;line-height:1.78;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+.wrap{max-width:1080px;margin:0 auto;padding:0 26px}
+:focus-visible{outline:2px solid var(--brand-2);outline-offset:2px;border-radius:3px}
+.mono{font-family:var(--mono)}
+code{font-family:var(--mono);font-size:.88em;background:var(--sunken);border:1px solid var(--rule);border-radius:3px;padding:0 4px;white-space:nowrap}
+
+/* 顶栏：细、密、无装饰 */
+header{position:sticky;top:0;z-index:40;background:color-mix(in srgb,var(--paper) 92%,transparent);
+  backdrop-filter:blur(6px);border-bottom:1px solid var(--rule)}
+.hd{display:flex;align-items:center;gap:18px;height:52px}
+.brand{display:flex;align-items:center;gap:9px;min-width:0}
+.brand img{width:26px;height:26px;border-radius:6px;display:block}
+.brand .t{font-weight:600;font-size:15px;letter-spacing:.01em;white-space:nowrap}
+.brand .t span{font-family:var(--mono);font-size:11px;color:var(--ink-3);font-weight:400;letter-spacing:.04em}
+nav{display:flex;gap:2px;margin-left:auto}
+nav a{padding:5px 9px;border-radius:6px;font-size:13.5px;color:var(--ink-2)}
+nav a:hover{color:var(--ink);background:var(--sunken)}
+.hd .ic{width:30px;height:30px;display:grid;place-items:center;border:1px solid var(--rule);border-radius:7px;
+  background:var(--surface);cursor:pointer;flex:none}
+.hd .ic:hover{border-color:var(--rule-2)}
+.hd .ic svg{width:15px;height:15px}
+#hamb{display:none}
+
+/* 头部信息块：不喊口号，只陈述 */
+.intro{padding-top:56px;padding-bottom:40px}
+.intro h1{font-size:clamp(23px,2.6vw,30px);font-weight:600;letter-spacing:-.01em;margin:0 0 16px;line-height:1.45}
+.intro h1 .b{color:var(--brand)}
+.intro p{margin:0 0 8px;color:var(--ink-2);max-width:62ch}
+.meta{display:flex;flex-wrap:wrap;gap:8px 10px;align-items:center;margin:24px 0 0;font-family:var(--mono);font-size:11.5px;color:var(--ink-3)}
+.meta span{padding:2px 8px;border:1px solid var(--rule);border-radius:999px;background:var(--surface)}
+.meta b{color:var(--ink);font-weight:600}
+.acts{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:18px}
+.btn{display:inline-flex;align-items:center;gap:7px;height:34px;padding:0 13px;border-radius:8px;font-size:13.5px;font-weight:600;
+  flex:0 0 auto;line-height:1}
+.btn.pri{background:var(--brand-2);color:#fff}
+html[data-theme=dark] .btn.pri{color:#06121e}
+.btn.pri:hover{background:var(--brand)}
+.btn.alt{border:1px solid var(--rule-2);background:var(--surface);color:var(--ink)}
+.btn.alt:hover{border-color:var(--ink-3)}
+.btn svg{width:15px;height:15px;flex:none}
+
+/* 记录工作台：严格照源码还原。
+   结构 lib/screens/home_screen.dart（_WorkbenchSectionCard）+ lib/widgets/log_table.dart
+   配色取自 ColorScheme.fromSeed(#2196F3) 实测：surfaceContainerLow #F2F3FA、
+   surfaceContainerHighest #E1E2E8、surface #F8F9FF、onSurface #191C20、
+   onSurfaceVariant #43474E、outlineVariant #C3C7CF、secondaryContainer #D7E3F7。
+   固定浅色，如同一张截图，不随页面主题变。 */
+/* 示例图与正文同宽、带与分节同构的标题块，避免"贴图"感 */
+.uiwrap{max-width:1080px;margin:0 auto;padding:30px 26px 46px}
+.uiwrap .mockcap{font-family:var(--mono);font-size:11px;color:var(--ink-3);margin:0 0 10px}
+.uiwrap .mockcap.second{margin-top:34px}
+.uiwrap .mockcap a,ol.steps a{color:var(--brand)}
+.uiwrap .mockcap a:hover,ol.steps a:hover{text-decoration:underline}
+.uiwrap .fhead{margin-bottom:18px}
+.uiwrap .fhead .k{display:block;font-family:var(--mono);font-size:11px;letter-spacing:.1em;color:var(--ink-3);margin-bottom:6px}
+.uiwrap .fhead h3{margin:0 0 6px;font-size:17px;font-weight:600}
+.uiwrap .fhead p{margin:0;font-size:13.5px;color:var(--ink-2);max-width:74ch}
+/* 卡片：color surfaceContainerLow / 圆角 14 / 边框 outlineVariant / 内边距 18 */
+.uimock{background:#F2F3FA;border:1px solid #C3C7CF;border-radius:14px;padding:18px;color:#191C20;font-size:13px}
+.uibar{display:flex;align-items:center;gap:12px;margin-bottom:16px;min-width:0}
+/* 图标底座 38×38 / 圆角 10 / primary 12% 底 */
+.uibar .ico{width:38px;height:38px;border-radius:10px;background:rgba(54,97,142,.12);color:#36618E;
+  display:grid;place-items:center;flex:none}
+.uibar .ico svg{width:20px;height:20px}
+.uibar b{font-size:21px;font-weight:800;letter-spacing:-.01em}
+/* 条数胶囊：secondaryContainer / onSecondaryContainer / padding 9×4 / labelMedium w700 */
+.uibar .pill{font-size:12px;font-weight:700;background:#D7E3F7;color:#3B4858;padding:4px 9px;border-radius:999px}
+/* OutlinedButton：圆角 12 / 高 40 / 边框 outline / 前景 primary */
+.uibar .undo{margin-left:auto;display:inline-flex;align-items:center;gap:8px;height:40px;padding:0 16px;
+  border:1px solid rgba(115,119,127,.86);border-radius:12px;background:transparent;color:#36618E;font-size:14px;
+  font-weight:500;white-space:nowrap}
+.uibar .undo svg{width:18px;height:18px}
+.uitools{display:flex;gap:10px;margin-bottom:10px}
+/* 搜索框：圆角 12 / 边框 outlineVariant / 前缀图标 20 / 内边距 12×8 */
+.uisearch{flex:1;min-width:0;height:40px;border:1px solid #C3C7CF;border-radius:12px;display:flex;align-items:center;gap:8px;
+  padding:0 12px;color:#6B7078;font-size:14px;overflow:hidden;white-space:nowrap}
+.uisearch svg{width:20px;height:20px;flex:none;color:#43474E}
+/* 提示块：surfaceContainerLow 底 / 圆角 12 / 边框 outlineVariant / 内边距 12×9 */
+.uihint{display:inline-flex;align-items:center;gap:7px;padding:9px 12px;border:1px solid #C3C7CF;border-radius:12px;
+  background:#F2F3FA;color:#43474E;font-size:12px;white-space:nowrap}
+.uihint svg{width:18px;height:18px}
+.uiscroll{overflow-x:auto}
+/* DataTable：列宽取源码常量；表头行高 48、数据行高 56、字号 13、分隔线 outlineVariant */
+.uitable{width:100%;table-layout:fixed;border-collapse:separate;border-spacing:0;min-width:1378px}
+.uitable th{height:48px;background:#E1E2E8;color:#191C20;font-weight:700;font-size:13px;text-align:center;
+  white-space:nowrap;padding:0 8px;border-bottom:1px solid #C3C7CF}
+.uitable td{height:56px;text-align:center;white-space:nowrap;padding:0 8px;font-size:13px;color:#191C20;
+  border-bottom:1px solid #C3C7CF}
+.uitable tr:last-child td{border-bottom:0}
+/* 操作列是独立面板（宽 128 / surface 底 / 左分隔线 + 阴影），不是 DataColumn */
+.uitable th.op,.uitable td.op{position:sticky;right:0;background:#F8F9FF;border-left:1px solid #C3C7CF;
+  box-shadow:-3px 0 8px rgba(0,0,0,.08)}
+.uitable td.op svg{width:18px;height:18px;color:#43474E}
+
+/* 主控屏：照 lib/screens/controller_display_screen.dart 还原
+   顶栏 surfaceContainer #ECEEF4；当前面板表头实心 primary #36618E（白字），
+   上一位面板表头 primary 12% 底；字段块 surfaceContainerHighest 50% 底、圆角 10、高 ≥74 */
+.ctrl{background:#F8F9FF;padding:0;overflow:hidden}
+.ctop{display:flex;align-items:center;gap:12px;padding:12px 16px;background:#ECEEF4;border-bottom:1px solid #C3C7CF}
+.ctop .pi{color:#36618E;flex:none;display:grid;place-items:center}
+.ctop .pi svg{width:30px;height:30px}
+.ctop .ct{min-width:0}
+.ctop .ctitle{font-size:20px;font-weight:700;line-height:1.3}
+.ctop .csum{font-size:12px;color:#43474E;line-height:1.5}
+.cstat{margin-left:auto;display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:#127a45;white-space:nowrap}
+.cstat svg{width:16px;height:16px}
+.cclock{padding:7px 12px;border-radius:999px;background:rgba(209,228,255,.55);color:#194975;font-size:16px;
+  font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+.cbody{display:grid;grid-template-columns:3fr 2fr;gap:16px;padding:16px}
+.cpanel{border:1px solid #C3C7CF;border-radius:12px;overflow:hidden;background:#F8F9FF}
+.chead{display:flex;align-items:center;gap:8px;padding:12px 16px;font-size:20px;font-weight:800}
+.chead.cur{background:#36618E;color:#fff}
+.chead.prev{background:rgba(54,97,142,.12);color:#36618E}
+.chead svg{width:22px;height:22px;flex:none}
+.cpanelbody{padding:16px}
+.ccallsign{text-align:center;font-size:34px;font-weight:900;letter-spacing:1.5px;color:#36618E;margin:0 0 16px}
+.ctiles{display:grid;gap:12px}
+.cpanel.wide .ctiles{grid-template-columns:repeat(3,1fr)}
+.cpanel.narrow .ctiles{grid-template-columns:repeat(2,1fr)}
+.ctile{min-height:74px;padding:10px 14px;border:1px solid #C3C7CF;border-radius:10px;background:rgba(225,226,232,.5);
+  display:flex;flex-direction:column;justify-content:center;min-width:0}
+.ctile .k{font-size:12px;color:#43474E}
+.ctile .v{font-size:16px;font-weight:700;margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media (max-width:900px){.cbody{grid-template-columns:1fr}.ctiles{grid-template-columns:repeat(2,1fr)}}
+
+/* Live Share 公开页：照 OpenLogToolServer/live 的 App.tsx + App.css 还原
+   它是另一套视觉（React 端口），自带配色与字体，故在此独立声明 */
+.lv{background:#f4f7fb;border:1px solid #dfe6ef;border-radius:14px;overflow:hidden;color:#172033;
+  font-family:Inter,var(--sans);font-size:13px}
+.lvtop{display:flex;align-items:center;gap:11px;padding:10px 20px;border-bottom:1px solid #dfe6ef;background:#fff}
+.lvtop img{width:36px;height:36px;border-radius:10px;flex:none}
+.lvtop .bn{font-size:16px;font-weight:700;line-height:1.15;display:block}
+.lvtop .bs{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#5f6b7e}
+.lvsel{margin-left:auto;display:flex;gap:8px}
+.lvsel span{height:36px;padding:0 11px;display:inline-flex;align-items:center;border:1px solid #dfe6ef;border-radius:9px;
+  background:#fff;font-size:13px;min-width:112px}
+.lvbody{padding:26px 20px 28px}
+.lvhead{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;margin-bottom:24px;flex-wrap:wrap}
+.lveb{display:flex;align-items:center;gap:9px;color:#5f6b7e;font-size:13px;font-weight:650;margin-bottom:9px}
+.lvro{padding:3px 8px;border-radius:999px;color:#2168d5;background:#e8f1ff;font-size:11px;letter-spacing:.04em;text-transform:uppercase}
+.lvhead h4{margin:0;font-size:30px;line-height:1.1;letter-spacing:-.035em}
+.lvstate{display:flex;gap:9px;align-items:center;flex-wrap:wrap}
+.lvbadge{min-height:30px;padding:5px 10px;border-radius:999px;background:#e3f6ed;color:#16845b;font-size:12px;
+  font-weight:650;display:inline-flex;align-items:center;white-space:nowrap}
+.lvpill{min-height:30px;padding:5px 10px;border:1px solid #dfe6ef;border-radius:999px;background:#fff;color:#5f6b7e;
+  font-size:12px;font-weight:650;display:inline-flex;align-items:center;gap:7px;white-space:nowrap}
+.lvpill i{width:7px;height:7px;border-radius:50%;background:#16845b}
+.lvstats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:20px}
+.lvstats article{padding:16px 17px;border:1px solid #dfe6ef;border-radius:12px;background:#fff}
+.lvstats span{display:block;color:#5f6b7e;font-size:12px;font-weight:600}
+.lvstats strong{margin-top:7px;display:block;font-size:18px;letter-spacing:-.02em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lvlatest{margin-bottom:20px;padding:22px;border:1px solid color-mix(in srgb,#2168d5 24%,#dfe6ef);border-radius:16px;
+  background:linear-gradient(120deg,color-mix(in srgb,#2168d5 11%,#fff),#fff 50%)}
+.lvlabel{color:#2168d5;font-size:12px;font-weight:750;letter-spacing:.06em;text-transform:uppercase;margin-bottom:17px}
+.lvgrid{display:grid;grid-template-columns:minmax(180px,.8fr) minmax(380px,1.2fr);gap:38px;align-items:end}
+.lvprimary{display:grid;grid-template-columns:auto 1fr;align-items:baseline;gap:3px 10px}
+.lvprimary .n{color:#5f6b7e;font-size:13px;font-variant-numeric:tabular-nums}
+.lvprimary strong{font-family:var(--mono);font-size:clamp(28px,4vw,46px);line-height:1;letter-spacing:-.05em;color:#172033}
+.lvprimary time{grid-column:2;color:#5f6b7e;font-size:13px;font-variant-numeric:tabular-nums}
+.lvdetails{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px;margin:0}
+.lvdetails dt{color:#5f6b7e;font-size:11px;font-weight:650;margin-bottom:5px}
+.lvdetails dd{margin:0;font-size:14px;font-weight:650;overflow-wrap:anywhere}
+.lvhist{border:1px solid #dfe6ef;border-radius:14px;background:#fff;overflow:hidden}
+.lvhisthead{padding:18px 20px;display:flex;align-items:center;justify-content:space-between;gap:18px;border-bottom:1px solid #dfe6ef;flex-wrap:wrap}
+.lvhisthead h5{margin:0;font-size:18px;letter-spacing:-.02em}
+.lvhisthead p{margin:4px 0 0;color:#5f6b7e;font-size:12px}
+.lvsearch{width:min(300px,100%);height:38px;padding:0 11px;display:flex;align-items:center;gap:8px;border:1px solid #dfe6ef;
+  border-radius:9px;background:#eef4fb;color:#8490a3}
+.lvsearch svg{width:16px;height:16px;flex:none;color:#5f6b7e}
+.lvscroll{overflow-x:auto}
+.lv table{width:100%;border-collapse:collapse;font-size:13px;white-space:nowrap}
+.lv th{padding:10px 12px;color:#5f6b7e;background:#eef4fb;font-size:11px;font-weight:700;text-align:left}
+.lv td{padding:11px 12px;border-top:1px solid #dfe6ef;color:#172033}
+.lv tbody tr:first-child td{border-top:0}
+.lv .og{color:#8490a3;font-variant-numeric:tabular-nums}
+.lv .cs{color:#2168d5;font-family:var(--mono);font-size:14px;font-weight:750}
+.lvfoot{padding:13px 16px;display:flex;justify-content:flex-end;gap:12px;border-top:1px solid #dfe6ef;color:#5f6b7e;font-size:12px}
+.lvfoot span{min-height:32px;padding:5px 10px;border:1px solid #dfe6ef;border-radius:8px;display:inline-flex;align-items:center}
+.lvnote{margin:16px 0 0;color:#5f6b7e;font-size:12px;text-align:center}
+@media (max-width:900px){.lvstats{grid-template-columns:repeat(2,1fr)}.lvgrid{grid-template-columns:1fr;gap:20px}
+  .lvdetails{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:860px){.uihint{display:none}}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+th{font-family:var(--mono);font-size:10.5px;font-weight:500;color:var(--ink-3);text-align:center;padding:7px 9px;
+  border-bottom:1px solid var(--rule-2);background:var(--sunken)}
+td{padding:7px 9px;border-bottom:1px solid var(--rule);text-align:center;font-size:12.5px;color:var(--ink-2)}
+tbody tr:last-child td{border-bottom:0}
+/* 行悬停高亮只给记录工作台；下载表用了 rowspan，全局规则会让平台那一格连累第一行 */
+.uitable tbody tr:hover td{background:var(--sunken)}
+
+/* 段落：左栏标签 + 右栏内容，紧凑 */
+/* 分节之间只用留白分隔：满屏发丝线会把页面切成"一摞托盘" */
+section{padding:0}
+/* 全文统一节奏：小标签 + 标题 + 说明在上，内容通栏在下。
+   正文分节与示例图共用同一套标题结构，避免两种版式交替造成"拼接"感。 */
+.sec{padding:34px 0}
+.sec .side{margin-bottom:22px}
+.sec .side h2{font-size:17px;font-weight:600;margin:0 0 6px}
+.sec .side .no{display:block;font-family:var(--mono);font-size:11px;color:var(--ink-3);margin-bottom:6px;letter-spacing:.1em}
+.sec .side p{margin:0;font-size:13.5px;color:var(--ink-2);max-width:74ch}
+
+dl.feat{margin:0;border-top:1px solid var(--rule)}
+dl.feat div{display:grid;grid-template-columns:160px 1fr;gap:24px;padding:22px 0;border-bottom:1px solid var(--rule)}
+dl.feat dt{font-weight:600;font-size:14.5px}
+dl.feat dd{margin:0;font-size:14.5px;line-height:1.8;color:var(--ink-2)}
+
+table.roles{white-space:normal}
+table.roles th,table.roles td{text-align:left;padding:15px 16px;font-size:14px}
+table.roles td:first-child{font-family:var(--mono);font-size:11.5px;color:var(--ink);width:80px;font-weight:600}
+table.roles td:first-child.o{color:var(--brand)}
+table.roles td{color:var(--ink-2)}
+
+/* 下载 */
+.rel{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:baseline;margin-bottom:12px}
+.rel .v{font-family:var(--mono);font-weight:600;font-size:14px}
+.rel .d{font-family:var(--mono);font-size:11.5px;color:var(--ink-3)}
+.rel a{margin-left:auto;font-size:13px;font-weight:600;color:var(--brand)}
+.rel a:hover{text-decoration:underline}
+table.dl{white-space:normal}
+table.dl th,table.dl td{text-align:left;padding:9px 16px;font-size:13.5px;vertical-align:top}
+table.dl tr.grp td{border-top:1px solid var(--rule);padding-top:16px}
+table.dl tr:first-child td{border-top:0}
+table.dl td.p{width:100px;font-family:var(--mono);font-size:12px;color:var(--ink-3);white-space:nowrap}
+table.dl td.f a{color:var(--brand);font-family:var(--mono);font-size:12.5px;line-height:1.6;white-space:nowrap}
+table.dl td.f a:hover{text-decoration:underline}
+table.dl td.z{width:92px;font-family:var(--mono);font-size:12px;color:var(--ink-3);white-space:nowrap;text-align:right}
+.hint{margin:10px 0 0;font-size:12.5px;color:var(--ink-3)}
+
+/* 构建 */
+ol.steps{counter-reset:s;list-style:none;margin:0 0 14px;padding:0;border-top:1px solid var(--rule)}
+ol.steps li{counter-increment:s;display:grid;grid-template-columns:28px 1fr;gap:16px;padding:16px 0;border-bottom:1px solid var(--rule);font-size:14.5px}
+ol.steps li::before{content:counter(s,decimal-leading-zero);font-family:var(--mono);font-size:11.5px;color:var(--ink-3);padding-top:2px}
+ol.steps .h{color:var(--ink-3)}
+.term{border:1px solid var(--rule-2);border-radius:8px;overflow:hidden;background:var(--surface)}
+.term .bar{display:flex;align-items:center;gap:8px;padding:7px 11px;border-bottom:1px solid var(--rule);background:var(--sunken);
+  font-family:var(--mono);font-size:11px;color:var(--ink-3)}
+.term .bar button{margin-left:auto;background:var(--surface);border:1px solid var(--rule);border-radius:5px;color:var(--ink-2);
+  font-family:var(--mono);font-size:11px;padding:2px 8px;cursor:pointer}
+.term pre{margin:0;padding:13px;overflow-x:auto;font-family:var(--mono);font-size:12.5px;line-height:1.8;color:var(--ink)}
+.term .c{color:var(--ink-3)}
+.term .o{color:var(--ok)}
+
+footer{padding:22px 0 40px}
+.foot{display:flex;flex-wrap:wrap;gap:8px 22px;align-items:baseline;justify-content:space-between;font-size:12.5px;color:var(--ink-3)}
+.foot nav{gap:0}
+.foot nav a{font-size:12.5px;padding:3px 7px}
+
+@media (max-width:860px){
+  .sec{padding:26px 0}
+  dl.feat div{grid-template-columns:1fr;gap:2px}
+}
+@media (max-width:620px){
+  nav{display:none}
+  nav.open{display:flex;position:absolute;top:52px;left:0;right:0;flex-direction:column;background:var(--surface);
+    border-bottom:1px solid var(--rule);padding:6px 12px 10px}
+  #hamb{display:grid}
+  .brand .t span{display:none}
+}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap hd">
+    <a class="brand" href="#top">
+      <img src="icon.png" alt="">
+      <span class="t">CRL <span>Callsign Roll Log</span></span>
+    </a>
+    <nav id="nav">
+      <a href="#features">功能</a>
+      <a href="#collab">协作</a>
+      <a href="#download">下载</a>
+      <a href="#build">构建</a>
+      <a href="https://github.com/Mazha0309/OpenLogTool" target="_blank" rel="noopener">源码</a>
+    </nav>
+    <button class="ic" id="hamb" aria-label="菜单"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+    <button class="ic" id="theme" aria-label="深浅色"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path id="tg" d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+  </div>
+</header>
+
+<main id="top">
+  <div class="wrap intro">
+    <h1>业余无线电<span class="b">点名记录与协作</span>工具</h1>
+    <p>专为业余无线电爱好者设计。本地使用不需要服务器、也不需要注册账号：新建会话后即可记录、管理词库、查看历史与导入导出。服务器是可选扩展，用于个人云同步、好友与多人协作——没有服务器不会影响单机记录。</p>
+    <div class="meta">
+      <span>版本 <b data-version>v3.0.2-R</b></span>
+      <span>AGPL-3.0</span>
+      <span>Flutter · Rust</span>
+      <span>Linux / Windows / macOS / Android / Web</span>
+    </div>
+    <div class="acts">
+      <a class="btn pri" href="#download"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11m0 0 4.5-4.5M12 15l-4.5-4.5M5 20h14"/></svg>下载</a>
+      <a class="btn alt" href="https://github.com/Mazha0309/OpenLogTool" target="_blank" rel="noopener">源码仓库</a>
+      <a class="btn alt" href="https://github.com/Mazha0309/OpenLogTool/blob/main/README.md" target="_blank" rel="noopener">README</a>
+    </div>
+  </div>
+
+  <div class="uiwrap">
+    <div class="fhead">
+      <span class="k">示例 · 桌面客户端</span>
+      <h3>记录工作台</h3>
+      <p>主控在点名时逐条录入。下表列名、组件与配色取自应用源码本身。</p>
+    </div>
+    <div class="uimock">
+      <div class="uibar">
+        <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01"/></svg></span>
+        <b>已保存记录</b>
+        <span class="pill">59 条</span>
+        <span class="undo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4.5V10h5.5"/></svg>恢复最近删除</span>
+      </div>
+      <div class="uitools">
+        <div class="uisearch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>搜索呼号 / QTH / 备注…</div>
+        <div class="uihint"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M9 8l3-3 3 3M9 16l3 3 3-3"/></svg>Shift + 滚轮横向滚动</div>
+      </div>
+      <div class="uiscroll">
+        <table class="uitable">
+          <!-- 列宽取自 lib/widgets/log_table.dart 的 DataColumn 常量 -->
+          <colgroup>
+            <col style="width:60px"><col style="width:100px"><col style="width:120px"><col style="width:120px">
+            <col style="width:60px"><col style="width:60px"><col style="width:150px"><col style="width:150px">
+            <col style="width:80px"><col style="width:150px"><col style="width:80px"><col style="width:120px">
+            <col style="width:128px">
+          </colgroup>
+          <thead><tr><th>#</th><th>时间</th><th>主控</th><th>来台呼号</th><th>RST 发</th><th>RST 收</th><th>QTH</th><th>设备</th><th>功率</th><th>天线</th><th>高度</th><th>备注</th><th class="op">操作</th></tr></thead>
+          <tbody>
+            <tr><td>59</td><td>21:21</td><td>BG5CRL</td><td>BG5DBL</td><td>59</td><td>59</td><td>宁波高新区</td><td>森海克斯 GT 12</td><td>8W</td><td>老鹰 770拉杆</td><td>8楼</td><td>—</td><td class="op"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4.5" y="10.5" width="15" height="9.5" rx="2"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/></svg></td></tr>
+            <tr><td>58</td><td>21:20</td><td>BG5CRL</td><td>BG5FXY</td><td>59</td><td>59</td><td>杭州联胜路地铁口</td><td>泉盛 UV-K1</td><td>5W</td><td>原装天线</td><td>3楼</td><td>—</td><td class="op"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4.5" y="10.5" width="15" height="9.5" rx="2"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/></svg></td></tr>
+            <tr><td>57</td><td>21:18</td><td>BG5CRL</td><td>BG5CRW</td><td>59</td><td>59</td><td>宁波北仑</td><td>ICOM ID-52A</td><td>5W</td><td>770拉杆天线</td><td>4楼</td><td>—</td><td class="op"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4.5" y="10.5" width="15" height="9.5" rx="2"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/></svg></td></tr>
+            <tr><td>56</td><td>21:17</td><td>BG5CRL</td><td>BG5GZA</td><td>59</td><td>59</td><td>东洲岛</td><td>森海克斯 8650</td><td>8W</td><td>钻石 SRJ77</td><td>10米</td><td>—</td><td class="op"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4.5" y="10.5" width="15" height="9.5" rx="2"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/></svg></td></tr>
+            <tr><td>55</td><td>21:12</td><td>BG5GEH</td><td>BG5GVC</td><td>59</td><td>59</td><td>宁波镇海</td><td>YAESU VX-6R</td><td>5W</td><td>770天线</td><td>5楼</td><td>—</td><td class="op"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4.5" y="10.5" width="15" height="9.5" rx="2"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/></svg></td></tr>
+            <tr><td>54</td><td>21:11</td><td>BG5GEH</td><td>BG5ETL</td><td>59</td><td>59</td><td>萧山</td><td>森海克斯 8800</td><td>5W</td><td>钻石 770</td><td>30米</td><td>—</td><td class="op"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4.5" y="10.5" width="15" height="9.5" rx="2"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/></svg></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <section id="features">
+    <div class="wrap sec">
+      <div class="side"><div class="no">01</div><h2>记录</h2><p>点名时逐条录入。</p></div>
+      <dl class="feat">
+        <div><dt>字段</dt><dd>主控、来台呼号、时间、RST 发 / 收、QTH、设备、功率、天线、高度、备注。</dd></div>
+        <div><dt>补全</dt><dd>呼号、设备、天线、QTH 四类词典即时补全，输入新内容自动沉淀进词库。</dd></div>
+        <div><dt>操作</dt><dd>呼号自动大写、主控呼号保留上一台；Ctrl＋Enter 提交，可撤销上一条。</dd></div>
+        <div><dt>导出</dt><dd>JSON 与带样式的 Excel：标题居中加粗、表头配色、列宽行高自动适配。</dd></div>
+        <div><dt>可选 AI</dt><dd>语音识别与文字助手相互独立、默认关闭；密钥写入系统安全存储。</dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <section id="collab">
+    <div class="wrap sec">
+      <div class="side"><div class="no">02</div><h2>协作</h2><p>连接自建服务器后启用。</p></div>
+      <div>
+        <dl class="feat" style="margin-bottom:18px">
+          <div><dt>加入</dt><dd>所有者把会话发布到服务器，他人凭 10 位邀请码加入同一份记录。</dd></div>
+          <div><dt>实时</dt><dd>连续事件补拉 + 鉴权 WebSocket；断线或请求丢失后复用同一 mutationId 恢复。</dd></div>
+          <div><dt>冲突</dt><dd>无重叠修改自动三方 rebase；同字段冲突进入冲突中心，由使用者决定取舍。</dd></div>
+          <div><dt>云同步</dt><dd>个人会话与词库多设备自动合并；个人记录不写入协作会话。</dd></div>
+          <div><dt>主控屏</dt><dd>独立窗口显示当前点名进度，桌面端以独立进程运行，显示窗口出错不会带崩主控台。</dd></div>
+          <div><dt>Live Share</dt><dd>为主控、远程书记员或观众生成只读公开网页，无需登录即可查看当前点名进度；链接可设 1 小时至 7 天自动失效，密钥仅在创建时显示一次。</dd></div>
+        </dl>
+        <table class="roles">
+          <thead><tr><th>角色</th><th>权限</th></tr></thead>
+          <tbody>
+            <tr><td class="o">OWNER</td><td>创建/撤销邀请、调整或移除成员、转移所有权、重命名与关闭会话</td></tr>
+            <tr><td>EDITOR</td><td>新增、修改、删除记录</td></tr>
+            <tr><td>VIEWER</td><td>只读；被撤权或会话关闭后强制只读</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <div class="uiwrap">
+    <div class="fhead">
+      <span class="k">示例 · 协作时</span>
+      <h3>现场一块屏，远方一个网页</h3>
+      <p>主控屏由当前账号在客户端里打开，投给场内；Live Share 公开页发给不在场的观众与远程值守，无需账号。两边都是只读。</p>
+    </div>
+    <div class="mockcap">主控屏 · 桌面客户端，独立进程</div>
+    <div class="uimock ctrl">
+      <div class="ctop">
+        <span class="pi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="11.2" r="2.4" fill="currentColor" stroke="none"/><path d="M7.4 8.2a6.5 6.5 0 0 1 9.2 0"/><path d="M4.6 5.2a10.5 10.5 0 0 1 14.8 0"/><path d="M12 14v5.2h-2.6M12 19.2h2.6"/></svg></span>
+        <div class="ct">
+          <div class="ctitle">2026-10-05 夜间点名</div>
+          <div class="csum">已保存 59 位 · 更新 21:21:08 · BG5CRL 编辑</div>
+        </div>
+        <span class="cstat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 18a4 4 0 0 1 0-8 5.5 5.5 0 0 1 10.6-1.4A3.8 3.8 0 0 1 17.5 18z"/><path d="m9 14 2 2 3.6-3.6"/></svg>已连接</span>
+        <span class="cclock">21:21:09</span>
+      </div>
+      <div class="cbody">
+        <div class="cpanel wide">
+          <div class="chead cur"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="12" rx="2"/><circle cx="8.5" cy="14" r="2.2"/><path d="M14 12.5h4M14 16h4"/><path d="m6.5 8 9.5-5"/></svg>当前第 59 位</div>
+          <div class="cpanelbody">
+            <p class="ccallsign">BG5DBL</p>
+            <div class="ctiles">
+              <div class="ctile"><div class="k">时间</div><div class="v">21:21</div></div>
+              <div class="ctile"><div class="k">主控</div><div class="v">BG5CRL</div></div>
+              <div class="ctile"><div class="k">RST 发</div><div class="v">59</div></div>
+              <div class="ctile"><div class="k">RST 收</div><div class="v">59</div></div>
+              <div class="ctile"><div class="k">QTH</div><div class="v">宁波高新区</div></div>
+              <div class="ctile"><div class="k">设备</div><div class="v">森海克斯 GT 12</div></div>
+              <div class="ctile"><div class="k">功率</div><div class="v">8W</div></div>
+              <div class="ctile"><div class="k">天线</div><div class="v">老鹰 770拉杆</div></div>
+              <div class="ctile"><div class="k">高度</div><div class="v">8楼</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="cpanel narrow">
+          <div class="chead prev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 12a8.5 8.5 0 1 0 2.8-6.3"/><path d="M3.5 4.8v5.4h5.4"/><path d="M12 8.4V12l2.6 1.8"/></svg>第 58 位</div>
+          <div class="cpanelbody">
+            <div class="ctiles">
+              <div class="ctile"><div class="k">时间</div><div class="v">21:20</div></div>
+              <div class="ctile"><div class="k">主控</div><div class="v">BG5CRL</div></div>
+              <div class="ctile"><div class="k">来台呼号</div><div class="v">BG5FXY</div></div>
+              <div class="ctile"><div class="k">QTH</div><div class="v">杭州联胜路地铁口</div></div>
+              <div class="ctile"><div class="k">设备</div><div class="v">泉盛 UV-K1</div></div>
+              <div class="ctile"><div class="k">天线</div><div class="v">原装天线</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="mockcap second">Live Share 公开页 · 由服务端 <a href="https://github.com/Mazha0309/OpenLogToolServer" target="_blank" rel="noopener">OpenLogToolServer</a> 提供</div>
+    <div class="lv">
+      <div class="lvtop">
+        <img src="icon.png" alt="">
+        <span><span class="bn">OpenLogTool</span><span class="bs">公开实时记录</span></span>
+        <span class="lvsel"><span>简体中文</span><span>跟随系统</span></span>
+      </div>
+      <div class="lvbody">
+        <div class="lvhead">
+          <div>
+            <div class="lveb"><span class="lvro">只读</span><span>公开会话</span></div>
+            <h4>2026-10-05 夜间点名</h4>
+          </div>
+          <div class="lvstate">
+            <span class="lvbadge">进行中</span>
+            <span class="lvpill"><i></i>实时连接正常</span>
+          </div>
+        </div>
+        <div class="lvstats">
+          <article><span>已提交记录</span><strong>59</strong></article>
+          <article><span>最近主控</span><strong>BG5CRL</strong></article>
+          <article><span>分享有效期</span><strong>2026/10/08 21:00</strong></article>
+          <article><span>最近同步</span><strong>2026/10/05 21:21</strong></article>
+        </div>
+        <div class="lvlatest">
+          <div class="lvlabel">最新已提交记录</div>
+          <div class="lvgrid">
+            <div class="lvprimary"><span class="n">#59</span><strong>BG5DBL</strong><time>21:21</time></div>
+            <dl class="lvdetails">
+              <div><dt>主控</dt><dd>BG5CRL</dd></div>
+              <div><dt>RST 发 / RST 收</dt><dd>59 / 59</dd></div>
+              <div><dt>QTH</dt><dd>宁波高新区</dd></div>
+              <div><dt>设备</dt><dd>森海克斯 GT 12</dd></div>
+            </dl>
+          </div>
+        </div>
+        <div class="lvhist">
+          <div class="lvhisthead">
+            <div><h5>历史记录</h5><p>按时间倒序，仅显示服务端公开字段</p></div>
+            <span class="lvsearch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="6"/><path d="m16 16 4 4"/></svg>搜索呼号、主控或 QTH</span>
+          </div>
+          <div class="lvscroll">
+            <table>
+              <thead><tr><th>序号</th><th>时间</th><th>主控</th><th>呼号</th><th>RST 发</th><th>RST 收</th><th>QTH</th><th>设备</th><th>功率</th><th>天线</th><th>高度</th><th>备注</th></tr></thead>
+              <tbody>
+                <tr><td class="og">#59</td><td>21:21</td><td>BG5CRL</td><td class="cs">BG5DBL</td><td>59</td><td>59</td><td>宁波高新区</td><td>森海克斯 GT 12</td><td>8W</td><td>老鹰 770拉杆</td><td>8楼</td><td>—</td></tr>
+                <tr><td class="og">#58</td><td>21:20</td><td>BG5CRL</td><td class="cs">BG5FXY</td><td>59</td><td>59</td><td>杭州联胜路地铁口</td><td>泉盛 UV-K1</td><td>5W</td><td>原装天线</td><td>3楼</td><td>—</td></tr>
+                <tr><td class="og">#57</td><td>21:18</td><td>BG5CRL</td><td class="cs">BG5CRW</td><td>59</td><td>59</td><td>宁波北仑</td><td>ICOM ID-52A</td><td>5W</td><td>770拉杆天线</td><td>4楼</td><td>—</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="lvfoot"><span>第 1 / 2 页，共 59 条</span></div>
+        </div>
+        <p class="lvnote">此页面仅显示已提交的公开记录，不包含正在填写的草稿或成员信息。</p>
+      </div>
+    </div>
+  </div>
+
+  <section id="download">
+    <div class="wrap sec">
+      <div class="side"><div class="no">03</div><h2>下载</h2><p>产物发布在 GitHub Releases。</p></div>
+      <div>
+        <div class="rel">
+          <span class="v" data-version>v3.0.2-R</span>
+          <span class="d" data-released>读取中…</span>
+          <a href="https://github.com/Mazha0309/OpenLogTool/releases/latest" target="_blank" rel="noopener">在 Releases 查看 →</a>
+        </div>
+        <table class="dl">
+          <thead><tr><th>平台</th><th>文件（按格式 / 架构）</th><th>大小</th></tr></thead>
+          <tbody id="dlbody">
+            <tr><td class="p">Windows</td><td class="f"><a href="https://github.com/Mazha0309/OpenLogTool/releases/latest" target="_blank" rel="noopener">安装包 / 便携 zip</a></td><td class="z">—</td></tr>
+            <tr><td class="p">macOS</td><td class="f"><a href="https://github.com/Mazha0309/OpenLogTool/releases/latest" target="_blank" rel="noopener">universal dmg / zip</a></td><td class="z">—</td></tr>
+            <tr><td class="p">Linux</td><td class="f"><a href="https://github.com/Mazha0309/OpenLogTool/releases/latest" target="_blank" rel="noopener">AppImage / tar.gz / deb / rpm</a></td><td class="z">—</td></tr>
+            <tr><td class="p">Android</td><td class="f"><a href="https://github.com/Mazha0309/OpenLogTool/releases/latest" target="_blank" rel="noopener">APK（按架构 + 通用包）</a></td><td class="z">—</td></tr>
+            <tr><td class="p">iOS</td><td class="f"><a href="https://github.com/Mazha0309/OpenLogTool/releases/latest" target="_blank" rel="noopener">未签名 IPA</a></td><td class="z">—</td></tr>
+            <tr><td class="p">Web</td><td class="f"><a href="https://github.com/Mazha0309/OpenLogTool/releases/latest" target="_blank" rel="noopener">WebClient 包</a></td><td class="z">—</td></tr>
+          </tbody>
+        </table>
+        <p class="hint" id="dlnote">表格由页面读取 GitHub Releases API 生成；无法访问时保留为静态入口。</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="build">
+    <div class="wrap sec">
+      <div class="side"><div class="no">04</div><h2>构建</h2><p>Flutter 3.44+ · Dart 3.12+ · Rust 1.91.1</p></div>
+      <div>
+        <ol class="steps">
+          <li><span>克隆仓库并执行 <code>flutter pub get</code></span></li>
+          <li><span>按平台构建：<code>flutter build linux|windows|macos</code>，桌面与 Android 会一并编译 Rust 动态库</span></li>
+          <li><span>网页版另跑 <code>bash tool/build_web.sh</code></span></li>
+          <li><span>需要协作时再部署 <a href="https://github.com/Mazha0309/OpenLogToolServer" target="_blank" rel="noopener">OpenLogToolServer</a></span></li>
+        </ol>
+        <div class="term">
+          <div class="bar"><span>bash</span><button id="copy" type="button">复制</button></div>
+<pre id="cmd">git clone https://github.com/Mazha0309/OpenLogTool.git
+cd OpenLogTool
+flutter pub get
+
+<span class="c"># 桌面端（在各自系统执行）</span>
+flutter build linux      <span class="c"># 或 windows / macos</span>
+
+<span class="c"># Android</span>
+flutter build apk --release --split-per-abi
+
+<span class="c"># 网页版</span>
+bash tool/build_web.sh
+<span class="o"># 产物在 build/ 下</span></pre>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <span>CRL · Callsign Roll Log · © 2026 Mazha0309 · BG5CRL · AGPL-3.0</span>
+    <nav>
+      <a href="https://github.com/Mazha0309/OpenLogTool" target="_blank" rel="noopener">客户端仓库</a>
+      <a href="https://github.com/Mazha0309/OpenLogToolServer" target="_blank" rel="noopener">服务端仓库</a>
+      <a href="https://github.com/Mazha0309/OpenLogTool/releases" target="_blank" rel="noopener">发布</a>
+      <a href="https://github.com/Mazha0309/OpenLogTool/issues" target="_blank" rel="noopener">反馈</a>
+    </nav>
+  </div>
+</footer>
+
+<script>
+(function(){
+  var root=document.documentElement,KEY='crl-theme',saved=null;
+  try{saved=localStorage.getItem(KEY);}catch(e){}
+  root.setAttribute('data-theme',saved||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'));
+  function tg(){document.getElementById('tg').setAttribute('d',root.getAttribute('data-theme')==='dark'
+    ?'M12 3v2m0 14v2M5.6 5.6l1.4 1.4m10 10 1.4 1.4M3 12h2m14 0h2M5.6 18.4l1.4-1.4m10-10 1.4-1.4M16 12a4 4 0 1 1-8 0 4 4 0 0 1 8 0z'
+    :'M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z');}
+  tg();
+  document.getElementById('theme').addEventListener('click',function(){
+    var n=root.getAttribute('data-theme')==='dark'?'light':'dark';
+    root.setAttribute('data-theme',n);tg();try{localStorage.setItem(KEY,n);}catch(e){}
+  });
+  var nav=document.getElementById('nav');
+  document.getElementById('hamb').addEventListener('click',function(){nav.classList.toggle('open');});
+  nav.addEventListener('click',function(e){if(e.target.tagName==='A')nav.classList.remove('open');});
+
+  var copy=document.getElementById('copy');
+  copy.addEventListener('click',function(){
+    var t=document.getElementById('cmd').innerText;
+    (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject())
+      .then(function(){copy.textContent='已复制';setTimeout(function(){copy.textContent='复制';},1500);})
+      .catch(function(){copy.textContent='手动复制';});
+  });
+
+  var REPO='Mazha0309/OpenLogTool';
+  var ORDER=[['Windows',/windows|setup|\.exe$/i],['macOS',/macos|\.dmg$/i],['Linux',/linux|appimage|\.deb$|\.rpm$/i],
+             ['Android',/android|\.apk$/i],['iOS',/ios|\.ipa$/i],['Web',/webclient|web/i]];
+  function plat(n){for(var i=0;i<ORDER.length;i++){if(ORDER[i][1].test(n))return ORDER[i][0];}return '其他';}
+  function mb(n){return (Number(n)/1048576).toFixed(1)+' MB';}
+  function esc(s){return String(s).replace(/[&<>"]/g,function(c){return({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c];});}
+
+  fetch('https://api.github.com/repos/'+REPO+'/releases/latest',{headers:{Accept:'application/vnd.github+json'}})
+    .then(function(r){if(!r.ok)throw new Error(r.status);return r.json();})
+    .then(function(rel){
+      var tag=rel.tag_name||rel.name||'';
+      document.querySelectorAll('[data-version]').forEach(function(el){el.textContent=tag;});
+      var rd=document.querySelector('[data-released]');
+      if(rd&&rel.published_at)rd.textContent='发布于 '+rel.published_at.slice(0,10);
+
+      var assets=(rel.assets||[]).filter(function(a){return /\.(exe|zip|dmg|appimage|tar\.gz|deb|rpm|apk|ipa)$/i.test(a.name);});
+      if(!assets.length)return;
+      var groups={},order=[];
+      assets.forEach(function(a){var p=plat(a.name);if(!groups[p]){groups[p]=[];order.push(p);}groups[p].push(a);});
+      var rank=function(p){var i=['Windows','macOS','Linux','Android','iOS','Web'].indexOf(p);return i<0?9:i;};
+      order.sort(function(a,b){return rank(a)-rank(b);});
+      // 版本号已在标题区显示，表格里只留能区分文件名的部分；完整名放 title。
+      var tagBare=String(tag).replace(/^v/,'');
+      function shortName(name){
+        var s=name.replace(/^OpenLogTool-/,'');
+        s=s.split(tagBare).join('').replace(/[0-9a-f]{7}\.\d+-?/g,'');
+        s=s.replace(/-{2,}/g,'-').replace(/-\./g,'.').replace(/\.-/g,'.').replace(/^-+|-+$/g,'');
+        return s || name;
+      }
+      // 一行一个文件、各自显示体积；平台用 rowspan 归组，并按架构/格式名排序。
+      document.getElementById('dlbody').innerHTML=order.map(function(p){
+        var list=groups[p].slice().sort(function(a,b){return a.name.localeCompare(b.name);});
+        return list.map(function(a,i){
+          return '<tr'+(i===0?' class="grp"':'')+'>'+
+            (i===0?'<td class="p" rowspan="'+list.length+'">'+p+'</td>':'')+
+            '<td class="f"><a href="'+esc(a.browser_download_url)+'" title="'+esc(a.name)+'">'+esc(shortName(a.name))+'</a></td>'+
+            '<td class="z">'+mb(a.size)+'</td></tr>';
+        }).join('');
+      }).join('');
+      var note=document.getElementById('dlnote');
+      if(note)note.textContent='共 '+assets.length+' 个产物，数据来自 GitHub Releases API，随最新发布自动更新。';
+    })
+    .catch(function(){});
+})();
+</script>
+</body>
+</html>
