@@ -45,5 +45,5 @@ npx serve site
 - 页面第一屏必须同时出现 **CRL / Callsign Roll Log / 呼号点名日志**；不要把裸 `CRL` 或裸域名当作品牌。
 - 功能与下载文案以 `README.md` 为准。**版本号与下载表由页面实时读取 GitHub Releases API**（`releases/latest`）生成；API 不可达时自动回退到静态表格，不会空白。
 - 设计令牌对齐 App（`lib/theme/app_theme.dart`）：蓝色 seed `#2196F3`、圆角 12/16、间距 4/8/12/16/24/32、内容宽 1120、控件高 40。首屏示例是按 `lib/widgets/log_table.dart` 的真实列名还原的，不是凭空画的。
-- 字体走 Google Fonts（`Saira` 标题 + `IBM Plex Sans` 正文 + `IBM Plex Mono` 数据/标签）。失效时回退系统中文字体，不影响可读性；要离线或国内加速可把字体自托管到本目录并改 `<link>`。
+- 字体全部自托管在 `fonts/`，页面不请求 Google Fonts。中文主字体为更纱黑体 SC，西文与等宽为 `IBM Plex Sans` / `IBM Plex Mono`，Live Share 示例另用 `Inter`。清单、许可与更纱黑体子集的重生成方式见 `fonts/NOTICE.md`；**新增汉字段落后若有个别字明显是另一种字体，重跑 `python3 site/tools/subset-sarasa.py`**。
 - 因为要访问 `api.github.com`，站点**不要**加严格的 `connect-src` CSP；若必须加，请白名单 `https://api.github.com`。

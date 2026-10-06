@@ -35,6 +35,7 @@ jobs:
           set -euo pipefail
           mkdir -p _site
           cp site/index.html site/icon.png site/wechat-zjra.svg _site/
+          cp -R site/fonts _site/fonts
 
       - name: Configure Pages
         uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
