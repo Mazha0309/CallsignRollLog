@@ -1003,7 +1003,7 @@ jobs:
           ditto "$package_app" "$dmg_stage/OpenLogTool.app"
           ln -s /Applications "$dmg_stage/Applications"
           hdiutil create \
-            -volname Callsign Roll Log \
+            -volname "Callsign Roll Log" \
             -srcfolder "$dmg_stage" \
             -ov \
             -format UDZO \
