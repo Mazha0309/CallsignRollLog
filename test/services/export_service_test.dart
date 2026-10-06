@@ -105,6 +105,11 @@ void main() {
           ExportService.mimeTypeForExtension(null), 'application/octet-stream');
     });
 
+    test('maps adif mime type', () {
+      expect(ExportService.mimeTypeForExtension('adi'), 'text/plain');
+      expect(ExportService.mimeTypeForExtension('ADIF'), 'text/plain');
+    });
+
     test('does not append extension when already present', () {
       final meta = ExportService.webDownloadMeta(
         '点名记录.xlsx',
@@ -146,5 +151,134 @@ void main() {
     final workbook = excel_lib.Excel.decodeBytes(bytes!);
     final cell = workbook['点名记录'].cell(excel_lib.CellIndex.indexByString('A4'));
     expect(cell.cellStyle?.backgroundColor.colorHex, 'FF123456');
+  });
+
+  group('ExportService.generateAdif', () {
+    test('writes LoTW fields with station callsign as controller', () {
+      final adif = ExportService.generateAdif(
+        [
+          LogEntry(
+            id: 'log-1',
+            time: '2026-07-13T12:01:00Z',
+            controller: 'BG5CRL',
+            callsign: 'BG5CRL',
+            report: '59',
+            rstRcvd: '57',
+            qth: 'PM00de',
+            device: 'FT-991A',
+            power: '50W',
+            antenna: 'GP',
+            height: '8m',
+            remarks: 'net check-in',
+          ),
+        ],
+        createdAt: DateTime.utc(2026, 7, 13, 12, 30),
+      );
+
+      expect(adif, contains('<ADIF_VER:5>3.1.4'));
+      expect(adif, contains('<PROGRAMID:11>OpenLogTool'));
+      expect(adif, contains('<CALL:6>BG5CRL'));
+      expect(adif, contains('<STATION_CALLSIGN:6>BG5CRL'));
+      expect(adif, contains('<OPERATOR:6>BG5CRL'));
+      expect(adif, contains('<QSO_DATE:8>20260713'));
+      expect(adif, contains('<TIME_ON:4>1201'));
+      expect(adif, contains('<MODE:2>FM'));
+      expect(adif, contains('<BAND:2>2M'));
+      expect(adif, contains('<RST_SENT:2>59'));
+      expect(adif, contains('<RST_RCVD:2>57'));
+      expect(adif, contains('<GRIDSQUARE:6>PM00DE'));
+      expect(adif, isNot(contains('<COMMENT')));
+      expect(adif, isNot(contains('<NOTES')));
+      expect(adif, isNot(contains('APP_OPENLOGTOOL')));
+      expect(adif, contains('<EOR>'));
+    });
+
+    test('splits one ADIF file per controller', () {
+      final files = ExportService.generateAdifByController([
+        LogEntry(
+          id: 'log-1',
+          time: '2026-07-13T12:00:00Z',
+          controller: 'BG5CRL',
+          callsign: 'BG5CRL',
+          report: '59',
+          rstRcvd: '59',
+          qth: 'PM00',
+          device: '',
+          power: '',
+          antenna: '',
+          height: '',
+        ),
+        LogEntry(
+          id: 'log-2',
+          time: '2026-07-13T12:05:00Z',
+          controller: 'ba4aaa',
+          callsign: 'BD4BBB',
+          report: '59',
+          rstRcvd: '59',
+          qth: '杭州',
+          device: '',
+          power: '',
+          antenna: '',
+          height: '',
+        ),
+        LogEntry(
+          id: 'log-3',
+          time: '2026-07-13T12:10:00Z',
+          controller: 'BG5CRL',
+          callsign: 'BG5GEH',
+          report: '59',
+          rstRcvd: '59',
+          qth: '',
+          device: '',
+          power: '',
+          antenna: '',
+          height: '',
+        ),
+      ], createdAt: DateTime.utc(2026, 7, 13));
+
+      expect(files.keys.toList()..sort(), ['BA4AAA', 'BG5CRL']);
+      expect(files['BG5CRL'], contains('<CALL:6>BG5CRL'));
+      expect(files['BG5CRL'], contains('<CALL:6>BG5GEH'));
+      expect(files['BG5CRL'], contains('<STATION_CALLSIGN:6>BG5CRL'));
+      expect(files['BG5CRL'], isNot(contains('BD4BBB')));
+      expect(files['BA4AAA'], contains('<CALL:6>BD4BBB'));
+      expect(files['BA4AAA'], contains('<STATION_CALLSIGN:6>BA4AAA'));
+      expect(files['BA4AAA'], contains('<QTH:2>杭州'));
+    });
+
+    test('clock-only time uses the log createdAt date', () {
+      final adif = ExportService.generateAdif(
+        [
+          LogEntry(
+            id: 'log-2',
+            time: '20:15',
+            controller: 'BA4AAA',
+            callsign: 'BD4BBB',
+            report: '599',
+            rstRcvd: '',
+            qth: '杭州',
+            device: '',
+            power: '15',
+            antenna: '',
+            height: '',
+            remarks: '',
+            createdAt: '2026-08-19T01:00:00Z',
+          ),
+        ],
+        createdAt: DateTime.utc(2026, 1, 1),
+      );
+
+      expect(adif, contains('<QSO_DATE:8>20260819'));
+      expect(adif, contains('<TIME_ON:4>2015'));
+      expect(adif, contains('<TX_PWR:2>15'));
+    });
+
+    test('packs multiple controller ADIF files into a zip', () {
+      final bytes = ExportService.generateAdifArchiveBytes({
+        'BG5CRL': 'ADI-A',
+        'BA4AAA': 'ADI-B',
+      });
+      expect(bytes, isNotEmpty);
+    });
   });
 }

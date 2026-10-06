@@ -1,10 +1,12 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:archive/archive.dart';
 import 'package:excel/excel.dart' as excel_lib;
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
+import 'package:openlogtool/config/version.dart';
 import 'package:openlogtool/models/export_settings.dart';
 import 'package:openlogtool/models/log_entry.dart';
 import 'package:openlogtool/utils/log_time.dart';
@@ -131,6 +133,11 @@ class ExportService {
         return 'application/json';
       case 'xlsx':
         return 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+      case 'adi':
+      case 'adif':
+        return 'text/plain';
+      case 'zip':
+        return 'application/zip';
       default:
         return 'application/octet-stream';
     }
@@ -200,6 +207,145 @@ class ExportService {
     final jsonData = logs.map((log) => log.toJson()).toList();
     final jsonString = const JsonEncoder.withIndent('  ').convert(jsonData);
     return Uint8List.fromList(utf8.encode(jsonString));
+  }
+
+  static Uint8List generateAdifBytes(
+    List<LogEntry> logs, {
+    DateTime? createdAt,
+  }) {
+    return Uint8List.fromList(
+      utf8.encode(generateAdif(logs, createdAt: createdAt)),
+    );
+  }
+
+  static Map<String, String> generateAdifByController(
+    List<LogEntry> logs, {
+    DateTime? createdAt,
+  }) {
+    final grouped = <String, List<LogEntry>>{};
+    for (final log in logs) {
+      final controller = log.controller.trim().toUpperCase();
+      if (controller.isEmpty) continue;
+      grouped.putIfAbsent(controller, () => []).add(log);
+    }
+    return {
+      for (final entry in grouped.entries)
+        entry.key: generateAdif(
+          entry.value,
+          createdAt: createdAt,
+          stationCallsign: entry.key,
+        ),
+    };
+  }
+
+  static Uint8List generateAdifArchiveBytes(
+    Map<String, String> files, {
+    String Function(String stationCallsign)? fileNameForStation,
+  }) {
+    final archive = Archive();
+    files.forEach((station, contents) {
+      final name = fileNameForStation?.call(station) ?? '$station.adi';
+      final encoded = utf8.encode(contents);
+      archive.addFile(ArchiveFile(name, encoded.length, encoded));
+    });
+    return Uint8List.fromList(ZipEncoder().encode(archive) ?? const <int>[]);
+  }
+
+  static String generateAdif(
+    List<LogEntry> logs, {
+    DateTime? createdAt,
+    String? stationCallsign,
+  }) {
+    final created = (createdAt ?? DateTime.now()).toUtc();
+    final buffer = StringBuffer()
+      ..writeln('ADIF export from OpenLogTool')
+      ..write(_adifField('ADIF_VER', '3.1.4'))
+      ..write(_adifField('PROGRAMID', 'OpenLogTool'))
+      ..write(_adifField('PROGRAMVERSION', appVersion))
+      ..write(_adifField(
+        'CREATED_TIMESTAMP',
+        '${_adifDate(created)} ${_adifTime(created, includeSeconds: true)}',
+      ))
+      ..writeln('<EOH>');
+
+    for (final log in logs) {
+      final operator = log.controller.trim().toUpperCase();
+      final station = (stationCallsign ?? operator).trim().toUpperCase();
+      final qsoTime = _adifQsoDateTime(log.time, fallback: log.createdAt);
+      buffer.write(_adifField('CALL', log.callsign.trim().toUpperCase()));
+      buffer.write(_adifField('STATION_CALLSIGN', station));
+      buffer.write(_adifField('OPERATOR', operator));
+      if (qsoTime != null) {
+        buffer.write(_adifField('QSO_DATE', _adifDate(qsoTime)));
+        buffer.write(_adifField('TIME_ON', _adifTime(qsoTime)));
+      }
+      buffer.write(_adifField('MODE', 'FM'));
+      buffer.write(_adifField('BAND', '2M'));
+      buffer.write(_adifField('RST_SENT', log.report.trim()));
+      buffer.write(_adifField('RST_RCVD', log.rstRcvd.trim()));
+      final qth = log.qth.trim();
+      final grid = _adifGridSquare(qth);
+      if (grid != null) {
+        buffer.write(_adifField('GRIDSQUARE', grid));
+      } else {
+        buffer.write(_adifField('QTH', qth));
+      }
+      buffer.write(_adifField('MY_RIG', log.device.trim()));
+      buffer.write(_adifField('TX_PWR', _adifPower(log.power)));
+      buffer.writeln('<EOR>');
+    }
+    return buffer.toString();
+  }
+
+  static String _adifField(String name, String value) {
+    if (value.isEmpty) return '';
+    return '<$name:${value.length}>$value';
+  }
+
+  static DateTime? _adifQsoDateTime(String raw, {String? fallback}) {
+    final normalized = raw.trim();
+    if (normalized.isEmpty) return DateTime.tryParse(fallback ?? '')?.toUtc();
+    final parsed = DateTime.tryParse(normalized);
+    if (parsed != null) return parsed.toUtc();
+    final match =
+        RegExp(r'^(\d{1,2}):(\d{2})(?::(\d{2}))?$').firstMatch(normalized);
+    if (match == null) return DateTime.tryParse(fallback ?? '')?.toUtc();
+    final hour = int.parse(match.group(1)!);
+    final minute = int.parse(match.group(2)!);
+    final second = int.parse(match.group(3) ?? '0');
+    final reference =
+        DateTime.tryParse(fallback ?? '')?.toUtc() ?? DateTime.now().toUtc();
+    return DateTime.utc(
+      reference.year,
+      reference.month,
+      reference.day,
+      hour,
+      minute,
+      second,
+    );
+  }
+
+  static String _adifDate(DateTime value) =>
+      '${value.year.toString().padLeft(4, '0')}'
+      '${value.month.toString().padLeft(2, '0')}'
+      '${value.day.toString().padLeft(2, '0')}';
+
+  static String _adifTime(DateTime value, {bool includeSeconds = false}) {
+    final time = '${value.hour.toString().padLeft(2, '0')}'
+        '${value.minute.toString().padLeft(2, '0')}';
+    if (!includeSeconds) return time;
+    return '$time${value.second.toString().padLeft(2, '0')}';
+  }
+
+  static String? _adifGridSquare(String value) {
+    final match = RegExp(r'^[A-Ra-r]{2}\d{2}([A-Xa-x]{2})?$').firstMatch(value);
+    if (match == null) return null;
+    return value.toUpperCase();
+  }
+
+  static String _adifPower(String value) {
+    final match = RegExp(r'^(\d+(?:\.\d+)?)').firstMatch(value.trim());
+    return match?.group(1) ?? value.trim();
   }
 
   /// 根据日志列表和导出设置生成 Excel 文件字节。

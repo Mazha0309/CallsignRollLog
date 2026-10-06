@@ -125,6 +125,13 @@ class _ExportPanelState extends State<ExportPanel> {
                 color: theme.colorScheme.secondary,
                 onPressed: () => _exportExcel(context),
               ),
+              _buildActionButton(
+                context,
+                label: l10n.exportAdif,
+                icon: Icons.radio,
+                color: theme.colorScheme.tertiary,
+                onPressed: () => _exportAdif(context),
+              ),
             ],
           ),
           SizedBox(height: cardPadding),
@@ -406,7 +413,8 @@ class _ExportPanelState extends State<ExportPanel> {
       tone: SettingsTone.tertiary,
       child: Text(
         '• ${context.l10n.jsonFormatDescription}\n'
-        '• ${context.l10n.excelFormatDescription}',
+        '• ${context.l10n.excelFormatDescription}\n'
+        '• ${context.l10n.adifFormatDescription}',
         style: theme.textTheme.bodySmall?.copyWith(
           color: theme.colorScheme.onSurfaceVariant,
           height: 1.5,
@@ -1131,6 +1139,80 @@ class _ExportPanelState extends State<ExportPanel> {
       } else {
         _showSuccessDialog(
           l10n.exportSucceeded('JSON'),
+          l10n.fileSavedTo(saveResult.path!),
+          saveResult.path!,
+        );
+      }
+    } catch (e) {
+      _showSnackBar(l10n.exportFailed('$e'));
+    }
+  }
+
+  Future<void> _exportAdif(BuildContext context) async {
+    final l10n = context.l10n;
+    final logProvider = Provider.of<LogProvider>(context, listen: false);
+    final settingsProvider =
+        Provider.of<SettingsProvider>(context, listen: false);
+    final settings = settingsProvider.exportSettings;
+    final logs = logProvider.logs;
+
+    if (logs.isEmpty) {
+      _showSnackBar(l10n.noDataToExport);
+      return;
+    }
+
+    try {
+      final now = DateTime.now();
+      final sessionProvider =
+          Provider.of<SessionProvider>(context, listen: false);
+      final files =
+          ExportService.generateAdifByController(logs, createdAt: now);
+      if (files.isEmpty) {
+        _showSnackBar(l10n.noDataToExport);
+        return;
+      }
+
+      String baseName = ExportService.generateFileName(
+        settings.fileNameTemplate,
+        now,
+        sessionTitle: sessionProvider.currentSession?.title,
+        useSessionTitle: settings.useSessionTitleAsFileName,
+      );
+      final singleStation = files.length == 1 ? files.keys.single : null;
+      final filename = files.length == 1
+          ? (baseName.toLowerCase().endsWith('.adi')
+              ? baseName.replaceAll(RegExp(r'\.adi$', caseSensitive: false),
+                  '_${singleStation!}.adi')
+              : '${baseName}_$singleStation.adi')
+          : (baseName.toLowerCase().endsWith('.zip')
+              ? baseName
+              : '$baseName.zip');
+      final bytes = files.length == 1
+          ? Uint8List.fromList(utf8.encode(files.values.single))
+          : ExportService.generateAdifArchiveBytes(
+              files,
+              fileNameForStation: (station) => '${baseName}_$station.adi',
+            );
+
+      final saveResult = await ExportService.saveFile(
+        configuredPath: settings.exportPath,
+        filename: filename,
+        bytes: bytes,
+        dialogTitle: l10n.saveExportFileDialog('ADIF'),
+        allowedExtensions: files.length == 1 ? const ['adi'] : const ['zip'],
+      );
+
+      if (saveResult.cancelled) return;
+      if (saveResult.path == null) {
+        _showSnackBar(l10n.downloadsDirectoryUnavailable);
+        return;
+      }
+
+      if (saveResult.usedSaf) {
+        _showSnackBar(l10n.exportSavedViaSystemPicker('ADIF'));
+      } else {
+        _showSuccessDialog(
+          l10n.exportSucceeded('ADIF'),
           l10n.fileSavedTo(saveResult.path!),
           saveResult.path!,
         );
