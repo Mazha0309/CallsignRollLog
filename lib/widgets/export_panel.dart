@@ -125,6 +125,13 @@ class _ExportPanelState extends State<ExportPanel> {
                 color: theme.colorScheme.secondary,
                 onPressed: () => _exportExcel(context),
               ),
+              _buildActionButton(
+                context,
+                label: l10n.exportAdif,
+                icon: Icons.radio,
+                color: theme.colorScheme.tertiary,
+                onPressed: () => _exportAdif(context),
+              ),
             ],
           ),
           SizedBox(height: cardPadding),
@@ -406,7 +413,8 @@ class _ExportPanelState extends State<ExportPanel> {
       tone: SettingsTone.tertiary,
       child: Text(
         '• ${context.l10n.jsonFormatDescription}\n'
-        '• ${context.l10n.excelFormatDescription}',
+        '• ${context.l10n.excelFormatDescription}\n'
+        '• ${context.l10n.adifFormatDescription}',
         style: theme.textTheme.bodySmall?.copyWith(
           color: theme.colorScheme.onSurfaceVariant,
           height: 1.5,
@@ -1140,6 +1148,99 @@ class _ExportPanelState extends State<ExportPanel> {
     }
   }
 
+  // 本机记录不含模式/频段；记住上次的选择作为默认值。
+  static String _lastAdifMode = ExportService.adifModes.first;
+  static String _lastAdifBand = ExportService.adifBands.first;
+
+  Future<void> _exportAdif(BuildContext context) async {
+    final l10n = context.l10n;
+    final logProvider = Provider.of<LogProvider>(context, listen: false);
+    final settingsProvider =
+        Provider.of<SettingsProvider>(context, listen: false);
+    final settings = settingsProvider.exportSettings;
+    final logs = logProvider.logs;
+
+    if (logs.isEmpty) {
+      _showSnackBar(l10n.noDataToExport);
+      return;
+    }
+
+    final choice = await showDialog<({String mode, String band})>(
+      context: context,
+      builder: (_) => _AdifExportOptionsDialog(
+        initialMode: _lastAdifMode,
+        initialBand: _lastAdifBand,
+      ),
+    );
+    if (choice == null || !context.mounted) return;
+    _lastAdifMode = choice.mode;
+    _lastAdifBand = choice.band;
+
+    try {
+      final now = DateTime.now();
+      final sessionProvider =
+          Provider.of<SessionProvider>(context, listen: false);
+      final files = ExportService.generateAdifByController(
+        logs,
+        createdAt: now,
+        mode: choice.mode,
+        band: choice.band,
+      );
+      if (files.isEmpty) {
+        _showSnackBar(l10n.noDataToExport);
+        return;
+      }
+
+      String baseName = ExportService.generateFileName(
+        settings.fileNameTemplate,
+        now,
+        sessionTitle: sessionProvider.currentSession?.title,
+        useSessionTitle: settings.useSessionTitleAsFileName,
+      );
+      final singleStation = files.length == 1 ? files.keys.single : null;
+      final filename = files.length == 1
+          ? (baseName.toLowerCase().endsWith('.adi')
+              ? baseName.replaceAll(RegExp(r'\.adi$', caseSensitive: false),
+                  '_${singleStation!}.adi')
+              : '${baseName}_$singleStation.adi')
+          : (baseName.toLowerCase().endsWith('.zip')
+              ? baseName
+              : '$baseName.zip');
+      final bytes = files.length == 1
+          ? Uint8List.fromList(utf8.encode(files.values.single))
+          : ExportService.generateAdifArchiveBytes(
+              files,
+              fileNameForStation: (station) => '${baseName}_$station.adi',
+            );
+
+      final saveResult = await ExportService.saveFile(
+        configuredPath: settings.exportPath,
+        filename: filename,
+        bytes: bytes,
+        dialogTitle: l10n.saveExportFileDialog('ADIF'),
+        allowedExtensions: files.length == 1 ? const ['adi'] : const ['zip'],
+      );
+
+      if (saveResult.cancelled) return;
+      if (saveResult.path == null) {
+        _showSnackBar(l10n.downloadsDirectoryUnavailable);
+        return;
+      }
+
+      if (saveResult.usedSaf) {
+        _showSnackBar(l10n.exportSavedViaSystemPicker('ADIF'));
+      } else {
+        _showSuccessDialog(
+          l10n.exportSucceeded('ADIF'),
+          l10n.fileSavedTo(saveResult.path!),
+          saveResult.path!,
+        );
+      }
+    } catch (e) {
+      _showSnackBar(l10n.exportFailed('$e'));
+    }
+  }
+
   Future<void> _exportExcel(BuildContext context) async {
     final l10n = context.l10n;
     final logProvider = Provider.of<LogProvider>(context, listen: false);
@@ -1433,6 +1534,77 @@ class _ExportPanelState extends State<ExportPanel> {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// 导出 ADIF 前的模式 / 频段选择。
+///
+/// 本机记录不保存这两项，所以每次导出由使用者指定；默认沿用上次的选择。
+class _AdifExportOptionsDialog extends StatefulWidget {
+  const _AdifExportOptionsDialog({
+    required this.initialMode,
+    required this.initialBand,
+  });
+
+  final String initialMode;
+  final String initialBand;
+
+  @override
+  State<_AdifExportOptionsDialog> createState() =>
+      _AdifExportOptionsDialogState();
+}
+
+class _AdifExportOptionsDialogState extends State<_AdifExportOptionsDialog> {
+  late String _mode = widget.initialMode;
+  late String _band = widget.initialBand;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return AlertDialog(
+      key: const Key('adif-export-options'),
+      title: Text(l10n.adifExportOptionsTitle),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(l10n.adifExportOptionsHint),
+          const SizedBox(height: AppSpace.md),
+          DropdownButtonFormField<String>(
+            key: const Key('adif-export-mode'),
+            initialValue: _mode,
+            decoration: InputDecoration(labelText: l10n.adifModeLabel),
+            items: [
+              for (final mode in ExportService.adifModes)
+                DropdownMenuItem(value: mode, child: Text(mode)),
+            ],
+            onChanged: (value) => setState(() => _mode = value ?? _mode),
+          ),
+          const SizedBox(height: AppSpace.sm),
+          DropdownButtonFormField<String>(
+            key: const Key('adif-export-band'),
+            initialValue: _band,
+            decoration: InputDecoration(labelText: l10n.adifBandLabel),
+            items: [
+              for (final band in ExportService.adifBands)
+                DropdownMenuItem(value: band, child: Text(band)),
+            ],
+            onChanged: (value) => setState(() => _band = value ?? _band),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(l10n.cancel),
+        ),
+        FilledButton(
+          key: const Key('adif-export-confirm'),
+          onPressed: () => Navigator.pop(context, (mode: _mode, band: _band)),
+          child: Text(l10n.confirm),
+        ),
+      ],
     );
   }
 }

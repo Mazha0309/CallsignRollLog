@@ -292,7 +292,7 @@ class AppLogger extends ChangeNotifier {
       timestamp: record.time,
       level: _levelFromLogging(record.level),
       message: record.message,
-      source: record.loggerName.isEmpty ? 'OpenLogTool' : record.loggerName,
+      source: record.loggerName.isEmpty ? 'Callsign Roll Log' : record.loggerName,
       error: record.error?.toString(),
       stackTrace: record.stackTrace?.toString(),
     );
@@ -433,7 +433,7 @@ class AppLogger extends ChangeNotifier {
   void log(
     AppLogLevel level,
     String message, {
-    String source = 'OpenLogTool',
+    String source = 'Callsign Roll Log',
     Object? error,
     StackTrace? stackTrace,
   }) {
@@ -456,7 +456,7 @@ class AppLogger extends ChangeNotifier {
   void error(String message, [Object? error, StackTrace? stackTrace]) =>
       _logger.severe(message, error, stackTrace);
 
-  final logging.Logger _logger = logging.Logger('OpenLogTool');
+  final logging.Logger _logger = logging.Logger('Callsign Roll Log');
 
   static AppLogLevel _levelFromLogging(logging.Level level) {
     if (level >= logging.Level.SEVERE) return AppLogLevel.error;

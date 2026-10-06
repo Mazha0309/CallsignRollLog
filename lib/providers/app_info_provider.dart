@@ -6,7 +6,7 @@ class AppInfoProvider extends ChangeNotifier {
 
   bool get isLoaded => _isLoaded;
 
-  String get appName => 'OpenLogTool';
+  String get appName => 'Callsign Roll Log';
   String get version => AppConfig.versionName;
   String get buildNumber => AppConfig.buildNumber;
   String get commitHash => AppConfig.commitHash;

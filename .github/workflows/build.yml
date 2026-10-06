@@ -1,4 +1,4 @@
-name: OpenLogTool CI
+name: Callsign Roll Log CI
 
 on:
   push:
@@ -202,7 +202,7 @@ jobs:
           test -s build/web/pkg/openlogtool_core.js
           test -s build/web/pkg/openlogtool_core_bg.wasm
           grep -Fq 'shared:true' build/web/pkg/openlogtool_core.js
-          grep -Fq '<title>OpenLogTool</title>' build/web/index.html
+          grep -Fq '<title>Callsign Roll Log</title>' build/web/index.html
 
       - name: Verify subset font asset
         run: |
@@ -217,9 +217,9 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p dist
-          bundle_name="OpenLogTool-$ARTIFACT_VERSION-WebClient"
+          bundle_name="CallsignRoll-$ARTIFACT_VERSION-WebClient"
           bundle_dir="$RUNNER_TEMP/$bundle_name"
-          archive="OpenLogTool-$ARTIFACT_VERSION-WebClient.tar.gz"
+          archive="CallsignRoll-$ARTIFACT_VERSION-WebClient.tar.gz"
           mkdir -p "$bundle_dir/web"
           cp -a build/web/. "$bundle_dir/web/"
           install -m 0644 \
@@ -457,11 +457,11 @@ jobs:
           mkdir -p dist
           for abi in arm64-v8a armeabi-v7a x86_64; do
             source="build/release-apks/app-$abi-release.apk"
-            artifact="OpenLogTool-$ARTIFACT_VERSION-Android-$abi.apk"
+            artifact="CallsignRoll-$ARTIFACT_VERSION-Android-$abi.apk"
             cp "$source" "dist/$artifact"
           done
           cp build/release-apks/app-universal-release.apk \
-            "dist/OpenLogTool-$ARTIFACT_VERSION-Android-universal.apk"
+            "dist/CallsignRoll-$ARTIFACT_VERSION-Android-universal.apk"
 
       - name: Upload Android artifacts
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -576,7 +576,7 @@ jobs:
         run: |
           set -euo pipefail
           release_dir=build/linux/x64/release
-          archive="OpenLogTool-${ARTIFACT_VERSION}-linux-x86_64.tar.gz"
+          archive="CallsignRoll-${ARTIFACT_VERSION}-linux-x86_64.tar.gz"
           tar -C "$release_dir" -czf "$release_dir/$archive" bundle
 
           package_root="$RUNNER_TEMP/openlogtool-package"
@@ -611,7 +611,7 @@ jobs:
           appdir="$RUNNER_TEMP/OpenLogTool.AppDir"
           appimagetool="$RUNNER_TEMP/appimagetool-x86_64.AppImage"
           appimage_runtime="$RUNNER_TEMP/runtime-x86_64"
-          appimage="$release_dir/OpenLogTool-${ARTIFACT_VERSION}-linux-x86_64.AppImage"
+          appimage="$release_dir/CallsignRoll-${ARTIFACT_VERSION}-linux-x86_64.AppImage"
           smoke_root="$RUNNER_TEMP/openlogtool-appimage-smoke"
 
           curl --fail --location --retry 3 --silent --show-error \
@@ -629,7 +629,7 @@ jobs:
           ln -s usr/bin/openlogtool "$appdir/AppRun"
           printf '%s\n' \
             '[Desktop Entry]' \
-            'Name=OpenLogTool' \
+            'Name=Callsign Roll Log' \
             'Comment=Amateur radio net logging tool' \
             'Exec=openlogtool' \
             'Icon=openlogtool' \
@@ -683,7 +683,7 @@ jobs:
           cp assets/images/app_icon_512.png \
             pkgdeb/usr/share/icons/hicolor/256x256/apps/openlogtool.png
           chmod 755 pkgdeb/opt/openlogtool/openlogtool
-          deb="dist/OpenLogTool-$VERSION_NAME-Linux-x86_64.deb"
+          deb="dist/CallsignRoll-$VERSION_NAME-Linux-x86_64.deb"
           dpkg-deb --root-owner-group --build pkgdeb "$deb"
           dpkg-deb --info "$deb"
           # Read the whole listing: grep -q can close the pipe early and make
@@ -708,7 +708,7 @@ jobs:
           rpmfile=$(find /tmp/rpmbuild/RPMS -type f -name '*.rpm' | head -n 1)
           test -n "$rpmfile"
           rpm -qpl "$rpmfile" | grep -Fx '/opt/openlogtool/openlogtool'
-          cp "$rpmfile" "dist/OpenLogTool-$VERSION_NAME-Linux-x86_64.rpm"
+          cp "$rpmfile" "dist/CallsignRoll-$VERSION_NAME-Linux-x86_64.rpm"
 
       - name: Upload Linux artifact
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -850,7 +850,7 @@ jobs:
             throw "Inno Setup failed with exit code $LASTEXITCODE"
           }
 
-          $installer = Get-Item "windows/installer/OpenLogTool-Setup-$env:ARTIFACT_VERSION.exe"
+          $installer = Get-Item "windows/installer/CallsignRoll-Setup-$env:ARTIFACT_VERSION.exe"
           $installRoot = Join-Path $env:RUNNER_TEMP "OpenLogToolInstallerSmoke"
           $arguments = @(
             "/VERYSILENT",
@@ -992,8 +992,8 @@ jobs:
           set -euo pipefail
           app=build/macos/Build/Products/Release/openlogtool.app
           mkdir -p dist
-          zip_name="OpenLogTool-$ARTIFACT_VERSION-macOS-universal.zip"
-          dmg_name="OpenLogTool-$ARTIFACT_VERSION-macOS-universal.dmg"
+          zip_name="CallsignRoll-$ARTIFACT_VERSION-macOS-universal.zip"
+          dmg_name="CallsignRoll-$ARTIFACT_VERSION-macOS-universal.dmg"
           package_app="$RUNNER_TEMP/OpenLogTool.app"
           ditto "$app" "$package_app"
           ditto -c -k --sequesterRsrc --keepParent "$package_app" "dist/$zip_name"
@@ -1003,7 +1003,7 @@ jobs:
           ditto "$package_app" "$dmg_stage/OpenLogTool.app"
           ln -s /Applications "$dmg_stage/Applications"
           hdiutil create \
-            -volname OpenLogTool \
+            -volname Callsign Roll Log \
             -srcfolder "$dmg_stage" \
             -ov \
             -format UDZO \
@@ -1128,7 +1128,7 @@ jobs:
           # （自签证书或 sideload 工具），格式与正式 ipa 一致。
           mkdir -p dist Payload
           cp -R build/ios/iphoneos/Runner.app Payload/
-          zip -qr "dist/OpenLogTool-ios.ipa" Payload
+          zip -qr "dist/CallsignRoll-ios.ipa" Payload
 
       - name: Upload iOS artifacts
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -1209,7 +1209,7 @@ jobs:
         uses: softprops/action-gh-release@3d0d9888cb7fd7b750713d6e236d1fcb99157228 # v3.0.2
         with:
           tag_name: ${{ github.ref_name }}
-          name: OpenLogTool ${{ github.ref_name }}
+          name: Callsign Roll Log ${{ github.ref_name }}
           generate_release_notes: true
           prerelease: false
           fail_on_unmatched_files: true

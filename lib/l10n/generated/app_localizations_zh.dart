@@ -777,10 +777,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get inAppControllerDisplayHint => '当前设备使用应用内全屏主控模式。';
 
   @override
-  String get controllerScreenTitle => 'OpenLogTool 主控屏';
+  String get controllerScreenTitle => 'Callsign Roll Log 主控屏';
 
   @override
-  String get controllerFloatingWindowTitle => 'OpenLogTool 主控悬浮窗';
+  String get controllerFloatingWindowTitle => 'Callsign Roll Log 主控悬浮窗';
 
   @override
   String get controllerScreenFallbackTitle => '点名主控屏';
@@ -1654,7 +1654,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String serverInvalidResponse(String url) {
-    return '已连接 $url，但它没有返回兼容的 OpenLogTool Server 响应。';
+    return '已连接 $url，但它没有返回兼容的 Callsign Roll Log Server 响应。';
   }
 
   @override
@@ -2096,20 +2096,20 @@ class AppLocalizationsZh extends AppLocalizations {
   String get fontPreview => '预览';
 
   @override
-  String get fontPreviewSample => 'OpenLogTool · CQ CQ · 点名记录 123';
+  String get fontPreviewSample => 'Callsign Roll Log · CQ CQ · 点名记录 123';
 
   @override
   String get aboutAppAction => '关于应用';
 
   @override
-  String get aboutAppTitle => '关于 OpenLogTool';
+  String get aboutAppTitle => '关于 Callsign Roll Log';
 
   @override
   String get aboutAppTagline => '业余无线电点名记录与协作工具';
 
   @override
   String get aboutAppDescription =>
-      '为现场和远程书记员提供完整点名记录、实时草稿协作与主控显示。OpenLogTool 专注于点名现场工作流，不以替代个人通联日志为目标。';
+      '为现场和远程书记员提供完整点名记录、实时草稿协作与主控显示。Callsign Roll Log 专注于点名现场工作流，不以替代个人通联日志为目标。';
 
   @override
   String aboutVersionChip(String version) {
@@ -2188,7 +2188,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get aboutLicenseName => 'GNU AGPL-3.0';
 
   @override
-  String get aboutLicenseHint => 'OpenLogTool 是自由开源软件';
+  String get aboutLicenseHint => 'Callsign Roll Log 是自由开源软件';
 
   @override
   String get aboutCopyright => '© 2026 Mazha0309 · BG5CRL';
@@ -2707,7 +2707,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get databaseExportHint => '备份会话、记录、词库以及本机协作副本和待同步状态';
 
   @override
-  String get databaseExportDialogTitle => '保存 OpenLogTool 本机数据库备份';
+  String get databaseExportDialogTitle => '保存 Callsign Roll Log 本机数据库备份';
 
   @override
   String get databaseExportSucceeded => '本机数据库备份已导出';
@@ -2724,7 +2724,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get databaseImportHint => '选择 JSON 备份并预览后，完整替换当前本机数据库';
 
   @override
-  String get databaseImportPickerTitle => '选择 OpenLogTool 本机数据库备份';
+  String get databaseImportPickerTitle => '选择 Callsign Roll Log 本机数据库备份';
 
   @override
   String get databaseImportNoFileSelected => '未选择备份文件，未执行导入';
@@ -2777,7 +2777,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String databaseImportInvalid(String error) {
-    return '所选文件不是有效的 OpenLogTool 数据库备份（$error）';
+    return '所选文件不是有效的 Callsign Roll Log 数据库备份（$error）';
   }
 
   @override
@@ -2846,7 +2846,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get dataTransferActionsTitle => '记录文件';
 
   @override
-  String get dataTransferActionsHint => 'JSON 适合完整数据迁移，Excel 适合查看、分享和打印。';
+  String get dataTransferActionsHint =>
+      'JSON 适合完整数据迁移，Excel 适合查看、分享和打印，ADIF 适合导入电台日志软件。';
 
   @override
   String get exportDataTitle => '导出数据';
@@ -2859,6 +2860,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get exportExcel => '导出 Excel';
+
+  @override
+  String get exportAdif => '导出 ADIF';
 
   @override
   String get importDataTitle => '导入数据';
@@ -2914,6 +2918,22 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get excelFormatDescription =>
       'Excel：使用 .xlsx 格式，包含分组主控行、颜色样式和底部信息，适合分享与打印。';
+
+  @override
+  String get adifFormatDescription =>
+      'ADIF：按主控呼号各生成一份 .adi，可直接导入 LoTW / QRZ；多个主控时打包为 zip。';
+
+  @override
+  String get adifExportOptionsTitle => '导出 ADIF';
+
+  @override
+  String get adifExportOptionsHint => '本机记录不含模式与频段，请选择本次导出的取值。';
+
+  @override
+  String get adifModeLabel => '模式';
+
+  @override
+  String get adifBandLabel => '频段';
 
   @override
   String get excelExportSettingsTitle => '编辑 Excel 导出设置';
@@ -2977,7 +2997,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get footerInformation => '底部说明';
 
   @override
-  String get footerInformationHint => '显示 OpenLogTool 项目与许可信息';
+  String get footerInformationHint => '显示 Callsign Roll Log 项目与许可信息';
 
   @override
   String get restoreDefaultColors => '恢复默认颜色';
@@ -3262,7 +3282,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get aiSettingsOptionalMessage =>
-      '音频将直接发送到你配置的服务，不经过 OpenLogTool 协作服务器。识别结果只作为候选，不会自动覆盖书记员正在编辑的内容。';
+      '音频将直接发送到你配置的服务，不经过 Callsign Roll Log 协作服务器。识别结果只作为候选，不会自动覆盖书记员正在编辑的内容。';
 
   @override
   String get aiRecognitionEnabled => '启用 AI 辅助识别';
@@ -4187,10 +4207,10 @@ class AppLocalizationsZhCn extends AppLocalizationsZh {
   String get inAppControllerDisplayHint => '当前设备使用应用内全屏主控模式。';
 
   @override
-  String get controllerScreenTitle => 'OpenLogTool 主控屏';
+  String get controllerScreenTitle => 'Callsign Roll Log 主控屏';
 
   @override
-  String get controllerFloatingWindowTitle => 'OpenLogTool 主控悬浮窗';
+  String get controllerFloatingWindowTitle => 'Callsign Roll Log 主控悬浮窗';
 
   @override
   String get controllerScreenFallbackTitle => '点名主控屏';
@@ -4613,7 +4633,7 @@ class AppLocalizationsZhCn extends AppLocalizationsZh {
 
   @override
   String serverInvalidResponse(String url) {
-    return '已连接 $url，但它没有返回兼容的 OpenLogTool Server 响应。';
+    return '已连接 $url，但它没有返回兼容的 Callsign Roll Log Server 响应。';
   }
 
   @override
@@ -5055,7 +5075,7 @@ class AppLocalizationsZhCn extends AppLocalizationsZh {
   String get fontPreview => '预览';
 
   @override
-  String get fontPreviewSample => 'OpenLogTool · CQ CQ · 点名记录 123';
+  String get fontPreviewSample => 'Callsign Roll Log · CQ CQ · 点名记录 123';
 
   @override
   String get localCollaborationOperationBusy => '另一项协作操作仍在进行，请等待结束后重试。';
@@ -5077,7 +5097,7 @@ class AppLocalizationsZhCn extends AppLocalizationsZh {
 
   @override
   String get aiSettingsOptionalMessage =>
-      '音频将直接发送到你配置的服务，不经过 OpenLogTool 协作服务器。识别结果只作为候选，不会自动覆盖书记员正在编辑的内容。';
+      '音频将直接发送到你配置的服务，不经过 Callsign Roll Log 协作服务器。识别结果只作为候选，不会自动覆盖书记员正在编辑的内容。';
 
   @override
   String get aiRecognitionEnabled => '启用 AI 辅助识别';

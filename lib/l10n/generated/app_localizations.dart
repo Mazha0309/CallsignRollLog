@@ -1525,13 +1525,13 @@ abstract class AppLocalizations {
   /// No description provided for @controllerScreenTitle.
   ///
   /// In zh, this message translates to:
-  /// **'OpenLogTool 主控屏'**
+  /// **'Callsign Roll Log 主控屏'**
   String get controllerScreenTitle;
 
   /// No description provided for @controllerFloatingWindowTitle.
   ///
   /// In zh, this message translates to:
-  /// **'OpenLogTool 主控悬浮窗'**
+  /// **'Callsign Roll Log 主控悬浮窗'**
   String get controllerFloatingWindowTitle;
 
   /// No description provided for @controllerScreenFallbackTitle.
@@ -3110,7 +3110,7 @@ abstract class AppLocalizations {
   /// No description provided for @serverInvalidResponse.
   ///
   /// In zh, this message translates to:
-  /// **'已连接 {url}，但它没有返回兼容的 OpenLogTool Server 响应。'**
+  /// **'已连接 {url}，但它没有返回兼容的 Callsign Roll Log Server 响应。'**
   String serverInvalidResponse(String url);
 
   /// No description provided for @serverAddressRequired.
@@ -3860,7 +3860,7 @@ abstract class AppLocalizations {
   /// No description provided for @fontPreviewSample.
   ///
   /// In zh, this message translates to:
-  /// **'OpenLogTool · CQ CQ · 点名记录 123'**
+  /// **'Callsign Roll Log · CQ CQ · 点名记录 123'**
   String get fontPreviewSample;
 
   /// No description provided for @aboutAppAction.
@@ -3872,7 +3872,7 @@ abstract class AppLocalizations {
   /// No description provided for @aboutAppTitle.
   ///
   /// In zh, this message translates to:
-  /// **'关于 OpenLogTool'**
+  /// **'关于 Callsign Roll Log'**
   String get aboutAppTitle;
 
   /// No description provided for @aboutAppTagline.
@@ -3884,7 +3884,7 @@ abstract class AppLocalizations {
   /// No description provided for @aboutAppDescription.
   ///
   /// In zh, this message translates to:
-  /// **'为现场和远程书记员提供完整点名记录、实时草稿协作与主控显示。OpenLogTool 专注于点名现场工作流，不以替代个人通联日志为目标。'**
+  /// **'为现场和远程书记员提供完整点名记录、实时草稿协作与主控显示。Callsign Roll Log 专注于点名现场工作流，不以替代个人通联日志为目标。'**
   String get aboutAppDescription;
 
   /// No description provided for @aboutVersionChip.
@@ -4029,7 +4029,7 @@ abstract class AppLocalizations {
   /// No description provided for @aboutLicenseHint.
   ///
   /// In zh, this message translates to:
-  /// **'OpenLogTool 是自由开源软件'**
+  /// **'Callsign Roll Log 是自由开源软件'**
   String get aboutLicenseHint;
 
   /// No description provided for @aboutCopyright.
@@ -4963,7 +4963,7 @@ abstract class AppLocalizations {
   /// No description provided for @databaseExportDialogTitle.
   ///
   /// In zh, this message translates to:
-  /// **'保存 OpenLogTool 本机数据库备份'**
+  /// **'保存 Callsign Roll Log 本机数据库备份'**
   String get databaseExportDialogTitle;
 
   /// No description provided for @databaseExportSucceeded.
@@ -4993,7 +4993,7 @@ abstract class AppLocalizations {
   /// No description provided for @databaseImportPickerTitle.
   ///
   /// In zh, this message translates to:
-  /// **'选择 OpenLogTool 本机数据库备份'**
+  /// **'选择 Callsign Roll Log 本机数据库备份'**
   String get databaseImportPickerTitle;
 
   /// No description provided for @databaseImportNoFileSelected.
@@ -5089,7 +5089,7 @@ abstract class AppLocalizations {
   /// No description provided for @databaseImportInvalid.
   ///
   /// In zh, this message translates to:
-  /// **'所选文件不是有效的 OpenLogTool 数据库备份（{error}）'**
+  /// **'所选文件不是有效的 Callsign Roll Log 数据库备份（{error}）'**
   String databaseImportInvalid(String error);
 
   /// No description provided for @databaseImportReadFailed.
@@ -5203,7 +5203,7 @@ abstract class AppLocalizations {
   /// No description provided for @dataTransferActionsHint.
   ///
   /// In zh, this message translates to:
-  /// **'JSON 适合完整数据迁移，Excel 适合查看、分享和打印。'**
+  /// **'JSON 适合完整数据迁移，Excel 适合查看、分享和打印，ADIF 适合导入电台日志软件。'**
   String get dataTransferActionsHint;
 
   /// No description provided for @exportDataTitle.
@@ -5229,6 +5229,12 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'导出 Excel'**
   String get exportExcel;
+
+  /// No description provided for @exportAdif.
+  ///
+  /// In zh, this message translates to:
+  /// **'导出 ADIF'**
+  String get exportAdif;
 
   /// No description provided for @importDataTitle.
   ///
@@ -5337,6 +5343,36 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'Excel：使用 .xlsx 格式，包含分组主控行、颜色样式和底部信息，适合分享与打印。'**
   String get excelFormatDescription;
+
+  /// No description provided for @adifFormatDescription.
+  ///
+  /// In zh, this message translates to:
+  /// **'ADIF：按主控呼号各生成一份 .adi，可直接导入 LoTW / QRZ；多个主控时打包为 zip。'**
+  String get adifFormatDescription;
+
+  /// No description provided for @adifExportOptionsTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'导出 ADIF'**
+  String get adifExportOptionsTitle;
+
+  /// No description provided for @adifExportOptionsHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'本机记录不含模式与频段，请选择本次导出的取值。'**
+  String get adifExportOptionsHint;
+
+  /// No description provided for @adifModeLabel.
+  ///
+  /// In zh, this message translates to:
+  /// **'模式'**
+  String get adifModeLabel;
+
+  /// No description provided for @adifBandLabel.
+  ///
+  /// In zh, this message translates to:
+  /// **'频段'**
+  String get adifBandLabel;
 
   /// No description provided for @excelExportSettingsTitle.
   ///
@@ -5455,7 +5491,7 @@ abstract class AppLocalizations {
   /// No description provided for @footerInformationHint.
   ///
   /// In zh, this message translates to:
-  /// **'显示 OpenLogTool 项目与许可信息'**
+  /// **'显示 Callsign Roll Log 项目与许可信息'**
   String get footerInformationHint;
 
   /// No description provided for @restoreDefaultColors.
@@ -5930,7 +5966,7 @@ abstract class AppLocalizations {
   /// No description provided for @aiSettingsOptionalMessage.
   ///
   /// In zh, this message translates to:
-  /// **'音频将直接发送到你配置的服务，不经过 OpenLogTool 协作服务器。识别结果只作为候选，不会自动覆盖书记员正在编辑的内容。'**
+  /// **'音频将直接发送到你配置的服务，不经过 Callsign Roll Log 协作服务器。识别结果只作为候选，不会自动覆盖书记员正在编辑的内容。'**
   String get aiSettingsOptionalMessage;
 
   /// No description provided for @aiRecognitionEnabled.

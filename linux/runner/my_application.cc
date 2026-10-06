@@ -27,7 +27,7 @@ static void native_file_dialog_method_call_cb(FlMethodChannel* channel,
     return;
   }
 
-  const gchar* title = "Select an OpenLogTool database backup";
+  const gchar* title = "Select an Callsign Roll Log database backup";
   FlValue* args = fl_method_call_get_args(method_call);
   if (args != nullptr && fl_value_get_type(args) == FL_VALUE_TYPE_MAP) {
     FlValue* title_value = fl_value_lookup_string(args, "title");
@@ -96,11 +96,11 @@ static void my_application_activate(GApplication* application) {
   if (use_header_bar) {
     GtkHeaderBar* header_bar = GTK_HEADER_BAR(gtk_header_bar_new());
     gtk_widget_show(GTK_WIDGET(header_bar));
-    gtk_header_bar_set_title(header_bar, "OpenLogTool");
+    gtk_header_bar_set_title(header_bar, "Callsign Roll Log");
     gtk_header_bar_set_show_close_button(header_bar, TRUE);
     gtk_window_set_titlebar(window, GTK_WIDGET(header_bar));
   } else {
-    gtk_window_set_title(window, "OpenLogTool");
+    gtk_window_set_title(window, "Callsign Roll Log");
   }
 
   gtk_window_set_default_size(window, 1280, 720);

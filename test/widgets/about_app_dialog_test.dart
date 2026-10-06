@@ -21,7 +21,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byKey(const Key('about-app-dialog')), findsOneWidget);
-    expect(find.text('OpenLogTool'), findsOneWidget);
+    expect(find.text('Callsign Roll Log'), findsOneWidget);
     expect(find.text('版本 2.1.0-R+42'), findsOneWidget);
     expect(find.text('2.1.0-R+42'), findsOneWidget);
     expect(find.text('418'), findsOneWidget);
@@ -56,7 +56,7 @@ void main() {
     await tester.tap(find.byKey(const Key('open-about')));
     await tester.pumpAndSettle();
 
-    expect(find.text('OpenLogTool'), findsOneWidget);
+    expect(find.text('Callsign Roll Log'), findsOneWidget);
     expect(find.byKey(const Key('about-app-scroll')), findsOneWidget);
     expect(tester.takeException(), isNull);
 
@@ -79,7 +79,7 @@ void main() {
       (tester) async {
     await _setSurface(tester, const Size(800, 760));
     final releaseUri = Uri.parse(
-      'https://github.com/Mazha0309/OpenLogTool/releases/tag/v2.2.0-R',
+      'https://github.com/Mazha0309/CallsignRollLog/releases/tag/v2.2.0-R',
     );
     Uri? openedUri;
 
@@ -161,7 +161,7 @@ void main() {
         currentVersion: '2.1.0-R+42',
         latestVersion: '2.1.0-R',
         releaseUri: Uri.parse(
-          'https://github.com/Mazha0309/OpenLogTool/releases/tag/v2.1.0-R',
+          'https://github.com/Mazha0309/CallsignRollLog/releases/tag/v2.1.0-R',
         ),
         updateAvailable: false,
       ),
@@ -242,7 +242,7 @@ class _TestApp extends StatelessWidget {
                 onPressed: () => showDialog<void>(
                   context: context,
                   builder: (context) => AboutAppDialog(
-                    appName: 'OpenLogTool',
+                    appName: 'Callsign Roll Log',
                     fullVersion: '2.1.0-R+42',
                     buildNumber: '418',
                     commitHash: 'abc1234',

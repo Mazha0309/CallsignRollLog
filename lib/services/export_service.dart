@@ -1,10 +1,12 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:archive/archive.dart';
 import 'package:excel/excel.dart' as excel_lib;
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
+import 'package:openlogtool/config/version.dart';
 import 'package:openlogtool/models/export_settings.dart';
 import 'package:openlogtool/models/log_entry.dart';
 import 'package:openlogtool/utils/log_time.dart';
@@ -131,6 +133,11 @@ class ExportService {
         return 'application/json';
       case 'xlsx':
         return 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+      case 'adi':
+      case 'adif':
+        return 'text/plain';
+      case 'zip':
+        return 'application/zip';
       default:
         return 'application/octet-stream';
     }
@@ -200,6 +207,183 @@ class ExportService {
     final jsonData = logs.map((log) => log.toJson()).toList();
     final jsonString = const JsonEncoder.withIndent('  ').convert(jsonData);
     return Uint8List.fromList(utf8.encode(jsonString));
+  }
+
+  static Uint8List generateAdifBytes(
+    List<LogEntry> logs, {
+    DateTime? createdAt,
+  }) {
+    return Uint8List.fromList(
+      utf8.encode(generateAdif(logs, createdAt: createdAt)),
+    );
+  }
+
+  static Map<String, String> generateAdifByController(
+    List<LogEntry> logs, {
+    DateTime? createdAt,
+    String mode = _defaultAdifMode,
+    String band = _defaultAdifBand,
+  }) {
+    final grouped = <String, List<LogEntry>>{};
+    for (final log in logs) {
+      final controller = log.controller.trim().toUpperCase();
+      if (controller.isEmpty) continue;
+      grouped.putIfAbsent(controller, () => []).add(log);
+    }
+    return {
+      for (final entry in grouped.entries)
+        entry.key: generateAdif(
+          entry.value,
+          createdAt: createdAt,
+          stationCallsign: entry.key,
+          mode: mode,
+          band: band,
+        ),
+    };
+  }
+
+  /// 本机记录不含模式与频段字段，导出 ADIF 时由使用者选择。
+  static const String _defaultAdifMode = 'FM';
+  static const String _defaultAdifBand = '2M';
+
+  /// 可选择的是 ADIF 规范里的 MODE / BAND 取值。
+  static const List<String> adifModes = <String>[
+    'FM',
+    'USB',
+    'LSB',
+    'AM',
+    'CW',
+    'RTTY',
+    'FT8',
+    'FT4',
+  ];
+  static const List<String> adifBands = <String>[
+    '2M',
+    '70CM',
+    '6M',
+    '10M',
+    '23CM',
+    '1.25M',
+  ];
+
+  static Uint8List generateAdifArchiveBytes(
+    Map<String, String> files, {
+    String Function(String stationCallsign)? fileNameForStation,
+  }) {
+    final archive = Archive();
+    files.forEach((station, contents) {
+      final name = fileNameForStation?.call(station) ?? '$station.adi';
+      final encoded = utf8.encode(contents);
+      archive.addFile(ArchiveFile(name, encoded.length, encoded));
+    });
+    return Uint8List.fromList(ZipEncoder().encode(archive) ?? const <int>[]);
+  }
+
+  static String generateAdif(
+    List<LogEntry> logs, {
+    DateTime? createdAt,
+    String? stationCallsign,
+    String mode = _defaultAdifMode,
+    String band = _defaultAdifBand,
+  }) {
+    final created = (createdAt ?? DateTime.now()).toUtc();
+    final buffer = StringBuffer()
+      ..writeln('ADIF export from Callsign Roll Log')
+      ..write(_adifField('ADIF_VER', '3.1.4'))
+      ..write(_adifField('PROGRAMID', 'Callsign Roll Log'))
+      ..write(_adifField('PROGRAMVERSION', appVersion))
+      ..write(_adifField(
+        'CREATED_TIMESTAMP',
+        '${_adifDate(created)} ${_adifTime(created, includeSeconds: true)}',
+      ))
+      ..writeln('<EOH>');
+
+    for (final log in logs) {
+      final operator = log.controller.trim().toUpperCase();
+      final station = (stationCallsign ?? operator).trim().toUpperCase();
+      final qsoTime = _adifQsoDateTime(log.time, fallback: log.createdAt);
+      buffer.write(_adifField('CALL', log.callsign.trim().toUpperCase()));
+      buffer.write(_adifField('STATION_CALLSIGN', station));
+      buffer.write(_adifField('OPERATOR', operator));
+      if (qsoTime != null) {
+        buffer.write(_adifField('QSO_DATE', _adifDate(qsoTime)));
+        buffer.write(_adifField('TIME_ON', _adifTime(qsoTime)));
+      }
+      buffer.write(_adifField('MODE', mode));
+      buffer.write(_adifField('BAND', band));
+      buffer.write(_adifField('RST_SENT', log.report.trim()));
+      buffer.write(_adifField('RST_RCVD', log.rstRcvd.trim()));
+      final qth = log.qth.trim();
+      final grid = _adifGridSquare(qth);
+      if (grid != null) {
+        buffer.write(_adifField('GRIDSQUARE', grid));
+      } else {
+        buffer.write(_adifField('QTH', qth));
+      }
+      buffer.write(_adifField('MY_RIG', log.device.trim()));
+      buffer.write(_adifField('TX_PWR', _adifPower(log.power)));
+      buffer.writeln('<EOR>');
+    }
+    return buffer.toString();
+  }
+
+  /// 写出一个 ADIF 字段。
+  ///
+  /// 长度按 **UTF-8 字节数** 声明，而不是字符数：文件本身就是 UTF-8 写出的，
+  /// 按字节切片的导入器（大多数实现）才能取到完整字段。纯 ASCII 时两者相同；
+  /// 中文 QTH / 设备名这类非 ASCII 值只有按字节声明才自洽。
+  ///
+  /// 注：ADI 规范把 String 定义为 ASCII，非 ASCII 值严格来说应用 ADX；这里选择
+  /// 保住数据并保证自身一致，而不是静默丢弃中文。
+  static String _adifField(String name, String value) {
+    if (value.isEmpty) return '';
+    return '<$name:${utf8.encode(value).length}>$value';
+  }
+
+  static DateTime? _adifQsoDateTime(String raw, {String? fallback}) {
+    final normalized = raw.trim();
+    if (normalized.isEmpty) return DateTime.tryParse(fallback ?? '')?.toUtc();
+    final parsed = DateTime.tryParse(normalized);
+    if (parsed != null) return parsed.toUtc();
+    final match =
+        RegExp(r'^(\d{1,2}):(\d{2})(?::(\d{2}))?$').firstMatch(normalized);
+    if (match == null) return DateTime.tryParse(fallback ?? '')?.toUtc();
+    final hour = int.parse(match.group(1)!);
+    final minute = int.parse(match.group(2)!);
+    final second = int.parse(match.group(3) ?? '0');
+    final reference =
+        DateTime.tryParse(fallback ?? '')?.toUtc() ?? DateTime.now().toUtc();
+    return DateTime.utc(
+      reference.year,
+      reference.month,
+      reference.day,
+      hour,
+      minute,
+      second,
+    );
+  }
+
+  static String _adifDate(DateTime value) =>
+      '${value.year.toString().padLeft(4, '0')}'
+      '${value.month.toString().padLeft(2, '0')}'
+      '${value.day.toString().padLeft(2, '0')}';
+
+  static String _adifTime(DateTime value, {bool includeSeconds = false}) {
+    final time = '${value.hour.toString().padLeft(2, '0')}'
+        '${value.minute.toString().padLeft(2, '0')}';
+    if (!includeSeconds) return time;
+    return '$time${value.second.toString().padLeft(2, '0')}';
+  }
+
+  static String? _adifGridSquare(String value) {
+    final match = RegExp(r'^[A-Ra-r]{2}\d{2}([A-Xa-x]{2})?$').firstMatch(value);
+    if (match == null) return null;
+    return value.toUpperCase();
+  }
+
+  static String _adifPower(String value) {
+    final match = RegExp(r'^(\d+(?:\.\d+)?)').firstMatch(value.trim());
+    return match?.group(1) ?? value.trim();
   }
 
   /// 根据日志列表和导出设置生成 Excel 文件字节。
@@ -422,8 +606,8 @@ class ExportService {
       );
 
       final footerTexts = [
-        '此表格由 OpenLogTool 生成导出，本项目使用开源协议: GNU Affero General Public License V3',
-        '项目仓库地址: https://github.com/Mazha0309/OpenLogTool',
+        '此表格由 Callsign Roll Log 生成导出，本项目使用开源协议: GNU Affero General Public License V3',
+        '项目仓库地址: https://github.com/Mazha0309/CallsignRollLog',
         '分享点名记录时无须携带本条说明',
       ];
 
@@ -521,7 +705,7 @@ class ImportResult {
 }
 
 /// 从 JSON 字符串解析导入数据。
-/// 支持两种格式：OpenLogTool 原生 JSON（数组）和 HamTool 导出格式（含 `currentRecords` 的 Map）。
+/// 支持两种格式：Callsign Roll Log 原生 JSON（数组）和 HamTool 导出格式（含 `currentRecords` 的 Map）。
 ImportResult parseJsonImport(String jsonString) {
   final jsonData = json.decode(jsonString);
   final List<LogEntry> importedLogs;
@@ -567,7 +751,7 @@ ImportResult parseJsonImport(String jsonString) {
       );
     }).toList();
   } else if (jsonData is List) {
-    // OpenLogTool JSON format
+    // Callsign Roll Log JSON format
     importedLogs = jsonData.map((item) {
       String callsign = '';
       String qth = '';

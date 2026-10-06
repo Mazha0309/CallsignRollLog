@@ -56,7 +56,7 @@ if (-not (Test-Path -LiteralPath $flutterAssets -PathType Container)) {
 
 New-Item -ItemType Directory -Path $artifactDirectory -Force | Out-Null
 $safeVersion = $Version -replace '[^0-9A-Za-z._+-]', '-'
-$artifactPath = Join-Path $artifactDirectory "OpenLogTool-Windows-x64-$safeVersion.zip"
+$artifactPath = Join-Path $artifactDirectory "CallsignRoll-Windows-x64-$safeVersion.zip"
 
 Compress-Archive `
     -Path (Join-Path $bundleDirectory "*") `
@@ -86,7 +86,7 @@ try {
         try {
             Start-Sleep -Seconds 10
             if ($process.HasExited) {
-                throw "OpenLogTool exited during the Windows smoke test (exit code $($process.ExitCode))"
+                throw "Callsign Roll Log exited during the Windows smoke test (exit code $($process.ExitCode))"
             }
         }
         finally {

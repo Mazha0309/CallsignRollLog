@@ -101,6 +101,7 @@ void main() {
     expect(find.text('Import and export'), findsOneWidget);
     expect(find.text('Record files'), findsOneWidget);
     expect(find.text('Export JSON'), findsOneWidget);
+    expect(find.text('Export ADIF'), findsOneWidget);
     // LLM 未启用时隐藏 Excel 导入按钮。
     expect(find.text('Import Excel'), findsNothing);
     expect(find.text('Excel configuration'), findsOneWidget);

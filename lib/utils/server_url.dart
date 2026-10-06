@@ -1,4 +1,4 @@
-/// Returns the stable configured origin used for one OpenLogTool server.
+/// Returns the stable configured origin used for one Callsign Roll Log server.
 ///
 /// The server API accepts both the deployment root and its `/api/v1` endpoint.
 /// Keeping a single representation prevents a harmless spelling change from

@@ -1,4 +1,4 @@
-//! OpenLogTool's serialized SQLite facade.
+//! Callsign Roll Log's serialized SQLite facade.
 //!
 //! The public surface intentionally mirrors the small SQLx subset used by the
 //! existing data core. The implementation is synchronous rusqlite guarded by a
@@ -331,7 +331,7 @@ pub mod sqlite {
         pub async fn connect_with(self, options: SqliteConnectOptions) -> Result<SqlitePool> {
             if self.max_connections != 1 {
                 return Err(Error::Configuration(
-                    "OpenLogTool SQLite storage requires max_connections(1)".to_string(),
+                    "Callsign Roll Log SQLite storage requires max_connections(1)".to_string(),
                 ));
             }
             SqlitePool::connect_with(options).await

@@ -24,9 +24,9 @@ class AboutAppDialog extends StatelessWidget {
   });
 
   static final Uri repositoryUri =
-      Uri.parse('https://github.com/Mazha0309/OpenLogTool');
+      Uri.parse('https://github.com/Mazha0309/CallsignRollLog');
   static final Uri issueTrackerUri =
-      Uri.parse('https://github.com/Mazha0309/OpenLogTool/issues');
+      Uri.parse('https://github.com/Mazha0309/CallsignRollLog/issues');
   static final GitHubReleaseService _githubReleaseService =
       GitHubReleaseService();
 

@@ -5,4 +5,4 @@ Priority: optional
 Architecture: amd64
 Maintainer: Mazha0309 <mazha0309@example.com>
 Depends: libgtk-3-0 (>= 3.24), libx11-6, libxext6
-Description: OpenLogTool amateur radio net logging client
+Description: Callsign Roll Log amateur radio net logging client

@@ -1,4 +1,4 @@
-# OpenLogTool - 业余无线电点名记录与协作工具
+# Callsign Roll Log - 业余无线电点名记录与协作工具
 
 专为业余无线电爱好者设计的点名记录工具，支持跨平台运行。
 
@@ -136,7 +136,7 @@ Dart 层日志（`lib/services/app_logger.dart`）在应用支持目录写 `app.
 
 | 平台 | 捕获方式 | 产物位置 |
 |---|---|---|
-| Windows | `windows/runner/crash_handler.cpp`（未处理异常过滤器 + `MiniDumpWriteDump`） | `%LOCALAPPDATA%\OpenLogTool\CrashDumps\*.dmp` |
+| Windows | `windows/runner/crash_handler.cpp`（未处理异常过滤器 + `MiniDumpWriteDump`） | `%LOCALAPPDATA%\Callsign Roll Log\CrashDumps\*.dmp` |
 | Linux | `linux/runner/crash_handler.cc`（SIGSEGV/SIGBUS/SIGILL/SIGFPE/SIGABRT） | `$XDG_DATA_HOME/openlogtool/crashes/*.txt`（回退 `~/.local/share`） |
 | macOS | 系统崩溃报告（应用未自带处理器） | `~/Library/Logs/DiagnosticReports/*.ips` |
 
@@ -158,7 +158,7 @@ Flutter 的 Windows 无障碍桥在处理「节点重新挂载」的语义更新
 语义树。
 
 验收方式：装上带该保护的构建后，在曾崩溃的机器上正常使用，确认
-`%LOCALAPPDATA%\OpenLogTool\CrashDumps` 不再新增 `flutter_windows.dll+0x3A9FA`、
+`%LOCALAPPDATA%\Callsign Roll Log\CrashDumps` 不再新增 `flutter_windows.dll+0x3A9FA`、
 读 `0x48` 的 minidump；同时 `app.log` 里应有 `[Accessibility]` 的 ACTIVE 记录。
 
 正式 Windows 便携包会在应用目录内携带 Visual C++ CRT 与 Universal CRT，
@@ -168,8 +168,8 @@ Flutter 的 Windows 无障碍桥在处理「节点重新挂载」的语义更新
 ### 构建
 
 ```bash
-git clone https://github.com/Mazha0309/OpenLogTool.git
-cd OpenLogTool
+git clone https://github.com/Mazha0309/CallsignRollLog.git
+cd Callsign Roll Log
 flutter pub get
 flutter build linux
 flutter build windows
@@ -245,7 +245,7 @@ OPENLOGTOOL_WEB_PORT=8080 \
   docker compose -f docker-compose.web.yml up -d --build
 ```
 
-该容器只提供静态 WebClient，不包含 OpenLogTool Server。公网部署时应由现有的
+该容器只提供静态 WebClient，不包含 Callsign Roll Log Server。公网部署时应由现有的
 HTTPS 反向代理转发到 `127.0.0.1:5973`。GitHub Actions 会在每次推送和 PR
 自动构建 WebClient；普通构建可下载 Actions artifact，`v*` 标签发布时
 WebClient 压缩包会一并加入 GitHub Release。
@@ -254,15 +254,15 @@ Release 中的 WebClient 压缩包是完整的预构建 Docker 部署包，不�
 也不会在部署机器上重新编译 Flutter 或 Rust。下载并解压后直接运行：
 
 ```bash
-tar -xzf OpenLogTool-*-WebClient.tar.gz
-cd OpenLogTool-*-WebClient
+tar -xzf Callsign Roll Log-*-WebClient.tar.gz
+cd Callsign Roll Log-*-WebClient
 docker compose up -d
 ```
 
 发布包中已包含静态网页、Rust WASM、Dockerfile、Nginx 配置和
 `docker-compose.yml`，默认同样映射到外部端口 `5973`。
 
-浏览器连接 OpenLogTool Server 时还要遵守同源策略。如果 WebClient 与 API 使用
+浏览器连接 Callsign Roll Log Server 时还要遵守同源策略。如果 WebClient 与 API 使用
 不同 Origin（协议、域名或端口任一不同），服务端的 `CORS_ORIGINS` 必须包含
 WebClient 的完整 Origin，例如：
 

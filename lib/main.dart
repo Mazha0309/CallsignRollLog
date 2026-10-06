@@ -270,7 +270,7 @@ class MyApp extends StatelessWidget {
     );
 
     return MaterialApp(
-      title: 'OpenLogTool',
+      title: 'Callsign Roll Log',
       initialRoute: '/',
       navigatorObservers: UrlSync.navigatorObservers,
       debugShowCheckedModeBanner: false,
