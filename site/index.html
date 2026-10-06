@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>CRL · Callsign Roll Log — 业余无线电点名记录与协作工具</title>
-<meta name="description" content="专为业余无线电爱好者设计的点名记录工具，跨平台运行。本地不需要服务器与账号，服务器是个人云同步与多人协作的可选扩展。AGPL-3.0 开源。">
+<meta name="description" content="专为业余无线电爱好者设计的点名记录工具，跨平台运行，用于浙江省业余无线电协会中继台网的点名。本地不需要服务器与账号，服务器是个人云同步与多人协作的可选扩展。AGPL-3.0 开源。">
 <meta name="color-scheme" content="light dark">
 <link rel="icon" href="icon.png" type="image/png">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap">
@@ -56,6 +56,8 @@ nav a:hover{color:var(--ink);background:var(--sunken)}
 .intro h1{font-size:clamp(23px,2.6vw,30px);font-weight:600;letter-spacing:-.01em;margin:0 0 16px;line-height:1.45}
 .intro h1 .b{color:var(--brand)}
 .intro p{margin:0 0 8px;color:var(--ink-2);max-width:62ch}
+.intro .use{margin-top:14px;color:var(--ink)}
+.intro .use a{color:var(--brand)}
 .intro .eyebrow{margin:0 0 10px;font-family:var(--mono);font-size:12px;letter-spacing:.12em;color:var(--ink-3)}
 .meta{display:flex;flex-wrap:wrap;gap:8px 10px;align-items:center;margin:24px 0 0;font-family:var(--mono);font-size:11.5px;color:var(--ink-3)}
 .meta span{padding:2px 8px;border:1px solid var(--rule);border-radius:999px;background:var(--surface)}
@@ -331,15 +333,6 @@ table.dl td.z{width:92px;font-family:var(--mono);font-size:12px;color:var(--ink-
 @media (max-width:440px){
   .cpanel.wide .ctiles,.cpanel.narrow .ctiles{grid-template-columns:1fr}
 }
-@media (max-width:620px){
-  .ctile{min-height:0;padding:9px 11px}
-  .ctile .v{font-size:15px;white-space:normal;overflow-wrap:anywhere}
-  .ccallsign{font-size:27px;margin-bottom:12px}
-  .ctop{gap:9px;padding:10px 12px}
-  .ctop .pi svg{width:24px;height:24px}
-  .ctop .ctitle{font-size:16px}
-  .ctop .csum{display:none}
-}
 @media (max-width:720px){
   .lv{display:none}
   .lvmob{display:block}
@@ -369,10 +362,11 @@ footer{padding:22px 0 40px}
   dl.feat div{grid-template-columns:1fr;gap:2px}
 }
 @media (max-width:620px){
-  nav{display:none}
-  nav.open{display:flex;position:absolute;top:52px;left:0;right:0;flex-direction:column;background:var(--surface);
+  header nav{display:none}
+  header nav.open{display:flex;position:absolute;top:52px;left:0;right:0;flex-direction:column;background:var(--surface);
     border-bottom:1px solid var(--rule);padding:6px 12px 10px}
   #hamb{display:grid;margin-left:auto}
+  .foot nav{display:flex}
   .brand .t span{display:inline}
   /* 示例工具栏在窄屏换行，避免标题被挤成竖排 */
   .uibar{flex-wrap:wrap;row-gap:10px}
@@ -381,6 +375,61 @@ footer{padding:22px 0 40px}
   table.dl th,table.dl td{padding:8px 10px}
   table.dl td.p,table.dl td.z{width:auto}
   table.dl td.f a{white-space:normal;overflow-wrap:anywhere}
+}
+.only-phone{display:none}
+.dllist{display:none}
+.subacts{display:contents}
+.ctopn{display:none}
+.dlgrp{border-top:1px solid var(--rule);padding:2px 0 8px}
+.dlgrp h4{margin:0;padding:12px 0 2px;font-family:var(--mono);font-size:12px;font-weight:600;letter-spacing:.04em;color:var(--ink-3)}
+.dlgrp a{display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding:7px 0;font-size:13.5px}
+.dlgrp a span{color:var(--brand);overflow-wrap:anywhere}
+.dlgrp a em{flex:none;font-style:normal;font-family:var(--mono);font-size:12px;color:var(--ink-3)}
+/* 窄于 640：对应 ControllerDisplayScreen 的 compact header（两行，不是桌面单行） */
+.ctopn{padding:12px 16px;background:#ECEEF4;border-bottom:1px solid #C3C7CF;color:#191C20}
+.ctopn-r,.ctopn-r2{display:flex;align-items:center;gap:8px}
+.ctopn-r2{margin-top:8px}
+.ctopn .pi svg{width:28px;height:28px}
+.ctopn .ctitle{flex:1;min-width:0;font-size:20px;font-weight:700;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ctune{width:40px;height:40px;border-radius:20px;display:grid;place-items:center;background:rgba(54,97,142,.12);color:#36618E;flex:none}
+.ctune svg{width:20px;height:20px}
+.ctopn .csum{flex:1;min-width:0;font-size:12px;color:#43474E;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ctopn .cstat{margin-left:0;padding:7px 10px;border-radius:999px;background:rgba(15,122,69,.12);font-weight:600}
+
+@media (max-width:720px){
+  body{overflow-x:clip}
+  .wrap,.uiwrap{padding-left:16px;padding-right:16px}
+  .hd{height:52px;gap:8px}
+  .brand{min-width:0;flex:1}
+  .brand .t{overflow:hidden;text-overflow:ellipsis}
+  .brand .t span{display:inline}
+  .hd .ic{width:36px;height:36px}
+  header nav{display:none}
+  #hamb{display:grid;margin-left:auto}
+  header nav.open{display:flex;position:absolute;top:52px;left:0;right:0;z-index:30;flex-direction:column;
+    background:var(--surface);border-bottom:1px solid var(--rule);padding:6px 12px 10px}
+  header nav.open a{font-size:15px;color:var(--ink);padding:10px 8px}
+  .foot nav{display:flex}
+
+  .only-desk{display:none}
+  .only-phone{display:inline}
+  .uimock:not(.ctrl),.lv{display:none !important}
+  .uimock.ctrl,.uimob,.lvmob{display:block !important}
+  .cbody{padding:8px;gap:12px}
+
+  .dllist:not(:empty){display:block}
+  .dllist:not(:empty)+table.dl{display:none}
+  table.dl td.f a{white-space:normal;overflow-wrap:anywhere}
+  .rel{flex-wrap:wrap}
+  .rel a{margin-left:0}
+
+  .wx{flex-direction:column;align-items:flex-start;gap:12px}
+  footer{padding:16px 0 32px}
+  .foot{flex-direction:column;align-items:flex-start;gap:6px}
+}
+@media (max-width:639px){
+  .ctop{display:none}
+  .ctopn{display:block}
 }
 @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
 </style>
@@ -410,16 +459,19 @@ footer{padding:22px 0 40px}
     <p class="eyebrow">呼号点名日志</p>
     <h1>业余无线电<span class="b">点名记录与协作</span>工具</h1>
     <p>专为业余无线电爱好者设计。本地使用不需要服务器、也不需要注册账号：新建会话后即可记录、管理词库、查看历史与导入导出。服务器是可选扩展，用于个人云同步、好友与多人协作——没有服务器不会影响单机记录。</p>
+    <p class="use">用于<a href="https://mp.weixin.qq.com/mp/profile_ext?action=home&amp;__biz=MzI5NTM3MjE0NA==&amp;scene=124#wechat_redirect" target="_blank" rel="noopener">浙江省业余无线电协会</a>中继台网的点名。</p>
     <div class="meta">
-      <span>版本 <b data-version>v3.0.3-R</b></span>
+      <span>版本 <b data-version>…</b></span>
       <span>开源 · AGPL-3.0</span>
       <span>Flutter · Rust</span>
       <span>Linux / Windows / macOS / Android / Web</span>
     </div>
     <div class="acts">
       <a class="btn pri" href="#download"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11m0 0 4.5-4.5M12 15l-4.5-4.5M5 20h14"/></svg>下载</a>
-      <a class="btn alt" href="https://github.com/Mazha0309/CallsignRollLog" target="_blank" rel="noopener">源码仓库</a>
-      <a class="btn alt" href="https://github.com/Mazha0309/CallsignRollLog/blob/main/README.md" target="_blank" rel="noopener">README</a>
+      <div class="subacts">
+        <a class="btn alt" href="https://github.com/Mazha0309/CallsignRollLog" target="_blank" rel="noopener">源码仓库</a>
+        <a class="btn alt" href="https://github.com/Mazha0309/CallsignRollLog/blob/main/README.md" target="_blank" rel="noopener">README</a>
+      </div>
     </div>
   </div>
 
@@ -461,7 +513,6 @@ footer{padding:22px 0 40px}
         </table>
       </div>
     </div>
-  </div>
     <div class="uimob">
       <div class="ma">
         <div class="mah"><span class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01"/></svg></span><b>已保存记录</b><span class="machip">59 条</span></div>
@@ -469,9 +520,9 @@ footer{padding:22px 0 40px}
         <div class="masearch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>搜索呼号 / QTH / 备注…</div>
         <article class="marec"><div class="marow"><span class="mano">#59</span><b>BG5DBL</b><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg></div><div class="mameta"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3 2"/></svg>21:21</span><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>BG5CRL</span><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 4v16M8.5 8 6 20M15.5 8 18 20M7 20h10"/></svg>59/59</span></div></article>
         <article class="marec"><div class="marow"><span class="mano">#58</span><b>BG5FXY</b><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg></div><div class="mameta"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3 2"/></svg>21:20</span><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>BG5CRL</span><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 4v16M8.5 8 6 20M15.5 8 18 20M7 20h10"/></svg>59/59</span></div></article>
-        </div>
       </div>
     </div>
+  </div>
 
   <section id="features">
     <div class="wrap sec">
@@ -516,7 +567,7 @@ footer{padding:22px 0 40px}
       <h3>现场一块屏，远方一个网页</h3>
       <p>主控屏由当前账号在客户端里打开，投给场内；Live Share 公开页发给不在场的观众与远程值守，无需账号。两边都是只读。</p>
     </div>
-    <div class="mockcap">主控屏 · 桌面客户端，独立进程</div>
+    <div class="mockcap"><span class="only-desk">主控屏 · 桌面客户端，独立进程</span><span class="only-phone">主控屏</span></div>
     <div class="uimock ctrl">
       <div class="ctop">
         <span class="pi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="11.2" r="2.4" fill="currentColor" stroke="none"/><path d="M7.4 8.2a6.5 6.5 0 0 1 9.2 0"/><path d="M4.6 5.2a10.5 10.5 0 0 1 14.8 0"/><path d="M12 14v5.2h-2.6M12 19.2h2.6"/></svg></span>
@@ -527,14 +578,27 @@ footer{padding:22px 0 40px}
         <span class="cstat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 18a4 4 0 0 1 0-8 5.5 5.5 0 0 1 10.6-1.4A3.8 3.8 0 0 1 17.5 18z"/><path d="m9 14 2 2 3.6-3.6"/></svg>已连接</span>
         <span class="cclock">21:21:09</span>
       </div>
+      <div class="ctopn">
+        <div class="ctopn-r">
+          <span class="pi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="11.2" r="2.4" fill="currentColor" stroke="none"/><path d="M7.4 8.2a6.5 6.5 0 0 1 9.2 0"/><path d="M4.6 5.2a10.5 10.5 0 0 1 14.8 0"/><path d="M12 14v5.2h-2.6M12 19.2h2.6"/></svg></span>
+          <div class="ctitle">2026-10-05 夜间点名</div>
+          <span class="ctune" title="显示设置"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/><circle cx="8" cy="7" r="2.2" fill="currentColor" stroke="none"/><circle cx="15" cy="12" r="2.2" fill="currentColor" stroke="none"/><circle cx="10" cy="17" r="2.2" fill="currentColor" stroke="none"/></svg></span>
+        </div>
+        <div class="ctopn-r2">
+          <div class="csum">已保存 59 位 · 更新 21:21:08 · BG5CRL 编辑</div>
+          <span class="cclock">21:21:09</span>
+          <span class="cstat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 18a4 4 0 0 1 0-8 5.5 5.5 0 0 1 10.6-1.4A3.8 3.8 0 0 1 17.5 18z"/><path d="m9 14 2 2 3.6-3.6"/></svg>已连接</span>
+        </div>
+      </div>
       <div class="cbody">
         <div class="cpanel wide">
         <div class="chead cur"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="12" rx="2"/><circle cx="8.5" cy="14" r="2.2"/><path d="M14 12.5h4M14 16h4"/><path d="m6.5 8 9.5-5"/></svg>当前第 59 位</div>
         <div class="cpanelbody">
           <p class="ccallsign">BG5DBL</p>
           <div class="ctiles">
-            <div class="ctile"><div class="k">时间</div><div class="v">21:21</div></div>
             <div class="ctile"><div class="k">主控</div><div class="v">BG5CRL</div></div>
+            <div class="ctile"><div class="k">来台呼号</div><div class="v">BG5DBL</div></div>
+            <div class="ctile"><div class="k">时间</div><div class="v">21:21</div></div>
             <div class="ctile"><div class="k">RST 发</div><div class="v">59</div></div>
             <div class="ctile"><div class="k">RST 收</div><div class="v">59</div></div>
             <div class="ctile"><div class="k">QTH</div><div class="v">宁波高新区</div></div>
@@ -542,6 +606,7 @@ footer{padding:22px 0 40px}
             <div class="ctile"><div class="k">功率</div><div class="v">8W</div></div>
             <div class="ctile"><div class="k">天线</div><div class="v">老鹰 770拉杆</div></div>
             <div class="ctile"><div class="k">高度</div><div class="v">8楼</div></div>
+            <div class="ctile"><div class="k">备注</div><div class="v">—</div></div>
           </div>
         </div>
         </div>
@@ -549,18 +614,23 @@ footer{padding:22px 0 40px}
         <div class="chead prev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 12a8.5 8.5 0 1 0 2.8-6.3"/><path d="M3.5 4.8v5.4h5.4"/><path d="M12 8.4V12l2.6 1.8"/></svg>第 58 位</div>
         <div class="cpanelbody">
           <div class="ctiles">
-            <div class="ctile"><div class="k">时间</div><div class="v">21:20</div></div>
             <div class="ctile"><div class="k">主控</div><div class="v">BG5CRL</div></div>
             <div class="ctile"><div class="k">来台呼号</div><div class="v">BG5FXY</div></div>
+            <div class="ctile"><div class="k">时间</div><div class="v">21:20</div></div>
+            <div class="ctile"><div class="k">RST 发</div><div class="v">59</div></div>
+            <div class="ctile"><div class="k">RST 收</div><div class="v">59</div></div>
             <div class="ctile"><div class="k">QTH</div><div class="v">杭州联胜路地铁口</div></div>
             <div class="ctile"><div class="k">设备</div><div class="v">泉盛 UV-K1</div></div>
+            <div class="ctile"><div class="k">功率</div><div class="v">5W</div></div>
             <div class="ctile"><div class="k">天线</div><div class="v">原装天线</div></div>
+            <div class="ctile"><div class="k">高度</div><div class="v">3楼</div></div>
+            <div class="ctile"><div class="k">备注</div><div class="v">—</div></div>
           </div>
         </div>
         </div>
       </div>
     </div>
-    <div class="mockcap second">Live Share 公开页 · 由服务端 <a href="https://github.com/Mazha0309/CallsignRollLogServer" target="_blank" rel="noopener">CallsignRollLogServer</a> 提供</div>
+    <div class="mockcap second"><span class="only-desk">Live Share 公开页 · 由服务端 <a href="https://github.com/Mazha0309/CallsignRollLogServer" target="_blank" rel="noopener">CallsignRollLogServer</a> 提供</span><span class="only-phone">Live Share 公开页</span></div>
     <div class="lv">
       <div class="lvtop">
         <img src="icon.png" alt="">
@@ -665,10 +735,11 @@ footer{padding:22px 0 40px}
       <div class="side"><div class="no">03</div><h2>下载</h2><p>产物发布在 GitHub Releases。</p></div>
       <div>
         <div class="rel">
-          <span class="v" data-version>v3.0.2-R</span>
+          <span class="v" data-version>…</span>
           <span class="d" data-released>读取中…</span>
           <a href="https://github.com/Mazha0309/CallsignRollLog/releases/latest" target="_blank" rel="noopener">在 Releases 查看 →</a>
         </div>
+        <div class="dllist" id="dllist"></div>
         <table class="dl">
           <thead><tr><th>平台</th><th>文件（按格式 / 架构）</th><th>大小</th></tr></thead>
           <tbody id="dlbody">
@@ -722,7 +793,7 @@ bash tool/build_web.sh
         <div><dt>服务端</dt><dd><a href="https://github.com/Mazha0309/CallsignRollLogServer" target="_blank" rel="noopener">Mazha0309/CallsignRollLogServer</a> · 自建即可启用个人云同步与多人协作。</dd></div>
         <div><dt>协议</dt><dd>GNU Affero General Public License v3.0：可自由使用、修改与分发；若改造后通过网络对外提供服务，同样需要公开修改后的源码。仓库内附完整 <a href="https://github.com/Mazha0309/CallsignRollLog/blob/main/LICENSE" target="_blank" rel="noopener">LICENSE</a>。</dd></div>
         <div><dt>特别鸣谢</dt><dd class="wx">
-          <span><a href="https://mp.weixin.qq.com/mp/profile_ext?action=home&amp;__biz=MzI5NTM3MjE0NA==&amp;scene=124#wechat_redirect" target="_blank" rel="noopener">浙江省业余无线电协会</a><br><span class="wxcap">公众号链接需在微信内打开：在微信里点名称，或用手机微信扫码。</span></span>
+          <span><a href="https://mp.weixin.qq.com/mp/profile_ext?action=home&amp;__biz=MzI5NTM3MjE0NA==&amp;scene=124#wechat_redirect" target="_blank" rel="noopener">浙江省业余无线电协会</a><br><span class="wxcap">本软件用于该协会中继台网的点名。公众号链接需在微信内打开：在微信里点名称，或用手机微信扫码。</span></span>
           <img class="wxqr" src="wechat-zjra.svg" alt="浙江省业余无线电协会微信公众号二维码" width="124" height="124" loading="lazy">
         </dd></div>
       </dl>
@@ -768,6 +839,12 @@ bash tool/build_web.sh
   });
 
   var REPO='Mazha0309/CallsignRollLog';
+  var VER_KEY='crl-latest-release';
+  function paintVersion(tag){
+    if(!tag)return;
+    document.querySelectorAll('[data-version]').forEach(function(el){el.textContent=tag;});
+  }
+  try{paintVersion(localStorage.getItem(VER_KEY));}catch(e){}
   var ORDER=[['Windows',/windows|setup|\.exe$/i],['macOS',/macos|\.dmg$/i],['Linux',/linux|appimage|\.deb$|\.rpm$/i],
              ['Android',/android|\.apk$/i],['iOS',/ios|\.ipa$/i],['Web',/webclient|web/i]];
   function plat(n){for(var i=0;i<ORDER.length;i++){if(ORDER[i][1].test(n))return ORDER[i][0];}return '其他';}
@@ -778,7 +855,8 @@ bash tool/build_web.sh
     .then(function(r){if(!r.ok)throw new Error(r.status);return r.json();})
     .then(function(rel){
       var tag=rel.tag_name||rel.name||'';
-      document.querySelectorAll('[data-version]').forEach(function(el){el.textContent=tag;});
+      paintVersion(tag);
+      try{if(tag)localStorage.setItem(VER_KEY,tag);}catch(e){}
       var rd=document.querySelector('[data-released]');
       if(rd&&rel.published_at)rd.textContent='发布于 '+rel.published_at.slice(0,10);
 
@@ -806,10 +884,26 @@ bash tool/build_web.sh
             '<td class="z">'+mb(a.size)+'</td></tr>';
         }).join('');
       }).join('');
+      var listEl=document.getElementById('dllist');
+      if(listEl){
+        listEl.innerHTML=order.map(function(p){
+          var list=groups[p].slice().sort(function(a,b){return a.name.localeCompare(b.name);});
+          return '<section class="dlgrp"><h4>'+esc(p)+'</h4>'+
+            list.map(function(a){
+              return '<a href="'+esc(a.browser_download_url)+'" title="'+esc(a.name)+'"><span>'+esc(shortName(a.name))+'</span><em>'+mb(a.size)+'</em></a>';
+            }).join('')+'</section>';
+        }).join('');
+      }
       var note=document.getElementById('dlnote');
       if(note)note.textContent='共 '+assets.length+' 个产物，数据来自 GitHub Releases API，随最新发布自动更新。';
     })
-    .catch(function(){});
+    .catch(function(){
+      var known=false;
+      document.querySelectorAll('[data-version]').forEach(function(el){
+        if(el.textContent&&el.textContent!=='…')known=true;
+      });
+      if(!known)paintVersion('未能获取');
+    });
   if(/MicroMessenger/i.test(navigator.userAgent)){
     document.querySelectorAll('.wxqr,.wxcap').forEach(function(el){el.style.display='none';});
   }
