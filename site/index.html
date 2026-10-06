@@ -13,16 +13,34 @@
 <meta name="twitter:card" content="summary">
 <meta name="color-scheme" content="light dark">
 <link rel="icon" href="icon.png" type="image/png">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap">
 <style>
+/* 字体全部自托管在 site/fonts/：Google Fonts 在国内不可达，且外链样式表会阻塞渲染。
+   中文主字体为更纱黑体 SC（Sarasa Gothic SC），西文与等宽沿用 IBM Plex 与 Inter。
+   各文件的来源、许可与再生成方式见 site/fonts/NOTICE.md 与 site/tools/subset-sarasa.py。 */
+@font-face{font-family:"IBM Plex Sans";font-style:normal;font-weight:400;src:url(fonts/plex-sans-400.woff2) format("woff2");font-display:swap}
+@font-face{font-family:"IBM Plex Sans";font-style:normal;font-weight:500;src:url(fonts/plex-sans-500.woff2) format("woff2");font-display:swap}
+@font-face{font-family:"IBM Plex Sans";font-style:normal;font-weight:600;src:url(fonts/plex-sans-600.woff2) format("woff2");font-display:swap}
+@font-face{font-family:"IBM Plex Sans";font-style:normal;font-weight:700;src:url(fonts/plex-sans-700.woff2) format("woff2");font-display:swap}
+@font-face{font-family:"IBM Plex Mono";font-style:normal;font-weight:400;src:url(fonts/plex-mono-400.woff2) format("woff2");font-display:swap}
+@font-face{font-family:"IBM Plex Mono";font-style:normal;font-weight:500;src:url(fonts/plex-mono-500.woff2) format("woff2");font-display:swap}
+@font-face{font-family:"IBM Plex Mono";font-style:normal;font-weight:600;src:url(fonts/plex-mono-600.woff2) format("woff2");font-display:swap}
+@font-face{font-family:Inter;font-style:normal;font-weight:400;src:url(fonts/inter-400.woff2) format("woff2");font-display:swap}
+@font-face{font-family:Inter;font-style:normal;font-weight:500;src:url(fonts/inter-500.woff2) format("woff2");font-display:swap}
+@font-face{font-family:Inter;font-style:normal;font-weight:600;src:url(fonts/inter-600.woff2) format("woff2");font-display:swap}
+@font-face{font-family:Inter;font-style:normal;font-weight:700;src:url(fonts/inter-700.woff2) format("woff2");font-display:swap}
+/* 更纱黑体只做站点子集：常规与中等各用一份，600 及以上统一落粗体，省掉一个文件 */
+@font-face{font-family:"Sarasa Gothic SC";font-style:normal;font-weight:400;src:url(fonts/sarasa-gothic-sc-400.woff2) format("woff2");font-display:swap}
+@font-face{font-family:"Sarasa Gothic SC";font-style:normal;font-weight:500;src:url(fonts/sarasa-gothic-sc-400.woff2) format("woff2");font-display:swap}
+@font-face{font-family:"Sarasa Gothic SC";font-style:normal;font-weight:600;src:url(fonts/sarasa-gothic-sc-700.woff2) format("woff2");font-display:swap}
+@font-face{font-family:"Sarasa Gothic SC";font-style:normal;font-weight:700;src:url(fonts/sarasa-gothic-sc-700.woff2) format("woff2");font-display:swap}
 :root{
   --paper:#fbfbfc; --surface:#fff; --sunken:#f2f4f7; --sel:#e9eff7;
   --ink:#141a22; --ink-2:#586172; --ink-3:#8a93a3;
   --rule:#e4e7ec; --rule-2:#cbd1da;
   --brand:#12599f; --brand-2:#1e78d2; --brand-wash:#e8f1fb;
   --ok:#0f7a45; --ok-wash:#e6f4ec;
-  --sans:"IBM Plex Sans",-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Noto Sans SC",sans-serif;
-  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --sans:"IBM Plex Sans","Sarasa Gothic SC",-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Noto Sans SC",sans-serif;
+  --mono:"IBM Plex Mono","Sarasa Gothic SC",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
 }
 html[data-theme=dark]{
   color-scheme:dark;
