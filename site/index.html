@@ -19,6 +19,7 @@
   --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
 }
 html[data-theme=dark]{
+  color-scheme:dark;
   --paper:#0c1118; --surface:#131c27; --sunken:#0f1822; --sel:#17293c;
   --ink:#e7edf6; --ink-2:#9ca8ba; --ink-3:#687587;
   --rule:#1f2a38; --rule-2:#2d3a4b;
@@ -26,9 +27,11 @@ html[data-theme=dark]{
   --ok:#4fd08a; --ok-wash:#0f2a1d;
 }
 *{box-sizing:border-box}
-html{scroll-behavior:smooth;scroll-padding-top:74px}
+html{scroll-behavior:smooth;scroll-padding-top:74px;color-scheme:light}
 body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:15.5px;line-height:1.78;-webkit-font-smoothing:antialiased}
 a{color:inherit;text-decoration:none}
+/* 表单控件默认不继承 color（取系统 buttontext），深色下会出现黑图标配深底 */
+button{font:inherit;color:inherit;background:none;border:0;padding:0}
 .wrap{max-width:1080px;margin:0 auto;padding:0 26px}
 :focus-visible{outline:2px solid var(--brand-2);outline-offset:2px;border-radius:3px}
 .mono{font-family:var(--mono)}
@@ -46,7 +49,7 @@ nav{display:flex;gap:2px;margin-left:auto}
 nav a{padding:5px 9px;border-radius:6px;font-size:13.5px;color:var(--ink-2)}
 nav a:hover{color:var(--ink);background:var(--sunken)}
 .hd .ic{width:30px;height:30px;display:grid;place-items:center;border:1px solid var(--rule);border-radius:7px;
-  background:var(--surface);cursor:pointer;flex:none}
+  background:var(--surface);color:var(--ink);cursor:pointer;flex:none}
 .hd .ic:hover{border-color:var(--rule-2)}
 .hd .ic svg{width:15px;height:15px}
 #hamb{display:none}
@@ -453,6 +456,91 @@ footer{padding:26px 0 44px;border-top:1px solid var(--rule)}
   .ctop{display:none}
   .ctopn{display:block}
 }
+/* ===== 深色模式：示例图跟随主题。浅色规则一概不动，这里只重定义颜色 =====
+   取值对齐应用自身的深色 ColorScheme（seed #2196F3），不是把浅色反相。 */
+html[data-theme=dark]{
+  --mk-bg:#191c20; --mk-surface:#101418; --mk-high:#33353a; --mk-line:#43474e;
+  --mk-ink:#e1e2e6; --mk-ink2:#c3c6cf; --mk-ink3:#8d9199;
+  --mk-pri:#a2c9ff; --mk-pri-soft:rgba(162,201,255,.16); --mk-pri-solid:#2f5a86;
+  --mk-chip:#3a4a5e; --mk-chip-ink:#d6e3f7; --mk-chip2:#2a2d31; --mk-chip2-ink:#c3c6cf;
+  --mk-ok:#6fd39a; --mk-ok-soft:rgba(111,211,154,.16);
+  --mk-clock:#d1e4ff; --mk-clock-bg:rgba(0,73,127,.55);
+  --mk-ico:#2a3b52; --mk-rec:#1d2024; --mk-rec-line:#33353a;
+  --ls-bg:#0f1520; --ls-line:#23303f; --ls-ink:#e6ecf5; --ls-ink2:#93a1b5; --ls-ink3:#6b7a8f;
+  --ls-panel:#151d29; --ls-head:#1b2532; --ls-accent:#6aa9f0; --ls-accent-soft:#16283f;
+  --ls-ok:#4fd08a; --ls-ok-soft:#12301f;
+}
+/* 记录工作台 */
+html[data-theme=dark] .uimock{background:var(--mk-bg);border-color:var(--mk-line);color:var(--mk-ink)}
+html[data-theme=dark] .uibar .ico{background:var(--mk-pri-soft);color:var(--mk-pri)}
+html[data-theme=dark] .uibar .pill{background:var(--mk-chip);color:var(--mk-chip-ink)}
+html[data-theme=dark] .uibar .undo{border-color:var(--mk-line);color:var(--mk-pri)}
+html[data-theme=dark] .uisearch{border-color:var(--mk-line);color:var(--mk-ink3)}
+html[data-theme=dark] .uisearch svg{color:var(--mk-ink2)}
+html[data-theme=dark] .uihint{border-color:var(--mk-line);background:var(--mk-bg);color:var(--mk-ink2)}
+html[data-theme=dark] .uitable th{background:var(--mk-high);color:var(--mk-ink);border-bottom-color:var(--mk-line)}
+html[data-theme=dark] .uitable td{color:var(--mk-ink);border-bottom-color:var(--mk-line)}
+html[data-theme=dark] .uitable th.op,html[data-theme=dark] .uitable td.op{background:var(--mk-surface);
+  border-left-color:var(--mk-line);box-shadow:-3px 0 8px rgba(0,0,0,.5)}
+html[data-theme=dark] .uitable td.op svg{color:var(--mk-ink2)}
+html[data-theme=dark] .uitable tbody tr:hover td{background:var(--mk-high)}
+/* 主控屏 */
+html[data-theme=dark] .ctrl{background:var(--mk-surface)}
+html[data-theme=dark] .ctop,html[data-theme=dark] .ctopn{background:var(--mk-bg);border-bottom-color:var(--mk-line);color:var(--mk-ink)}
+html[data-theme=dark] .ctop .pi{color:var(--mk-pri)}
+html[data-theme=dark] .ctune{background:var(--mk-pri-soft);color:var(--mk-pri)}
+html[data-theme=dark] .ctop .csum,html[data-theme=dark] .ctopn .csum{color:var(--mk-ink2)}
+html[data-theme=dark] .cstat{color:var(--mk-ok)}
+html[data-theme=dark] .ctopn .cstat{background:var(--mk-ok-soft)}
+html[data-theme=dark] .cclock{background:var(--mk-clock-bg);color:var(--mk-clock)}
+html[data-theme=dark] .cpanel{border-color:var(--mk-line);background:var(--mk-surface)}
+html[data-theme=dark] .chead.cur{background:var(--mk-pri-solid);color:#fff}
+html[data-theme=dark] .chead.prev{background:var(--mk-pri-soft);color:var(--mk-pri)}
+html[data-theme=dark] .ccallsign{color:var(--mk-pri)}
+html[data-theme=dark] .ctile{border-color:var(--mk-line);background:var(--mk-high)}
+html[data-theme=dark] .ctile .k{color:var(--mk-ink2)}
+/* 客户端 · 手机 */
+html[data-theme=dark] .ma{background:var(--mk-bg);border-color:var(--mk-line)}
+html[data-theme=dark] .machip{background:var(--mk-chip2);color:var(--mk-chip2-ink)}
+html[data-theme=dark] .mah .mi{background:var(--mk-ico);color:var(--mk-pri)}
+html[data-theme=dark] .mah b,html[data-theme=dark] .marow b{color:var(--mk-ink)}
+html[data-theme=dark] .maundo{border-color:var(--mk-line);color:var(--mk-ink3)}
+html[data-theme=dark] .masearch{border-color:var(--mk-line);color:var(--mk-ink3)}
+html[data-theme=dark] .marec{border-color:var(--mk-rec-line);background:var(--mk-rec)}
+html[data-theme=dark] .mano{background:var(--mk-chip);color:var(--mk-chip-ink)}
+html[data-theme=dark] .marow svg{color:var(--mk-ink3)}
+html[data-theme=dark] .mameta{color:var(--mk-ink3)}
+/* Live Share */
+html[data-theme=dark] .lv,html[data-theme=dark] .lm{background:var(--ls-bg);border-color:var(--ls-line);color:var(--ls-ink)}
+html[data-theme=dark] .lvtop{padding:10px 20px;background:var(--ls-panel);border-bottom-color:var(--ls-line)}
+html[data-theme=dark] .lmtop{border-bottom-color:var(--ls-line)}
+html[data-theme=dark] .lvsel span,html[data-theme=dark] .lvstats article,html[data-theme=dark] .lvhist,
+html[data-theme=dark] .lvpill,html[data-theme=dark] .lmsel,html[data-theme=dark] .lmstats article,
+html[data-theme=dark] .lmlatest,html[data-theme=dark] .lmcard,html[data-theme=dark] .lmsearch{
+  background:var(--ls-panel);border-color:var(--ls-line)}
+html[data-theme=dark] .lvtop .bs,html[data-theme=dark] .lveb,html[data-theme=dark] .lvstats span,
+html[data-theme=dark] .lvprimary .n,html[data-theme=dark] .lvprimary time,html[data-theme=dark] .lvdetails dt,
+html[data-theme=dark] .lvhisthead p,html[data-theme=dark] .lvpill,html[data-theme=dark] .lvfoot,
+html[data-theme=dark] .lvnote,html[data-theme=dark] .lme,html[data-theme=dark] .lmstats span,
+html[data-theme=dark] .lmlabel,html[data-theme=dark] .lmp time,html[data-theme=dark] .lmdet dt,
+html[data-theme=dark] .lmcard dt,html[data-theme=dark] .lmh time,html[data-theme=dark] .lmh .ord{color:var(--ls-ink2)}
+html[data-theme=dark] .lvprimary strong,html[data-theme=dark] .lv td{color:var(--ls-ink)}
+html[data-theme=dark] .lvlabel,html[data-theme=dark] .lv .cs,html[data-theme=dark] .lmp strong,
+html[data-theme=dark] .lmh strong{color:var(--ls-accent)}
+html[data-theme=dark] .lvro,html[data-theme=dark] .lmro{background:var(--ls-accent-soft);color:var(--ls-accent)}
+html[data-theme=dark] .lmbadge{background:var(--ls-accent-soft);color:var(--ls-accent)}
+html[data-theme=dark] .lvbadge,html[data-theme=dark] .lmpill{background:var(--ls-ok-soft);color:var(--ls-ok)}
+html[data-theme=dark] .lvpill i,html[data-theme=dark] .lmpill i{background:var(--ls-ok)}
+html[data-theme=dark] .lvlatest{border-color:var(--ls-line);background:var(--ls-panel)}
+html[data-theme=dark] .lvhisthead{border-bottom-color:var(--ls-line)}
+html[data-theme=dark] .lvsearch{background:var(--ls-head);color:var(--ls-ink3)}
+html[data-theme=dark] .lvsearch svg{color:var(--ls-ink2)}
+html[data-theme=dark] .lv th{background:var(--ls-head);color:var(--ls-ink2)}
+html[data-theme=dark] .lv td{border-top-color:var(--ls-line)}
+html[data-theme=dark] .lv .og,html[data-theme=dark] .lmp .n{color:var(--ls-ink3)}
+html[data-theme=dark] .lvfoot span{border-color:var(--ls-line)}
+html[data-theme=dark] .lmh{border-bottom-color:var(--ls-line)}
+
 @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
 </style>
 </head>
