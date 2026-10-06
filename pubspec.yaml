@@ -1,11 +1,11 @@
 name: openlogtool
 description: Callsign Roll Log - 业余无线电点名记录与协作工具
 publish_to: 'none'
-version: 3.0.2-R
+version: 3.0.3-R
 license: AGPL-3.0
-homepage: https://github.com/Mazha0309/OpenLogTool
-repository: https://github.com/Mazha0309/OpenLogTool.git
-issue_tracker: https://github.com/Mazha0309/OpenLogTool/issues
+homepage: https://github.com/Mazha0309/CallsignRollLog
+repository: https://github.com/Mazha0309/CallsignRollLog.git
+issue_tracker: https://github.com/Mazha0309/CallsignRollLog/issues
 
 environment:
   sdk: '>=3.3.0 <4.0.0'
