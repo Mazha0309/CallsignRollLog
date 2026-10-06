@@ -4,7 +4,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>CRL · Callsign Roll Log — 业余无线电点名记录与协作工具</title>
-<meta name="description" content="专为业余无线电爱好者设计的点名记录工具，跨平台运行，用于浙江省业余无线电协会中继台网的点名。本地不需要服务器与账号，服务器是个人云同步与多人协作的可选扩展。AGPL-3.0 开源。">
+<meta name="description" content="本软件是浙江省业余无线电协会中继台网点名活动使用的记录软件。跨平台运行，本地不需要服务器与账号；服务器是个人云同步与多人协作的可选扩展。AGPL-3.0 开源。">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Callsign Roll Log">
+<meta property="og:title" content="浙江省业余无线电协会中继台网点名记录软件 · CRL Callsign Roll Log">
+<meta property="og:description" content="本软件是浙江省业余无线电协会中继台网点名活动使用的记录软件。跨平台运行，本地不需要服务器与账号，AGPL-3.0 开源。">
+<meta property="og:image" content="https://mazha0309.github.io/CallsignRollLog/icon.png">
+<meta name="twitter:card" content="summary">
 <meta name="color-scheme" content="light dark">
 <link rel="icon" href="icon.png" type="image/png">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap">
@@ -247,6 +253,7 @@ dl.feat dd{margin:0;font-size:15px;line-height:1.78;color:var(--ink-2)}
 .wx{display:flex;align-items:center;gap:22px;flex-wrap:wrap}
 .wxqr{width:124px;height:124px;flex:none;background:#fff;border:1px solid var(--rule);border-radius:10px;padding:6px}
 .wxcap{color:var(--ink-3);font-size:12.5px;line-height:1.65}
+.wxuse{display:inline-block;margin:3px 0;color:var(--ink);font-size:14.5px;line-height:1.6}
 
 table.roles{white-space:normal}
 table.roles th,table.roles td{text-align:left;padding:17px 16px;font-size:14.5px}
@@ -569,7 +576,7 @@ html[data-theme=dark] .lmh{border-bottom-color:var(--ls-line)}
     <p class="eyebrow">呼号点名日志</p>
     <h1>业余无线电<span class="b">点名记录与协作</span>工具</h1>
     <p>专为业余无线电爱好者设计。本地使用不需要服务器、也不需要注册账号：新建会话后即可记录、管理词库、查看历史与导入导出。服务器是可选扩展，用于个人云同步、好友与多人协作——没有服务器不会影响单机记录。</p>
-    <p class="use">用于<a href="https://mp.weixin.qq.com/mp/profile_ext?action=home&amp;__biz=MzI5NTM3MjE0NA==&amp;scene=124#wechat_redirect" target="_blank" rel="noopener">浙江省业余无线电协会</a>中继台网的点名。</p>
+    <p class="use">本软件是<a href="https://mp.weixin.qq.com/mp/profile_ext?action=home&amp;__biz=MzI5NTM3MjE0NA==&amp;scene=124#wechat_redirect" target="_blank" rel="noopener">浙江省业余无线电协会</a>中继台网点名活动使用的记录软件。</p>
     <div class="meta">
       <span>版本 <b data-version>…</b></span>
       <span>开源 · AGPL-3.0</span>
@@ -903,7 +910,9 @@ bash tool/build_web.sh
         <div><dt>服务端</dt><dd><a href="https://github.com/Mazha0309/CallsignRollLogServer" target="_blank" rel="noopener">Mazha0309/CallsignRollLogServer</a> · 自建即可启用个人云同步与多人协作。</dd></div>
         <div><dt>协议</dt><dd>GNU Affero General Public License v3.0：可自由使用、修改与分发；若改造后通过网络对外提供服务，同样需要公开修改后的源码。仓库内附完整 <a href="https://github.com/Mazha0309/CallsignRollLog/blob/main/LICENSE" target="_blank" rel="noopener">LICENSE</a>。</dd></div>
         <div><dt>特别鸣谢</dt><dd class="wx">
-          <span><a href="https://mp.weixin.qq.com/mp/profile_ext?action=home&amp;__biz=MzI5NTM3MjE0NA==&amp;scene=124#wechat_redirect" target="_blank" rel="noopener">浙江省业余无线电协会</a><br><span class="wxcap">本软件用于该协会中继台网的点名。公众号链接需在微信内打开：在微信里点名称，或用手机微信扫码。</span></span>
+          <span><a href="https://mp.weixin.qq.com/mp/profile_ext?action=home&amp;__biz=MzI5NTM3MjE0NA==&amp;scene=124#wechat_redirect" target="_blank" rel="noopener">浙江省业余无线电协会</a>
+            <br><span class="wxuse">本软件是浙江省业余无线电协会中继台网点名活动使用的记录软件。</span>
+            <br><span class="wxcap">公众号链接需在微信外打开：在微信里点名称，或用手机微信扫码。</span></span>
           <img class="wxqr" src="wechat-zjra.svg" alt="浙江省业余无线电协会微信公众号二维码" width="124" height="124" loading="lazy">
         </dd></div>
       </dl>
@@ -1015,6 +1024,7 @@ bash tool/build_web.sh
       if(!known)paintVersion('未能获取');
     });
   if(/MicroMessenger/i.test(navigator.userAgent)){
+    // 微信内只隐藏二维码与"请在微信外打开"的提示；用途说明在任何环境都必须可见
     document.querySelectorAll('.wxqr,.wxcap').forEach(function(el){el.style.display='none';});
   }
 })();
