@@ -274,6 +274,15 @@ git add lib/services/ai_recognition/presets.dart test/services/ai_recognition/pr
 git commit -m "feat(ai): add provider presets for the multimodal kind"
 ```
 
+**实施与复查后的勘误**（以实际提交为准，`30d797b` + `c98dad6`）：
+
+1. **清单最终是 `final` 而非 `const`**。`requestOptions` 用 `Map.unmodifiable` 包裹（与 `AiProviderProfile` 的既有模式一致）后构造函数不再是 `const`，因此 `aiProviderPresets` 声明为 `final`。`baseUrl` 仍存 `String`——理由从「保持 const」改为「不把解析后的对象嵌进纯数据清单」，语义更贴切。
+2. **硅基流动不得携带未实测的请求选项**。原样例给它写了 `audioDataEncoding: 'dataUrl'`，但那只是照抄百炼——我们没有任何凭据验证过它。已移除，与 `custom` 一致走 provider 默认值。**预设有两处必须诚实：不编造模型名、不写未实测的参数。**
+3. **测试样例有两处必须偏差**：① `model: preset.defaultModel` 对留空的预设会因 `AiProviderProfile` 的 model 非空校验而抛 `ArgumentError`，需在测试内补占位模型；② 原样例 import 的桶文件未被使用，会触发 `unused_import`（补上 capabilities 断言后才真正需要它）。
+4. **测试还须覆盖 capabilities 推导与「未实测预设留空」两条不变量**——否则把 `supportsAudioFieldExtraction` 改成 `false` 或给硅基流动填个模型名都不会被发现（复查的变异验证证实了这两点）。
+
+**顺带留一条给 Task 3 的要求**：`labelKey`/`hintKey` 是裸字符串，而四份 ARB 里这些键在 Task 3 之前并不存在，`test/l10n/l10n_test.dart` 也不做键一致性检查。Task 3 补完键之后，**应增加一条断言「每条预设的 label/hint 键都能在生成的 `AppLocalizations` 里解析」**，把人工同步换成自动护栏。
+
 ---
 
 ### Task 3: 多模态档案在设置里成为一等公民
