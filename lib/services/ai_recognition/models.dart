@@ -692,3 +692,16 @@ Object? _copyJsonValue(Object? value) {
   jsonEncode(value);
   throw ArgumentError.value(value, 'value', 'must contain only JSON values');
 }
+
+/// 一次调用的完整产出：原始转写与从中提取的字段。
+///
+/// 从 pipeline.dart 迁来，使 provider 能在不依赖 pipeline 的情况下返回它。
+final class AiRecognitionResult {
+  const AiRecognitionResult({
+    required this.transcription,
+    required this.candidates,
+  });
+
+  final Transcription transcription;
+  final List<RecognitionCandidate> candidates;
+}

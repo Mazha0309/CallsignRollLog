@@ -2,16 +2,6 @@ import 'errors.dart';
 import 'models.dart';
 import 'providers.dart';
 
-final class AiRecognitionResult {
-  const AiRecognitionResult({
-    required this.transcription,
-    required this.candidates,
-  });
-
-  final Transcription transcription;
-  final List<RecognitionCandidate> candidates;
-}
-
 /// Runs one already-segmented audio turn through the configured stages.
 ///
 /// This class deliberately stops at local candidates. Applying a candidate to

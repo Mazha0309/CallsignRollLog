@@ -88,3 +88,18 @@ abstract interface class FieldExtractionProvider {
 
   void close();
 }
+
+/// 一次调用把音频变成字段。设计的模式 A 用它。
+abstract interface class AudioFieldExtractionProvider {
+  AiProviderProfile get profile;
+
+  AiProviderCapabilities get capabilities;
+
+  Future<AiRecognitionResult> extractFieldsFromAudio(
+    AudioSegment audio, {
+    String? instructions,
+    AiRequestOptions options = const AiRequestOptions(),
+  });
+
+  void close();
+}
