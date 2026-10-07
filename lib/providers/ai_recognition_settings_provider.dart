@@ -31,6 +31,7 @@ final class AiRecognitionSettingsProvider with ChangeNotifier {
   List<AiProviderProfile> _profiles = const [];
   String? _activeAsrProfileId;
   String? _activeFieldExtractionProfileId;
+  String? _activeAudioFieldExtractionProfileId;
   bool _enabled = false;
   bool _useLocalReferenceContext = true;
   TextAssistantConfig? _textAssistantConfig;
@@ -53,8 +54,14 @@ final class AiRecognitionSettingsProvider with ChangeNotifier {
   Iterable<AiProviderProfile> get fieldExtractionProfiles => _profiles.where(
         (profile) => profile.kind == AiProviderKind.fieldExtraction,
       );
+  Iterable<AiProviderProfile> get audioFieldExtractionProfiles =>
+      _profiles.where(
+        (profile) => profile.kind == AiProviderKind.audioFieldExtraction,
+      );
   String? get activeAsrProfileId => _activeAsrProfileId;
   String? get activeFieldExtractionProfileId => _activeFieldExtractionProfileId;
+  String? get activeAudioFieldExtractionProfileId =>
+      _activeAudioFieldExtractionProfileId;
   AiProviderProfile? get activeAsrProfile => _profileById(_activeAsrProfileId);
   AiProviderProfile? get activeFieldExtractionProfile =>
       _profileById(_activeFieldExtractionProfileId);
@@ -64,15 +71,10 @@ final class AiRecognitionSettingsProvider with ChangeNotifier {
   /// 只按 [AiProviderKind.audioFieldExtraction] 判定：`kind` 是这一用途的唯一
   /// 权威来源。`capabilities.supportsAudioFieldExtraction` 只是给界面看的声明，
   /// 不参与选择——否则会出现「档案配好了却选不中」这种难查的问题。
-  ///
-  /// 临时方案：目前取第一个 kind 匹配的档案。Plan 2 引入配置界面时会改为
-  /// 与 [activeFieldExtractionProfile] 一致的显式 active-id 选择。
-  AiProviderProfile? get activeAudioFieldExtractionProfile {
-    for (final profile in _profiles) {
-      if (profile.kind == AiProviderKind.audioFieldExtraction) return profile;
-    }
-    return null;
-  }
+  AiProviderProfile? get activeAudioFieldExtractionProfile => _profileById(
+        _activeAudioFieldExtractionProfileId,
+        AiProviderKind.audioFieldExtraction,
+      );
 
   AiCredentialResolver get credentialResolver => resolveCredentials;
 
@@ -87,6 +89,7 @@ final class AiRecognitionSettingsProvider with ChangeNotifier {
       _profiles = const [];
       _activeAsrProfileId = null;
       _activeFieldExtractionProfileId = null;
+      _activeAudioFieldExtractionProfileId = null;
       _enabled = false;
       _useLocalReferenceContext = true;
       _textAssistantConfig = null;
@@ -123,6 +126,10 @@ final class AiRecognitionSettingsProvider with ChangeNotifier {
     _activeFieldExtractionProfileId = _validActiveId(
       json['activeFieldExtractionProfileId'],
       AiProviderKind.fieldExtraction,
+    );
+    _activeAudioFieldExtractionProfileId = _validActiveId(
+      json['activeAudioFieldExtractionProfileId'],
+      AiProviderKind.audioFieldExtraction,
     );
     _enabled = json['enabled'] == true && _activeAsrProfileId != null;
     _useLocalReferenceContext = json['useLocalReferenceContext'] != false;
@@ -263,6 +270,16 @@ final class AiRecognitionSettingsProvider with ChangeNotifier {
         await _persist();
       });
 
+  Future<void> setActiveAudioFieldExtractionProfile(String? profileId) =>
+      _mutate(() async {
+        await initialized;
+        _requireKind(profileId, AiProviderKind.audioFieldExtraction);
+        if (_activeAudioFieldExtractionProfileId == profileId) return;
+        _activeAudioFieldExtractionProfileId = profileId;
+        notifyListeners();
+        await _persist();
+      });
+
   Future<void> upsertProfile(AiProviderProfile profile) => _mutate(() async {
         await initialized;
         _ensureSharedCredentialDestination(profile);
@@ -292,6 +309,10 @@ final class AiRecognitionSettingsProvider with ChangeNotifier {
             profile.kind != AiProviderKind.fieldExtraction) {
           _activeFieldExtractionProfileId = null;
         }
+        if (_activeAudioFieldExtractionProfileId == profile.id &&
+            profile.kind != AiProviderKind.audioFieldExtraction) {
+          _activeAudioFieldExtractionProfileId = null;
+        }
         notifyListeners();
         await _persist();
 
@@ -317,6 +338,9 @@ final class AiRecognitionSettingsProvider with ChangeNotifier {
         }
         if (_activeFieldExtractionProfileId == profileId) {
           _activeFieldExtractionProfileId = null;
+        }
+        if (_activeAudioFieldExtractionProfileId == profileId) {
+          _activeAudioFieldExtractionProfileId = null;
         }
         notifyListeners();
         await _persist();
@@ -412,6 +436,7 @@ final class AiRecognitionSettingsProvider with ChangeNotifier {
         _profiles = List.unmodifiable(imported);
         _activeAsrProfileId = null;
         _activeFieldExtractionProfileId = null;
+        _activeAudioFieldExtractionProfileId = null;
         _enabled = false;
         _useLocalReferenceContext = true;
         notifyListeners();
@@ -435,6 +460,7 @@ final class AiRecognitionSettingsProvider with ChangeNotifier {
         _profiles = const [];
         _activeAsrProfileId = null;
         _activeFieldExtractionProfileId = null;
+        _activeAudioFieldExtractionProfileId = null;
         _enabled = false;
         _textAssistantConfig = null;
         _textAssistantEnabled = false;
@@ -458,6 +484,8 @@ final class AiRecognitionSettingsProvider with ChangeNotifier {
         'textAssistant': _textAssistantConfig!.toJson(),
       'activeAsrProfileId': _activeAsrProfileId,
       'activeFieldExtractionProfileId': _activeFieldExtractionProfileId,
+      'activeAudioFieldExtractionProfileId':
+          _activeAudioFieldExtractionProfileId,
       'profiles': _profiles.map((profile) => profile.toJson()).toList(),
     });
     return _enqueuePreferenceOperation((preferences) async {
@@ -501,10 +529,12 @@ final class AiRecognitionSettingsProvider with ChangeNotifier {
     return result.future;
   }
 
-  AiProviderProfile? _profileById(String? id) {
+  AiProviderProfile? _profileById(String? id, [AiProviderKind? kind]) {
     if (id == null) return null;
     for (final profile in _profiles) {
-      if (profile.id == id) return profile;
+      if (profile.id == id && (kind == null || profile.kind == kind)) {
+        return profile;
+      }
     }
     return null;
   }

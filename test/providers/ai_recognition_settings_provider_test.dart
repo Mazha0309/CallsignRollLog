@@ -321,6 +321,42 @@ void main() {
     await restarted.removeProfile('extractor');
     expect(await restarted.hasTextAssistantCredential(), true);
   });
+
+  test('the multimodal kind has its own active slot', () async {
+    final values = _MemorySecureValues();
+    final provider = _provider(values);
+    await provider.initialized;
+    await provider.upsertProfile(_asrProfile());
+    await provider.upsertProfile(_audioExtractionProfile());
+
+    expect(
+      provider.audioFieldExtractionProfiles.map((profile) => profile.id),
+      ['multimodal'],
+    );
+
+    await provider.setActiveAudioFieldExtractionProfile('multimodal');
+    expect(provider.activeAudioFieldExtractionProfileId, 'multimodal');
+    expect(provider.activeAudioFieldExtractionProfile?.id, 'multimodal');
+
+    final restarted = _provider(values);
+    await restarted.initialized;
+    expect(restarted.activeAudioFieldExtractionProfileId, 'multimodal');
+    expect(restarted.activeAudioFieldExtractionProfile?.id, 'multimodal');
+
+    await restarted.setActiveAudioFieldExtractionProfile(null);
+    expect(restarted.activeAudioFieldExtractionProfile, isNull);
+  });
+
+  test('the multimodal active slot rejects another kind', () async {
+    final provider = _provider();
+    await provider.initialized;
+    await provider.upsertProfile(_asrProfile());
+
+    await expectLater(
+      provider.setActiveAudioFieldExtractionProfile('asr'),
+      throwsStateError,
+    );
+  });
 }
 
 AiRecognitionSettingsProvider _provider([_MemorySecureValues? values]) =>
@@ -353,6 +389,19 @@ AiProviderProfile _extractorProfile() => AiProviderProfile(
       credentialId: 'extractor-secret',
       capabilities: const AiProviderCapabilities(
         supportsFieldExtraction: true,
+      ),
+    );
+
+AiProviderProfile _audioExtractionProfile() => AiProviderProfile(
+      id: 'multimodal',
+      name: 'Multimodal',
+      kind: AiProviderKind.audioFieldExtraction,
+      protocol: AiProtocol.openAiChatCompletionsAudio,
+      baseUrl: Uri.parse('https://audio.example/v1'),
+      model: 'audio-model',
+      credentialId: 'multimodal-secret',
+      capabilities: const AiProviderCapabilities(
+        supportsAudioFieldExtraction: true,
       ),
     );
 

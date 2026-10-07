@@ -91,6 +91,15 @@ class _AiRecognitionSettingsState extends State<AiRecognitionSettings> {
           profiles: settings.asrProfiles.toList(growable: false),
           active: activeAsr,
         ),
+        const SizedBox(height: AppSpace.md),
+        _buildStageCard(
+          context,
+          settings: settings,
+          kind: AiProviderKind.audioFieldExtraction,
+          profiles:
+              settings.audioFieldExtractionProfiles.toList(growable: false),
+          active: settings.activeAudioFieldExtractionProfile,
+        ),
       ],
     );
   }
@@ -236,19 +245,31 @@ class _AiRecognitionSettingsState extends State<AiRecognitionSettings> {
     required List<AiProviderProfile> profiles,
     required AiProviderProfile? active,
   }) {
-    final isAsr = kind == AiProviderKind.speechRecognition;
+    final (icon, title, description) = switch (kind) {
+      AiProviderKind.speechRecognition => (
+          Icons.graphic_eq_outlined,
+          context.l10n.aiAsrStageTitle,
+          context.l10n.aiAsrStageDescription,
+        ),
+      AiProviderKind.fieldExtraction => (
+          Icons.rule_folder_outlined,
+          context.l10n.aiExtractionStageTitle,
+          context.l10n.aiExtractionStageDescription,
+        ),
+      AiProviderKind.audioFieldExtraction => (
+          Icons.record_voice_over_outlined,
+          context.l10n.aiStageAudioFieldExtractionTitle,
+          context.l10n.aiStageAudioFieldExtractionHint,
+        ),
+    };
     final protocols = AiProtocol.values
         .where((protocol) => protocol.supports(kind))
         .toList(growable: false);
     return SettingsSectionCard(
       key: Key('ai-stage-${kind.name}'),
-      icon: isAsr ? Icons.graphic_eq_outlined : Icons.rule_folder_outlined,
-      title: isAsr
-          ? context.l10n.aiAsrStageTitle
-          : context.l10n.aiExtractionStageTitle,
-      description: isAsr
-          ? context.l10n.aiAsrStageDescription
-          : context.l10n.aiExtractionStageDescription,
+      icon: icon,
+      title: title,
+      description: description,
       padding: widget.cardPadding,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -308,19 +329,20 @@ class _AiRecognitionSettingsState extends State<AiRecognitionSettings> {
                     ],
                     onChanged: _busy
                         ? null
-                        : (value) => _run(
-                              () => isAsr
-                                  ? settings.setActiveAsrProfile(
-                                      value == null || value.isEmpty
-                                          ? null
-                                          : value,
-                                    )
-                                  : settings.setActiveFieldExtractionProfile(
-                                      value == null || value.isEmpty
-                                          ? null
-                                          : value,
-                                    ),
-                            ),
+                        : (value) => _run(() {
+                              final profileId =
+                                  value == null || value.isEmpty ? null : value;
+                              return switch (kind) {
+                                AiProviderKind.speechRecognition =>
+                                  settings.setActiveAsrProfile(profileId),
+                                AiProviderKind.fieldExtraction => settings
+                                    .setActiveFieldExtractionProfile(profileId),
+                                AiProviderKind.audioFieldExtraction =>
+                                  settings.setActiveAudioFieldExtractionProfile(
+                                    profileId,
+                                  ),
+                              };
+                            }),
                   ),
                 ),
               ),
@@ -402,11 +424,14 @@ class _AiRecognitionSettingsState extends State<AiRecognitionSettings> {
       if (draft.secret case final secret?) {
         await settings.saveCredential(draft.profile.id, secret);
       }
-      if (kind == AiProviderKind.speechRecognition) {
-        await settings.setActiveAsrProfile(draft.profile.id);
-      } else {
-        await settings.setActiveFieldExtractionProfile(draft.profile.id);
-      }
+      await switch (kind) {
+        AiProviderKind.speechRecognition =>
+          settings.setActiveAsrProfile(draft.profile.id),
+        AiProviderKind.fieldExtraction =>
+          settings.setActiveFieldExtractionProfile(draft.profile.id),
+        AiProviderKind.audioFieldExtraction =>
+          settings.setActiveAudioFieldExtractionProfile(draft.profile.id),
+      };
     });
   }
 
@@ -756,9 +781,13 @@ class _AiProfileEditorDialogState extends State<_AiProfileEditorDialog> {
     super.initState();
     final existing = widget.existing;
     _protocol = existing?.protocol ??
-        (widget.kind == AiProviderKind.speechRecognition
-            ? AiProtocol.openAiAudioTranscriptions
-            : AiProtocol.openAiChatCompletions);
+        switch (widget.kind) {
+          AiProviderKind.speechRecognition =>
+            AiProtocol.openAiAudioTranscriptions,
+          AiProviderKind.fieldExtraction => AiProtocol.openAiChatCompletions,
+          AiProviderKind.audioFieldExtraction =>
+            AiProtocol.openAiChatCompletionsAudio,
+        };
     _credentialLocation = existing?.credentialTransport.location ??
         AiCredentialLocation.bearerHeader;
     _nameController = TextEditingController(text: existing?.name ?? '');
@@ -1049,6 +1078,8 @@ class _AiProfileEditorDialogState extends State<_AiProfileEditorDialog> {
               widget.kind == AiProviderKind.speechRecognition,
           supportsFieldExtraction:
               widget.kind == AiProviderKind.fieldExtraction,
+          supportsAudioFieldExtraction:
+              widget.kind == AiProviderKind.audioFieldExtraction,
           supportsLanguageHint: widget.kind == AiProviderKind.speechRecognition,
           supportsPrompt: true,
         ),
@@ -1089,27 +1120,36 @@ class _AiProfileEditorDialogState extends State<_AiProfileEditorDialog> {
 Map<String, Object?> _defaultRequestOptions(
   AiProtocol protocol,
   AiProviderKind kind,
-) =>
-    protocol == AiProtocol.jsonHttp
-        ? kind == AiProviderKind.speechRecognition
-            ? {
-                'requestTemplate': {
-                  'model': '{{model}}',
-                  'audio': '{{audio.dataUrl}}',
-                  'language': '{{language}}',
-                  'prompt': '{{prompt}}',
-                },
-                'responsePath': 'text',
-              }
-            : {
-                'requestTemplate': {
-                  'model': '{{model}}',
-                  'text': '{{transcription.text}}',
-                  'instructions': '{{instructions}}',
-                },
-                'responsePath': r'$',
-              }
-        : const {};
+) {
+  if (protocol != AiProtocol.jsonHttp) return const {};
+  return switch (kind) {
+    AiProviderKind.speechRecognition => {
+        'requestTemplate': {
+          'model': '{{model}}',
+          'audio': '{{audio.dataUrl}}',
+          'language': '{{language}}',
+          'prompt': '{{prompt}}',
+        },
+        'responsePath': 'text',
+      },
+    AiProviderKind.audioFieldExtraction => {
+        'requestTemplate': {
+          'model': '{{model}}',
+          'audio': '{{audio.dataUrl}}',
+          'instructions': '{{instructions}}',
+        },
+        'responsePath': r'$',
+      },
+    AiProviderKind.fieldExtraction => {
+        'requestTemplate': {
+          'model': '{{model}}',
+          'text': '{{transcription.text}}',
+          'instructions': '{{instructions}}',
+        },
+        'responsePath': r'$',
+      },
+  };
+}
 
 String _credentialIdFor({
   required String id,

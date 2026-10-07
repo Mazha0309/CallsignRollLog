@@ -6023,6 +6023,54 @@ abstract class AppLocalizations {
   /// **'把转写文本整理为呼号、RST、QTH 等候选字段；不配置时保留原始转写。'**
   String get aiExtractionStageDescription;
 
+  /// No description provided for @aiStageAudioFieldExtractionTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'多模态识别'**
+  String get aiStageAudioFieldExtractionTitle;
+
+  /// No description provided for @aiStageAudioFieldExtractionHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'一次调用直接从录音得到字段，不需要单独配置语音识别'**
+  String get aiStageAudioFieldExtractionHint;
+
+  /// No description provided for @aiPresetBailianAudio.
+  ///
+  /// In zh, this message translates to:
+  /// **'阿里云百炼'**
+  String get aiPresetBailianAudio;
+
+  /// No description provided for @aiPresetBailianAudioHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'推荐。按量计费，音频极便宜'**
+  String get aiPresetBailianAudioHint;
+
+  /// No description provided for @aiPresetSiliconFlowAudio.
+  ///
+  /// In zh, this message translates to:
+  /// **'硅基流动'**
+  String get aiPresetSiliconFlowAudio;
+
+  /// No description provided for @aiPresetSiliconFlowAudioHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'便于横向对比开源音频模型'**
+  String get aiPresetSiliconFlowAudioHint;
+
+  /// No description provided for @aiPresetCustom.
+  ///
+  /// In zh, this message translates to:
+  /// **'自定义'**
+  String get aiPresetCustom;
+
+  /// No description provided for @aiPresetCustomHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'手工填写端点与模型'**
+  String get aiPresetCustomHint;
+
   /// No description provided for @aiSupportedProtocols.
   ///
   /// In zh, this message translates to:

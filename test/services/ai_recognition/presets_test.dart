@@ -1,6 +1,19 @@
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:openlogtool/l10n/l10n.dart';
 import 'package:openlogtool/services/ai_recognition/ai_recognition.dart';
 import 'package:openlogtool/services/ai_recognition/presets.dart';
+
+/// 把预设里的裸字符串键映射到生成的 getter。`labelKey` / `hintKey` 是字符串，
+/// 拼错或漏补 ARB 都不会在编译期被发现；这张表让它们在这里曝光。
+final _presetMessages = <String, String Function(AppLocalizations)>{
+  'aiPresetBailianAudio': (l10n) => l10n.aiPresetBailianAudio,
+  'aiPresetBailianAudioHint': (l10n) => l10n.aiPresetBailianAudioHint,
+  'aiPresetSiliconFlowAudio': (l10n) => l10n.aiPresetSiliconFlowAudio,
+  'aiPresetSiliconFlowAudioHint': (l10n) => l10n.aiPresetSiliconFlowAudioHint,
+  'aiPresetCustom': (l10n) => l10n.aiPresetCustom,
+  'aiPresetCustomHint': (l10n) => l10n.aiPresetCustomHint,
+};
 
 void main() {
   test('every preset builds a usable profile for its kind', () {
@@ -67,6 +80,24 @@ void main() {
     for (final preset in aiProviderPresets) {
       expect(preset.labelKey, isNotEmpty);
       expect(preset.hintKey, isNotEmpty);
+    }
+  });
+
+  test('every preset label and hint key resolves to non-empty text', () async {
+    final zh = await AppLocalizations.delegate.load(const Locale('zh', 'CN'));
+    final en = await AppLocalizations.delegate.load(const Locale('en', 'US'));
+    for (final preset in aiProviderPresets) {
+      for (final key in [preset.labelKey, preset.hintKey]) {
+        final resolve = _presetMessages[key];
+        expect(
+          resolve,
+          isNotNull,
+          reason: '$key 在生成的 AppLocalizations 里没有对应 getter',
+        );
+        final message = resolve!;
+        expect(message(zh), isNotEmpty, reason: 'zh_CN 的 $key 文案为空');
+        expect(message(en), isNotEmpty, reason: 'en_US 的 $key 文案为空');
+      }
     }
   });
 }

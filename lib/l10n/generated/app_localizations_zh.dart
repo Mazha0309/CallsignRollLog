@@ -3314,6 +3314,30 @@ class AppLocalizationsZh extends AppLocalizations {
       '把转写文本整理为呼号、RST、QTH 等候选字段；不配置时保留原始转写。';
 
   @override
+  String get aiStageAudioFieldExtractionTitle => '多模态识别';
+
+  @override
+  String get aiStageAudioFieldExtractionHint => '一次调用直接从录音得到字段，不需要单独配置语音识别';
+
+  @override
+  String get aiPresetBailianAudio => '阿里云百炼';
+
+  @override
+  String get aiPresetBailianAudioHint => '推荐。按量计费，音频极便宜';
+
+  @override
+  String get aiPresetSiliconFlowAudio => '硅基流动';
+
+  @override
+  String get aiPresetSiliconFlowAudioHint => '便于横向对比开源音频模型';
+
+  @override
+  String get aiPresetCustom => '自定义';
+
+  @override
+  String get aiPresetCustomHint => '手工填写端点与模型';
+
+  @override
   String get aiSupportedProtocols => '支持的接口格式';
 
   @override
@@ -5127,6 +5151,30 @@ class AppLocalizationsZhCn extends AppLocalizationsZh {
   @override
   String get aiExtractionStageDescription =>
       '把转写文本整理为呼号、RST、QTH 等候选字段；不配置时保留原始转写。';
+
+  @override
+  String get aiStageAudioFieldExtractionTitle => '多模态识别';
+
+  @override
+  String get aiStageAudioFieldExtractionHint => '一次调用直接从录音得到字段，不需要单独配置语音识别';
+
+  @override
+  String get aiPresetBailianAudio => '阿里云百炼';
+
+  @override
+  String get aiPresetBailianAudioHint => '推荐。按量计费，音频极便宜';
+
+  @override
+  String get aiPresetSiliconFlowAudio => '硅基流动';
+
+  @override
+  String get aiPresetSiliconFlowAudioHint => '便于横向对比开源音频模型';
+
+  @override
+  String get aiPresetCustom => '自定义';
+
+  @override
+  String get aiPresetCustomHint => '手工填写端点与模型';
 
   @override
   String get aiSupportedProtocols => '支持的接口格式';

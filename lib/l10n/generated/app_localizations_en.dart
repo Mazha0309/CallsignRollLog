@@ -3510,6 +3510,33 @@ class AppLocalizationsEn extends AppLocalizations {
       'Turns a transcript into suggested callsign, RST, QTH, and other fields. Without it, the raw transcript remains available.';
 
   @override
+  String get aiStageAudioFieldExtractionTitle => 'Multimodal recognition';
+
+  @override
+  String get aiStageAudioFieldExtractionHint =>
+      'Turns a recording into fields in one call; no separate speech model needed';
+
+  @override
+  String get aiPresetBailianAudio => 'Alibaba Cloud Bailian';
+
+  @override
+  String get aiPresetBailianAudioHint =>
+      'Recommended. Pay as you go; audio is very cheap';
+
+  @override
+  String get aiPresetSiliconFlowAudio => 'SiliconFlow';
+
+  @override
+  String get aiPresetSiliconFlowAudioHint =>
+      'Convenient for comparing open audio models';
+
+  @override
+  String get aiPresetCustom => 'Custom';
+
+  @override
+  String get aiPresetCustomHint => 'Enter the endpoint and model yourself';
+
+  @override
   String get aiSupportedProtocols => 'Supported endpoint formats';
 
   @override
@@ -5411,6 +5438,33 @@ class AppLocalizationsEnUs extends AppLocalizationsEn {
   @override
   String get aiExtractionStageDescription =>
       'Turns a transcript into suggested callsign, RST, QTH, and other fields. Without it, the raw transcript remains available.';
+
+  @override
+  String get aiStageAudioFieldExtractionTitle => 'Multimodal recognition';
+
+  @override
+  String get aiStageAudioFieldExtractionHint =>
+      'Turns a recording into fields in one call; no separate speech model needed';
+
+  @override
+  String get aiPresetBailianAudio => 'Alibaba Cloud Bailian';
+
+  @override
+  String get aiPresetBailianAudioHint =>
+      'Recommended. Pay as you go; audio is very cheap';
+
+  @override
+  String get aiPresetSiliconFlowAudio => 'SiliconFlow';
+
+  @override
+  String get aiPresetSiliconFlowAudioHint =>
+      'Convenient for comparing open audio models';
+
+  @override
+  String get aiPresetCustom => 'Custom';
+
+  @override
+  String get aiPresetCustomHint => 'Enter the endpoint and model yourself';
 
   @override
   String get aiSupportedProtocols => 'Supported endpoint formats';

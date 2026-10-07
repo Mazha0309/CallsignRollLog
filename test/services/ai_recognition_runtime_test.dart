@@ -105,6 +105,9 @@ void main() {
     );
     await seed.initialized;
     await seed.upsertProfile(_audioFieldExtractionProfile());
+    await seed.setActiveAudioFieldExtractionProfile(
+      _audioFieldExtractionProfile().id,
+    );
 
     final preferences = await SharedPreferences.getInstance();
     final pendingPreferences = Completer<KeyValueStore>();
@@ -166,6 +169,9 @@ Future<AiRecognitionSettingsProvider> _settingsWithAudioFieldProfile() async {
   );
   await settings.initialized;
   await settings.upsertProfile(_audioFieldExtractionProfile());
+  await settings.setActiveAudioFieldExtractionProfile(
+    _audioFieldExtractionProfile().id,
+  );
   return settings;
 }
 

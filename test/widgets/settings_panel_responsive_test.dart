@@ -235,9 +235,30 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('AI-assisted recognition'), findsOneWidget);
-    expect(find.text('Audio transcription multipart'), findsOneWidget);
-    expect(find.text('Chat input_audio'), findsOneWidget);
-    expect(find.text('Generic JSON HTTP'), findsWidgets);
+    // The multimodal card shares the Chat input_audio and Generic JSON labels,
+    // so pin this test to the ASR stage it is about.
+    final asrStage = find.byKey(const Key('ai-stage-speechRecognition'));
+    expect(
+      find.descendant(
+        of: asrStage,
+        matching: find.text('Audio transcription multipart'),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(
+        of: asrStage,
+        matching: find.text('Chat input_audio'),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(
+        of: asrStage,
+        matching: find.text('Generic JSON HTTP'),
+      ),
+      findsOneWidget,
+    );
 
     final addAsrProfile = find.byKey(
       const Key('ai-add-profile-speechRecognition'),
@@ -380,6 +401,28 @@ void main() {
     );
     expect(find.byKey(const Key('ai-profile-name')), findsOneWidget);
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('offers an audio field extraction profile', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    _usePlatformLocale(tester, const Locale('en', 'US'));
+    await _setSurface(tester, const Size(1200, 900));
+    final providers = _SettingsProviders();
+    addTearDown(providers.dispose);
+
+    await tester.pumpWidget(_SettingsPanelHarness(providers: providers));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('settings-category-ai')));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.byKey(const Key('ai-stage-audioFieldExtraction')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const Key('ai-add-profile-audioFieldExtraction')),
+      findsOneWidget,
+    );
   });
 }
 
