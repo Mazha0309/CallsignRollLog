@@ -317,16 +317,22 @@ void main() {
     expect(result.candidates.single.fields['callsign'], 'BG5DBL');
   });
 
-  test('AiRecognitionResult is reachable from models.dart', () {
-    // 搬迁的目的：providers.dart 能引用它而不形成循环依赖。
-    // 这里的类型检查会在它仍定义于 pipeline.dart 时失败。
-    final AiRecognitionResult result = AiRecognitionResult(
-      transcription: Transcription(text: 'x'),
+  test('AiRecognitionResult lives in models.dart', () {
+    // 通过 models.dart 直接引用：若该类仍定义在 pipeline.dart，本文件将编译失败。
+    // 不能只依赖桶文件——桶同时导出 pipeline.dart，那样即便类没搬走也照样通过。
+    final models.AiRecognitionResult result = models.AiRecognitionResult(
+      transcription: models.Transcription(text: 'x'),
       candidates: const [],
     );
     expect(result.candidates, isEmpty);
   });
 }
+```
+
+该文件顶部除桶文件外，还需一个带前缀的 import：
+
+```dart
+import 'package:openlogtool/services/ai_recognition/models.dart' as models;
 ```
 
 **Step 2: 运行测试确认失败**
