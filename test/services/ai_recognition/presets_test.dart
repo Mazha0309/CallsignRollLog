@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:openlogtool/services/ai_recognition/ai_recognition.dart';
 import 'package:openlogtool/services/ai_recognition/presets.dart';
 
 void main() {
@@ -17,6 +18,20 @@ void main() {
       expect(profile.kind, preset.kind);
       expect(profile.baseUrl.hasScheme, isTrue);
       // 构造成功本身即证明 kind 与 protocol 配对合法。
+      // capabilities 是按 kind 推导的，改坏了必须能被发现。
+      expect(
+        profile.capabilities.supportsAudioFieldExtraction,
+        preset.kind == AiProviderKind.audioFieldExtraction,
+      );
+      expect(
+        profile.capabilities.supportsAudioTranscription,
+        preset.kind == AiProviderKind.speechRecognition,
+      );
+      expect(
+        profile.capabilities.supportsFieldExtraction,
+        preset.kind == AiProviderKind.fieldExtraction,
+      );
+      expect(profile.capabilities.supportsPrompt, isTrue);
     }
   });
 
@@ -38,6 +53,14 @@ void main() {
       (profile.requestOptions['body'] as Map)['enable_thinking'],
       isFalse,
     );
+  });
+
+  test('presets we have not measured keep an empty default model', () {
+    // 未实测就不要编造模型名；实测后再更新这条断言。
+    for (final id in ['siliconflow-audio', 'custom']) {
+      final preset = aiProviderPresets.firstWhere((p) => p.id == id);
+      expect(preset.defaultModel, isEmpty, reason: '$id 尚未实测');
+    }
   });
 
   test('every preset has a non-empty label and hint key', () {

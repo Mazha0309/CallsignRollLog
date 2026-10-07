@@ -3,7 +3,7 @@ import 'models.dart';
 /// 一个服务商预设：把「协议 + 端点 + 鉴权 + 请求选项 + 默认模型」一次填好，
 /// 用户只需粘 API Key。普通用户不可能自己猜出这些组合。
 final class AiProviderPreset {
-  const AiProviderPreset({
+  AiProviderPreset({
     required this.id,
     required this.labelKey,
     required this.hintKey,
@@ -11,9 +11,9 @@ final class AiProviderPreset {
     required this.protocol,
     required this.baseUrl,
     required this.defaultModel,
-    this.requestOptions = const {},
+    AiJsonObject requestOptions = const {},
     this.credentialTransport = const AiCredentialTransport.bearer(),
-  });
+  }) : requestOptions = Map.unmodifiable(requestOptions);
 
   final String id;
 
@@ -24,11 +24,16 @@ final class AiProviderPreset {
   final AiProviderKind kind;
   final AiProtocol protocol;
 
-  /// 存字符串而非 Uri：`Uri.parse` 不是 const 构造函数，存字符串才能让清单保持 const。
+  /// 存字符串而非 Uri：`Uri.parse` 不是 const 构造函数；存字符串让预设保持
+  /// 纯数据，不把解析后的对象嵌进清单。
   final String baseUrl;
 
+  /// 未实测的预设用空串作为「让用户自己填」的哨兵；真实模型名不会为空，
+  /// 因此空串不会与任何真实模型名冲突。
   final String defaultModel;
-  final Map<String, Object?> requestOptions;
+
+  /// 构造时已用 [Map.unmodifiable] 包裹，非 const 实例也不会把可变映射暴露出去。
+  final AiJsonObject requestOptions;
   final AiCredentialTransport credentialTransport;
 
   AiProviderProfile buildProfile({
@@ -57,7 +62,7 @@ final class AiProviderPreset {
 
 /// 预设清单。Base URL / 模型 ID / 请求选项都必须实测过再写进来——
 /// 服务商改接口的代价会直接落到用户身上（见 Task 1 的结论文档）。
-const aiProviderPresets = <AiProviderPreset>[
+final aiProviderPresets = <AiProviderPreset>[
   AiProviderPreset(
     id: 'bailian-audio',
     labelKey: 'aiPresetBailianAudio',
@@ -82,9 +87,9 @@ const aiProviderPresets = <AiProviderPreset>[
     kind: AiProviderKind.audioFieldExtraction,
     protocol: AiProtocol.openAiChatCompletionsAudio,
     baseUrl: 'https://api.siliconflow.cn/v1',
-    // 未实测，故意留空：界面上让用户填，不编造模型名。
+    // 未实测：连是否需要 dataUrl 都未验证（无凭据）。不要照抄百炼的值，
+    // 因此不设 requestOptions，一切走 provider 默认值。
     defaultModel: '',
-    requestOptions: {'audioDataEncoding': 'dataUrl'},
   ),
   AiProviderPreset(
     id: 'custom',
