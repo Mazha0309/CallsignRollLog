@@ -40,6 +40,10 @@ final class AiRecognitionException implements Exception {
 ///
 /// 内部错误码、异常文本、HTTP 状态行与响应体片段一律不得进入界面
 /// （设计文档 §13）。诊断细节走日志。
+///
+/// **已知限制（Plan 2 处理）**：文案目前是硬编码简体中文，而仓库支持英文界面
+/// （`lib/l10n/app_en.arb`）。用户可见文案本应走 l10n；等 Plan 2 做配置与复核
+/// 界面的文案时一并把这里改为语义键 + `.arb` 渲染，届时本函数只负责「分类」。
 String aiUserFacingErrorMessage(AiRecognitionException error) =>
     switch (error.kind) {
       AiRecognitionErrorKind.missingCredentials => '还没填 API Key',
