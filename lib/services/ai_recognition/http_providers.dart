@@ -31,6 +31,17 @@ abstract final class AiProviderFactory {
         httpClient: httpClient,
         timeout: timeout,
       );
+
+  static AudioFieldExtractionProvider createAudioFieldExtraction(
+    AiProviderProfile profile, {
+    http.Client? httpClient,
+    Duration timeout = const Duration(seconds: 60),
+  }) =>
+      ProtocolAudioFieldExtractionProvider(
+        profile: profile,
+        httpClient: httpClient,
+        timeout: timeout,
+      );
 }
 
 /// Batch ASR client selected entirely by [profile].
@@ -426,6 +437,161 @@ final class ProtocolFieldExtractionProvider implements FieldExtractionProvider {
   void close() => _transport.close();
 }
 
+/// 一次调用把音频变成「转写 + 字段」。设计的模式 A 用它。
+final class ProtocolAudioFieldExtractionProvider
+    implements AudioFieldExtractionProvider {
+  ProtocolAudioFieldExtractionProvider({
+    required this.profile,
+    http.Client? httpClient,
+    Duration timeout = const Duration(seconds: 60),
+  }) : _transport = AiHttpTransport(
+          profile: profile,
+          httpClient: httpClient,
+          timeout: timeout,
+        ) {
+    if (profile.kind != AiProviderKind.audioFieldExtraction) {
+      throw ArgumentError.value(
+        profile.kind,
+        'profile.kind',
+        'must be audioFieldExtraction',
+      );
+    }
+    if (!_supportedProtocols.contains(profile.protocol)) {
+      throw AiRecognitionException(
+        kind: AiRecognitionErrorKind.unsupportedProtocol,
+        message:
+            '${profile.protocol.name} cannot carry audio for field extraction',
+        providerId: profile.id,
+      );
+    }
+  }
+
+  static const _supportedProtocols = {
+    AiProtocol.openAiChatCompletionsAudio,
+    AiProtocol.jsonHttp,
+  };
+
+  @override
+  final AiProviderProfile profile;
+  final AiHttpTransport _transport;
+
+  @override
+  AiProviderCapabilities get capabilities => profile.capabilities;
+
+  @override
+  Future<AiRecognitionResult> extractFieldsFromAudio(
+    AudioSegment audio, {
+    String? instructions,
+    AiRequestOptions options = const AiRequestOptions(),
+  }) async {
+    try {
+      final response = switch (profile.protocol) {
+        AiProtocol.openAiChatCompletionsAudio => _recordChatAudio(
+            audio,
+            instructions: instructions,
+            options: options,
+          ),
+        AiProtocol.jsonHttp => _recordJson(
+            audio,
+            instructions: instructions,
+            options: options,
+          ),
+        AiProtocol.openAiAudioTranscriptions ||
+        AiProtocol.openAiChatCompletions =>
+          throw AiRecognitionException(
+            kind: AiRecognitionErrorKind.unsupportedProtocol,
+            message:
+                '${profile.protocol.name} cannot carry audio for field extraction',
+            providerId: profile.id,
+          ),
+      };
+      return await response;
+    } on AiRecognitionException {
+      rethrow;
+    } on FormatException catch (error) {
+      throw AiRecognitionException(
+        kind: AiRecognitionErrorKind.invalidConfiguration,
+        message: error.message,
+        providerId: profile.id,
+        cause: error,
+      );
+    } on ArgumentError catch (error) {
+      throw AiRecognitionException(
+        kind: AiRecognitionErrorKind.invalidConfiguration,
+        message: error.message.toString(),
+        providerId: profile.id,
+        cause: error,
+      );
+    }
+  }
+
+  Future<AiRecognitionResult> _recordChatAudio(
+    AudioSegment audio, {
+    required String? instructions,
+    required AiRequestOptions options,
+  }) async {
+    final configuredPrompt = _optionStringOrNull(profile, 'systemPrompt');
+    final instructionText = _nonEmptyOrNull(instructions);
+    final systemPrompt = [
+      if (configuredPrompt != null) configuredPrompt,
+      if (instructionText != null) instructionText,
+    ].join('\n');
+    final messages = <Object?>[];
+    if (systemPrompt.isNotEmpty) {
+      messages.add({'role': 'system', 'content': systemPrompt});
+    }
+    messages.add({
+      'role': 'user',
+      'content': buildChatAudioContent(profile, audio),
+    });
+    final response = await _sendJson(
+      _transport,
+      _openAiEndpoint(profile, const ['v1', 'chat', 'completions']),
+      'POST',
+      <String, Object?>{
+        ..._optionJsonObject(profile, 'body'),
+        'model': profile.model,
+        'messages': messages,
+      },
+      options,
+    );
+    return _parseAudioFieldExtraction(response, profile);
+  }
+
+  Future<AiRecognitionResult> _recordJson(
+    AudioSegment audio, {
+    required String? instructions,
+    required AiRequestOptions options,
+  }) async {
+    final template = profile.requestOptions['requestTemplate'];
+    if (template == null) {
+      throw const FormatException('requestTemplate is required for jsonHttp');
+    }
+    final body = renderAiJsonTemplate(template, {
+      'model': profile.model,
+      'audio': {
+        'base64': base64Encode(audio.bytes),
+        'dataUrl': 'data:${audio.mimeType};base64,${base64Encode(audio.bytes)}',
+        'mimeType': audio.mimeType,
+        'fileName': audio.fileName,
+        'byteLength': audio.bytes.length,
+      },
+      'instructions': _nonEmptyOrNull(instructions),
+    });
+    final response = await _sendJson(
+      _transport,
+      _configuredEndpoint(profile),
+      _optionString(profile, 'method', fallback: 'POST').toUpperCase(),
+      body,
+      options,
+    );
+    return _parseAudioFieldExtraction(response, profile);
+  }
+
+  @override
+  void close() => _transport.close();
+}
+
 Future<http.Response> _sendJson(
   AiHttpTransport transport,
   Uri endpoint,
@@ -558,6 +724,94 @@ List<RecognitionCandidate> _parseCandidates(
     }
   }
   return candidates;
+}
+
+/// 解析 `{"transcript": …, "fields": {…}, "uncertain": […]}`。
+///
+/// `fields` 为空或缺失时不产出候选——这是模型在说「这条没有可用信息」，
+/// 与「解析失败」是两件事，后者抛 [AiRecognitionErrorKind.invalidResponse]。
+AiRecognitionResult _parseAudioFieldExtraction(
+  http.Response response,
+  AiProviderProfile profile,
+) {
+  final decoded = _decodeResponse(response, profile);
+  final defaultPath = profile.protocol == AiProtocol.openAiChatCompletionsAudio
+      ? 'choices[0].message.content'
+      : r'$';
+  final responsePath =
+      _optionString(profile, 'responsePath', fallback: defaultPath);
+  var resolved = _readResponsePath(decoded, responsePath, profile);
+  if (resolved is String) {
+    try {
+      resolved = jsonDecode(resolved);
+    } on FormatException catch (error) {
+      throw _invalidResponse(
+        profile,
+        'The audio field extraction response is not JSON',
+        error,
+      );
+    }
+  }
+  if (resolved is! Map) {
+    throw _invalidResponse(
+      profile,
+      'The audio field extraction response is not an object',
+    );
+  }
+
+  final transcript = resolved['transcript'];
+  if (transcript is! String || transcript.trim().isEmpty) {
+    throw _invalidResponse(profile, 'The provider returned no transcript');
+  }
+
+  final rawFields = resolved['fields'];
+  final fields = <String, Object?>{};
+  if (rawFields is Map) {
+    for (final entry in rawFields.entries) {
+      if (entry.key is! String) {
+        throw _invalidResponse(profile, 'A field has a non-string key');
+      }
+      final value = entry.value;
+      if (value is! String || value.trim().isEmpty) continue;
+      fields[entry.key as String] = value.trim();
+    }
+  }
+
+  final uncertain = <String>[];
+  final rawUncertain = resolved['uncertain'];
+  if (rawUncertain is List) {
+    for (final value in rawUncertain) {
+      if (value is String && value.trim().isNotEmpty) {
+        uncertain.add(value.trim());
+      }
+    }
+  }
+
+  final transcription = Transcription(
+    text: transcript.trim(),
+    metadata: {
+      'providerId': profile.id,
+      'protocol': profile.protocol.name,
+      'model': profile.model,
+    },
+  );
+
+  return AiRecognitionResult(
+    transcription: transcription,
+    candidates: fields.isEmpty
+        ? const []
+        : [
+            RecognitionCandidate(
+              fields: fields,
+              sourceText: transcription.text,
+              metadata: {
+                'provider': profile.id,
+                'model': profile.model,
+                if (uncertain.isNotEmpty) 'uncertain': uncertain,
+              },
+            ),
+          ],
+  );
 }
 
 Object? _decodeResponse(http.Response response, AiProviderProfile profile) {
