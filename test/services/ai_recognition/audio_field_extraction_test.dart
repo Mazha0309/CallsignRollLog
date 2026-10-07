@@ -129,14 +129,19 @@ void main() {
   });
 
   group('ProtocolAudioFieldExtractionProvider', () {
-    AiProviderProfile profileWith({Map<String, Object?> options = const {}}) =>
+    AiProviderProfile profileWith({
+      Map<String, Object?> options = const {},
+      AiProtocol protocol = AiProtocol.openAiChatCompletionsAudio,
+      AiProviderCapabilities capabilities = const AiProviderCapabilities(),
+    }) =>
         AiProviderProfile(
           id: 'qwen',
           name: 'qwen-omni',
           kind: AiProviderKind.audioFieldExtraction,
-          protocol: AiProtocol.openAiChatCompletionsAudio,
+          protocol: protocol,
           baseUrl: Uri.parse('https://example.com/compatible-mode/v1'),
           model: 'qwen3.8-omni-flash',
+          capabilities: capabilities,
           // 这些用例验证请求体与解析，不验证鉴权；默认 bearer 传输会在
           // 发请求前要求凭据，这里显式关闭以便聚焦被测行为。
           credentialTransport: const AiCredentialTransport.none(),
@@ -152,11 +157,18 @@ void main() {
 
     test('parses transcript and fields from one response', () async {
       final provider = ProtocolAudioFieldExtractionProvider(
-        profile: profileWith(),
+        profile: profileWith(
+          options: const {'systemPrompt': 'You are a check-in scribe.'},
+        ),
         httpClient: MockClient((request) async {
           final body = jsonDecode(request.body) as Map<String, Object?>;
           expect(body['model'], 'qwen3.8-omni-flash');
           final messages = body['messages']! as List<Object?>;
+          final systemMessage = messages.first! as Map<String, Object?>;
+          expect(systemMessage['role'], 'system');
+          final systemContent = systemMessage['content']! as String;
+          expect(systemContent, contains('You are a check-in scribe.'));
+          expect(systemContent, contains('Extract one check-in record.'));
           final userContent = (messages.last!
               as Map<String, Object?>)['content']! as List<Object?>;
           expect(
@@ -192,6 +204,13 @@ void main() {
         'callsign': 'BG5DBL',
         'qth': '宁波高新区',
       });
+      // 候选 metadata 必须与 _parseCandidates 的约定一致。
+      expect(result.candidates.single.metadata['providerId'], 'qwen');
+      expect(
+        result.candidates.single.metadata['protocol'],
+        'openAiChatCompletionsAudio',
+      );
+      expect(result.candidates.single.metadata['model'], 'qwen3.8-omni-flash');
       provider.close();
     });
 
@@ -272,6 +291,154 @@ void main() {
         ),
         throwsArgumentError,
       );
+    });
+
+    test('renders the jsonHttp template with the audio and model', () async {
+      final provider = ProtocolAudioFieldExtractionProvider(
+        profile: profileWith(
+          protocol: AiProtocol.jsonHttp,
+          options: const {
+            'requestTemplate': {
+              'engine': '{{model}}',
+              'audio': '{{audio.base64}}',
+              'note': '{{instructions}}',
+            },
+          },
+        ),
+        httpClient: MockClient((request) async {
+          expect(request.method, 'POST');
+          final body = jsonDecode(request.body) as Map<String, Object?>;
+          expect(body['engine'], 'qwen3.8-omni-flash');
+          expect(body['audio'], 'AQID');
+          expect(body['note'], 'Extract one check-in record.');
+          return http.Response(
+            jsonEncode({
+              'transcript': 'BG5DBL 宁波高新区',
+              'fields': {'callsign': 'BG5DBL'},
+            }),
+            200,
+            headers: const {
+              'content-type': 'application/json; charset=utf-8',
+            },
+          );
+        }),
+      );
+
+      final result = await provider.extractFieldsFromAudio(
+        segment(),
+        instructions: 'Extract one check-in record.',
+      );
+
+      expect(result.transcription.text, 'BG5DBL 宁波高新区');
+      expect(result.candidates.single.fields['callsign'], 'BG5DBL');
+      provider.close();
+    });
+
+    test('maps a missing jsonHttp request template to invalidConfiguration',
+        () async {
+      final provider = ProtocolAudioFieldExtractionProvider(
+        profile: profileWith(protocol: AiProtocol.jsonHttp),
+        httpClient: MockClient((request) async => http.Response('{}', 200)),
+      );
+
+      await expectLater(
+        provider.extractFieldsFromAudio(segment()),
+        throwsA(
+          isA<AiRecognitionException>().having(
+            (e) => e.kind,
+            'kind',
+            AiRecognitionErrorKind.invalidConfiguration,
+          ),
+        ),
+      );
+      provider.close();
+    });
+
+    test('rejects a fields member that is not an object', () async {
+      final provider = ProtocolAudioFieldExtractionProvider(
+        profile: profileWith(),
+        httpClient: MockClient(
+          (request) async => http.Response(
+            jsonEncode({
+              'choices': [
+                {
+                  'message': {
+                    'content': '{"transcript":"BG5DBL","fields":"oops"}',
+                  },
+                },
+              ],
+            }),
+            200,
+            headers: const {
+              'content-type': 'application/json; charset=utf-8',
+            },
+          ),
+        ),
+      );
+
+      await expectLater(
+        provider.extractFieldsFromAudio(segment()),
+        throwsA(
+          isA<AiRecognitionException>().having(
+            (e) => e.kind,
+            'kind',
+            AiRecognitionErrorKind.invalidResponse,
+          ),
+        ),
+      );
+      provider.close();
+    });
+
+    test('passes an uncertain field list through to the candidate', () async {
+      final provider = ProtocolAudioFieldExtractionProvider(
+        profile: profileWith(),
+        httpClient: MockClient(
+          (request) async => http.Response(
+            jsonEncode({
+              'choices': [
+                {
+                  'message': {
+                    'content':
+                        '{"transcript":"宁波","fields":{"qth":"宁波"},"uncertain":["qth"]}',
+                  },
+                },
+              ],
+            }),
+            200,
+            headers: const {
+              'content-type': 'application/json; charset=utf-8',
+            },
+          ),
+        ),
+      );
+
+      final result = await provider.extractFieldsFromAudio(segment());
+
+      expect(result.candidates.single.metadata['uncertain'], ['qth']);
+      provider.close();
+    });
+
+    test('honors the declared audio capabilities', () async {
+      final provider = ProtocolAudioFieldExtractionProvider(
+        profile: profileWith(
+          capabilities: const AiProviderCapabilities(
+            supportedAudioMimeTypes: {'audio/mpeg'},
+          ),
+        ),
+        httpClient: MockClient((request) async => http.Response('{}', 200)),
+      );
+
+      await expectLater(
+        provider.extractFieldsFromAudio(segment()),
+        throwsA(
+          isA<AiRecognitionException>().having(
+            (e) => e.kind,
+            'kind',
+            AiRecognitionErrorKind.audioRejected,
+          ),
+        ),
+      );
+      provider.close();
     });
   });
 }

@@ -91,7 +91,7 @@ final class ProtocolAsrProvider implements AsrProvider {
     String? prompt,
     AiRequestOptions options = const AiRequestOptions(),
   }) async {
-    _validateAudio(audio);
+    _validateAudio(profile, audio);
     try {
       return await switch (profile.protocol) {
         AiProtocol.openAiAudioTranscriptions => _transcribeMultipart(
@@ -252,25 +252,6 @@ final class ProtocolAsrProvider implements AsrProvider {
       options,
     );
     return _parseTranscription(response, profile);
-  }
-
-  void _validateAudio(AudioSegment audio) {
-    final maxBytes = capabilities.maxAudioBytes;
-    if (maxBytes != null && audio.bytes.length > maxBytes) {
-      throw AiRecognitionException(
-        kind: AiRecognitionErrorKind.audioRejected,
-        message: 'The audio segment exceeds the provider byte limit',
-        providerId: profile.id,
-      );
-    }
-    final mimeTypes = capabilities.supportedAudioMimeTypes;
-    if (mimeTypes.isNotEmpty && !mimeTypes.contains(audio.mimeType)) {
-      throw AiRecognitionException(
-        kind: AiRecognitionErrorKind.audioRejected,
-        message: 'The provider does not support ${audio.mimeType}',
-        providerId: profile.id,
-      );
-    }
   }
 
   AiRecognitionException _invalidConfiguration(
@@ -484,6 +465,7 @@ final class ProtocolAudioFieldExtractionProvider
     String? instructions,
     AiRequestOptions options = const AiRequestOptions(),
   }) async {
+    _validateAudio(profile, audio);
     try {
       final response = switch (profile.protocol) {
         AiProtocol.openAiChatCompletionsAudio => _recordChatAudio(
@@ -590,6 +572,29 @@ final class ProtocolAudioFieldExtractionProvider
 
   @override
   void close() => _transport.close();
+}
+
+/// 校验音频是否满足 profile 声明的能力。
+///
+/// ASR 与音频字段抽取共用，保证能力声明的约束对两条链路一致。
+void _validateAudio(AiProviderProfile profile, AudioSegment audio) {
+  final capabilities = profile.capabilities;
+  final maxBytes = capabilities.maxAudioBytes;
+  if (maxBytes != null && audio.bytes.length > maxBytes) {
+    throw AiRecognitionException(
+      kind: AiRecognitionErrorKind.audioRejected,
+      message: 'The audio segment exceeds the provider byte limit',
+      providerId: profile.id,
+    );
+  }
+  final mimeTypes = capabilities.supportedAudioMimeTypes;
+  if (mimeTypes.isNotEmpty && !mimeTypes.contains(audio.mimeType)) {
+    throw AiRecognitionException(
+      kind: AiRecognitionErrorKind.audioRejected,
+      message: 'The provider does not support ${audio.mimeType}',
+      providerId: profile.id,
+    );
+  }
 }
 
 Future<http.Response> _sendJson(
@@ -730,6 +735,8 @@ List<RecognitionCandidate> _parseCandidates(
 ///
 /// `fields` 为空或缺失时不产出候选——这是模型在说「这条没有可用信息」，
 /// 与「解析失败」是两件事，后者抛 [AiRecognitionErrorKind.invalidResponse]。
+/// `fields` 存在但不是对象属于契约破损，也抛 [AiRecognitionErrorKind.invalidResponse]，
+/// 绝不静默降级成「空记录」。
 AiRecognitionResult _parseAudioFieldExtraction(
   http.Response response,
   AiProviderProfile profile,
@@ -765,6 +772,9 @@ AiRecognitionResult _parseAudioFieldExtraction(
   }
 
   final rawFields = resolved['fields'];
+  if (rawFields != null && rawFields is! Map) {
+    throw _invalidResponse(profile, 'The fields member is not an object');
+  }
   final fields = <String, Object?>{};
   if (rawFields is Map) {
     for (final entry in rawFields.entries) {
@@ -805,7 +815,8 @@ AiRecognitionResult _parseAudioFieldExtraction(
               fields: fields,
               sourceText: transcription.text,
               metadata: {
-                'provider': profile.id,
+                'providerId': profile.id,
+                'protocol': profile.protocol.name,
                 'model': profile.model,
                 if (uncertain.isNotEmpty) 'uncertain': uncertain,
               },
