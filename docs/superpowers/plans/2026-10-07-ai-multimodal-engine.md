@@ -1435,7 +1435,10 @@ git commit -m "test(ai): add the multimodal model comparison harness"
 | §10.1 前置横评实验 | Task 8 |
 | §4 校对层、§3.2 静音切分、§3.3 记录级上下文、§6 额度、§7 复核面板、§8 配置体验 | Plan 2–5 |
 
-**已知缺口**：Task 6 的 `recognizeRecord` 目前只用注入执行器测试，未覆盖「空音频 + 纯文本」这条补救路径——它依赖 Plan 2 的设置接线，因此在该计划的验收里补测。
+**已知缺口**：
+
+- 「空音频 + 纯文本」的补救路径未覆盖，依赖 Plan 2 的设置接线（该计划的验收里补测）。
+- `recognizeRecord` 里那行 `await settings.initialized` 无测试覆盖。Code review 的存活变异证实了这一点——把它删掉测试仍全绿，因为测试用的 settings 在调用前已初始化。补法：用一个受控未完成的 `preferencesLoader` 构造 settings，立即调用 `recognizeRecord`，若生产代码漏了 `await` 就会因读到空档案而抛 `invalidConfiguration`。
 
 **占位扫描**：无 TBD / TODO。Task 7 的文案映射已按 `errors.dart` 的真实枚举（`invalidConfiguration` / `unsupportedProtocol` / `missingCredentials` / `audioRejected` / `timeout` / `network` / `httpStatus` / `invalidResponse` / `cancelled` / `closed`）逐项写全，`httpStatus` 按状态码分支；测试强制覆盖全部枚举值，不构成占位。
 
