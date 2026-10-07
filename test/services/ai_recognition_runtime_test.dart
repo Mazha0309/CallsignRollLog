@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -5,6 +6,7 @@ import 'package:openlogtool/providers/ai_recognition_settings_provider.dart';
 import 'package:openlogtool/services/ai_credential_store.dart';
 import 'package:openlogtool/services/ai_recognition/ai_recognition.dart';
 import 'package:openlogtool/services/ai_recognition_runtime.dart';
+import 'package:openlogtool/services/key_value_store.dart';
 import 'package:openlogtool/services/secure_token_store.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -91,6 +93,70 @@ void main() {
         ),
       ),
     );
+  });
+
+  test(
+      'recognizeRecord waits for settings initialization before reading '
+      'the mode A profile', () async {
+    // Persist a configured mode A profile, then hand the next provider a
+    // loader we control so that its initialization cannot complete early.
+    final seed = AiRecognitionSettingsProvider(
+      credentialStore: AiCredentialStore(secureValues: _MemorySecureValues()),
+    );
+    await seed.initialized;
+    await seed.upsertProfile(_audioFieldExtractionProfile());
+
+    final preferences = await SharedPreferences.getInstance();
+    final pendingPreferences = Completer<KeyValueStore>();
+    final settings = AiRecognitionSettingsProvider(
+      preferencesLoader: () => pendingPreferences.future,
+      credentialStore: AiCredentialStore(secureValues: _MemorySecureValues()),
+    );
+
+    // The provider has not loaded the persisted profile yet.
+    expect(settings.activeAudioFieldExtractionProfile, isNull);
+
+    final expected = AiRecognitionResult(
+      transcription: Transcription(text: 'BG5DBL 宁波高新区'),
+      candidates: [
+        RecognitionCandidate(
+          fields: const {'callsign': 'BG5DBL'},
+          sourceText: 'BG5DBL 宁波高新区',
+        ),
+      ],
+    );
+    final provider = _FakeAudioFieldExtractionProvider(
+      profile: _audioFieldExtractionProfile(),
+      result: expected,
+    );
+    final factoryProfiles = <AiProviderProfile>[];
+
+    // Intentionally do NOT await settings.initialized here: recognizeRecord
+    // itself must wait for the pending load before selecting the profile.
+    final pendingResult = AiRecognitionRuntime.recognizeRecord(
+      _segment(),
+      settings,
+      AiCancellationToken(),
+      providerFactory: (selected) {
+        factoryProfiles.add(selected);
+        return provider;
+      },
+    );
+
+    await Future<void>.delayed(Duration.zero);
+    expect(
+      factoryProfiles,
+      isEmpty,
+      reason: 'the runtime must wait for settings initialization',
+    );
+
+    pendingPreferences.complete(PrefsKeyValueStore(preferences));
+
+    final result = await pendingResult;
+    expect(factoryProfiles, hasLength(1));
+    expect(factoryProfiles.single.id, _audioFieldExtractionProfile().id);
+    expect(provider.extractionCalls, 1);
+    expect(result.candidates.single.fields['callsign'], 'BG5DBL');
   });
 }
 
