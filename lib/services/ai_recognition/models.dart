@@ -4,7 +4,10 @@ typedef AiJsonObject = Map<String, Object?>;
 
 enum AiProviderKind {
   speechRecognition,
-  fieldExtraction;
+  fieldExtraction,
+
+  /// 音频直接产出字段：一次调用同时返回转写与字段。设计的模式 A 用它。
+  audioFieldExtraction;
 
   static AiProviderKind fromJson(Object? value) => _enumFromJson(
         values,
@@ -25,6 +28,10 @@ enum AiProtocol {
             this == jsonHttp,
         AiProviderKind.fieldExtraction =>
           this == openAiChatCompletions || this == jsonHttp,
+        // 音频必须在请求体里，因此只有能携带 input_audio 的协议可用。
+        // jsonHttp 靠 requestTemplate 自行携带。
+        AiProviderKind.audioFieldExtraction =>
+          this == openAiChatCompletionsAudio || this == jsonHttp,
       };
 
   static AiProtocol fromJson(Object? value) => _enumFromJson(

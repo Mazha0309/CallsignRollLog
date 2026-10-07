@@ -197,4 +197,63 @@ void main() {
       );
     });
   });
+
+  group('audioFieldExtraction kind', () {
+    test('accepts the chat audio protocol', () {
+      expect(
+        AiProtocol.openAiChatCompletionsAudio
+            .supports(AiProviderKind.audioFieldExtraction),
+        isTrue,
+      );
+    });
+
+    test('accepts jsonHttp for providers with a request template', () {
+      expect(
+        AiProtocol.jsonHttp.supports(AiProviderKind.audioFieldExtraction),
+        isTrue,
+      );
+    });
+
+    test('rejects protocols that cannot carry audio', () {
+      expect(
+        AiProtocol.openAiChatCompletions
+            .supports(AiProviderKind.audioFieldExtraction),
+        isFalse,
+      );
+      expect(
+        AiProtocol.openAiAudioTranscriptions
+            .supports(AiProviderKind.audioFieldExtraction),
+        isFalse,
+      );
+    });
+
+    test('profile rejects a protocol that cannot carry audio', () {
+      expect(
+        () => AiProviderProfile(
+          id: 'p1',
+          name: 'bad',
+          kind: AiProviderKind.audioFieldExtraction,
+          protocol: AiProtocol.openAiChatCompletions,
+          baseUrl: Uri.parse('https://example.com/v1'),
+          model: 'm',
+        ),
+        throwsArgumentError,
+      );
+    });
+
+    test('kind survives a JSON round trip', () {
+      final json = AiProviderProfile(
+        id: 'p1',
+        name: 'qwen',
+        kind: AiProviderKind.audioFieldExtraction,
+        protocol: AiProtocol.openAiChatCompletionsAudio,
+        baseUrl: Uri.parse('https://example.com/compatible-mode/v1'),
+        model: 'qwen3.8-omni-flash',
+      ).toJson();
+      expect(
+        AiProviderProfile.fromJson(json).kind,
+        AiProviderKind.audioFieldExtraction,
+      );
+    });
+  });
 }
