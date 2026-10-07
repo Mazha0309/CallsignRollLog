@@ -357,6 +357,71 @@ void main() {
       throwsStateError,
     );
   });
+
+  test('removing the active multimodal profile clears its slot', () async {
+    final provider = _provider();
+    await provider.initialized;
+    await provider.upsertProfile(_audioExtractionProfile());
+    await provider.setActiveAudioFieldExtractionProfile('multimodal');
+    expect(provider.activeAudioFieldExtractionProfile, isNotNull);
+
+    await provider.removeProfile('multimodal');
+
+    expect(provider.activeAudioFieldExtractionProfileId, isNull);
+    expect(provider.activeAudioFieldExtractionProfile, isNull);
+  });
+
+  test('changing a profile away from the multimodal kind clears its slot',
+      () async {
+    final provider = _provider();
+    await provider.initialized;
+    await provider.upsertProfile(_audioExtractionProfile());
+    await provider.setActiveAudioFieldExtractionProfile('multimodal');
+
+    // Same id and credential destination, but the kind no longer matches the
+    // slot this id was selected for.
+    await provider.upsertProfile(
+      AiProviderProfile(
+        id: 'multimodal',
+        name: 'Now speech',
+        kind: AiProviderKind.speechRecognition,
+        protocol: AiProtocol.openAiChatCompletionsAudio,
+        baseUrl: Uri.parse('https://audio.example/v1'),
+        model: 'audio-model',
+        credentialId: 'multimodal-secret',
+      ),
+    );
+
+    expect(provider.activeAudioFieldExtractionProfileId, isNull);
+    expect(provider.activeAudioFieldExtractionProfile, isNull);
+  });
+
+  test('importing profiles clears the multimodal active slot', () async {
+    final provider = _provider();
+    await provider.initialized;
+    await provider.upsertProfile(_audioExtractionProfile());
+    await provider.setActiveAudioFieldExtractionProfile('multimodal');
+
+    await provider.importProfiles(jsonEncode({
+      'schemaVersion': 1,
+      'profiles': <Object?>[],
+    }));
+
+    expect(provider.activeAudioFieldExtractionProfileId, isNull);
+    expect(provider.activeAudioFieldExtractionProfile, isNull);
+  });
+
+  test('reset clears the multimodal active slot', () async {
+    final provider = _provider();
+    await provider.initialized;
+    await provider.upsertProfile(_audioExtractionProfile());
+    await provider.setActiveAudioFieldExtractionProfile('multimodal');
+
+    await provider.reset();
+
+    expect(provider.activeAudioFieldExtractionProfileId, isNull);
+    expect(provider.activeAudioFieldExtractionProfile, isNull);
+  });
 }
 
 AiRecognitionSettingsProvider _provider([_MemorySecureValues? values]) =>
