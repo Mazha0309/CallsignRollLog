@@ -46,6 +46,7 @@ final class AiProviderCapabilities {
   const AiProviderCapabilities({
     this.supportsAudioTranscription = false,
     this.supportsFieldExtraction = false,
+    this.supportsAudioFieldExtraction = false,
     this.supportsStreaming = false,
     this.supportsLanguageHint = false,
     this.supportsPrompt = false,
@@ -68,6 +69,11 @@ final class AiProviderCapabilities {
       supportsFieldExtraction: _bool(
         json['supportsFieldExtraction'],
         'supportsFieldExtraction',
+        fallback: false,
+      ),
+      supportsAudioFieldExtraction: _bool(
+        json['supportsAudioFieldExtraction'],
+        'supportsAudioFieldExtraction',
         fallback: false,
       ),
       supportsStreaming: _bool(
@@ -95,6 +101,7 @@ final class AiProviderCapabilities {
 
   final bool supportsAudioTranscription;
   final bool supportsFieldExtraction;
+  final bool supportsAudioFieldExtraction;
   final bool supportsStreaming;
   final bool supportsLanguageHint;
   final bool supportsPrompt;
@@ -104,6 +111,7 @@ final class AiProviderCapabilities {
   AiJsonObject toJson() => {
         'supportsAudioTranscription': supportsAudioTranscription,
         'supportsFieldExtraction': supportsFieldExtraction,
+        'supportsAudioFieldExtraction': supportsAudioFieldExtraction,
         'supportsStreaming': supportsStreaming,
         'supportsLanguageHint': supportsLanguageHint,
         'supportsPrompt': supportsPrompt,

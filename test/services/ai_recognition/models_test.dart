@@ -256,4 +256,43 @@ void main() {
       );
     });
   });
+
+  group('capabilities', () {
+    test('defaults to not supporting audio field extraction', () {
+      expect(
+        const AiProviderCapabilities().supportsAudioFieldExtraction,
+        isFalse,
+      );
+    });
+
+    test('round trips through JSON', () {
+      const capabilities = AiProviderCapabilities(
+        supportsAudioFieldExtraction: true,
+      );
+      expect(
+        AiProviderCapabilities.fromJson(capabilities.toJson())
+            .supportsAudioFieldExtraction,
+        isTrue,
+      );
+    });
+  });
+
+  group('audioFieldExtraction jsonHttp profile', () {
+    test('profile accepts jsonHttp for audio field extraction', () {
+      expect(
+        () => AiProviderProfile(
+          id: 'p2',
+          name: 'template',
+          kind: AiProviderKind.audioFieldExtraction,
+          protocol: AiProtocol.jsonHttp,
+          baseUrl: Uri.parse('https://example.com/v1'),
+          model: 'm',
+          requestOptions: const {
+            'requestTemplate': {'audio': '{{audio.dataUrl}}'},
+          },
+        ),
+        returnsNormally,
+      );
+    });
+  });
 }
