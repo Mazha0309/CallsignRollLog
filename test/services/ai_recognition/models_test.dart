@@ -275,6 +275,13 @@ void main() {
         isTrue,
       );
     });
+
+    test('missing key falls back to false for older stored data', () {
+      expect(
+        AiProviderCapabilities.fromJson(const {}).supportsAudioFieldExtraction,
+        isFalse,
+      );
+    });
   });
 
   group('audioFieldExtraction jsonHttp profile', () {

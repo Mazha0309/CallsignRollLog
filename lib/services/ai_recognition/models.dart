@@ -101,6 +101,13 @@ final class AiProviderCapabilities {
 
   final bool supportsAudioTranscription;
   final bool supportsFieldExtraction;
+
+  /// 一次调用直接从音频产出结构化字段，区别于
+  /// [supportsAudioTranscription] + [supportsFieldExtraction] 的两跳组合。
+  ///
+  /// 仅作能力声明，不参与 provider 选择：判断档案是否用于该用途一律以
+  /// [AiProviderKind.audioFieldExtraction] 为准，避免标志与 kind 变成两个
+  /// 必须同时设置的开关。
   final bool supportsAudioFieldExtraction;
   final bool supportsStreaming;
   final bool supportsLanguageHint;
