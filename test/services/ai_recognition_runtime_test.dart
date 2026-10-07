@@ -1,10 +1,16 @@
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:openlogtool/providers/ai_recognition_settings_provider.dart';
+import 'package:openlogtool/services/ai_credential_store.dart';
 import 'package:openlogtool/services/ai_recognition/ai_recognition.dart';
 import 'package:openlogtool/services/ai_recognition_runtime.dart';
+import 'package:openlogtool/services/secure_token_store.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
+  setUp(() => SharedPreferences.setMockInitialValues({}));
+
   test('rejects filler-only transcripts before field extraction', () {
     expect(AiRecognitionRuntime.isActionableTranscription('嗯。'), isFalse);
     expect(AiRecognitionRuntime.isActionableTranscription('嗯嗯……'), isFalse);
@@ -22,34 +28,147 @@ void main() {
     expect(AiRecognitionRuntime.extractExplicitPower('没有提到功率'), isNull);
   });
 
-  test('recognizeRecord returns transcript and fields from one provider call',
+  test('recognizeRecord drives the real entry once with the chosen profile',
       () async {
-    var calls = 0;
-    final segment = AudioSegment(
+    final settings = await _settingsWithAudioFieldProfile();
+    final profile = settings.activeAudioFieldExtractionProfile!;
+    final segment = _segment();
+    final expected = AiRecognitionResult(
+      transcription: Transcription(text: 'BG5DBL 宁波高新区'),
+      candidates: [
+        RecognitionCandidate(
+          fields: const {'callsign': 'BG5DBL'},
+          sourceText: 'BG5DBL 宁波高新区',
+        ),
+      ],
+    );
+    final provider = _FakeAudioFieldExtractionProvider(
+      profile: profile,
+      result: expected,
+    );
+    final factoryProfiles = <AiProviderProfile>[];
+
+    final result = await AiRecognitionRuntime.recognizeRecord(
+      segment,
+      settings,
+      AiCancellationToken(),
+      providerFactory: (selected) {
+        factoryProfiles.add(selected);
+        return provider;
+      },
+    );
+
+    expect(factoryProfiles, hasLength(1));
+    expect(factoryProfiles.single, same(profile));
+    expect(provider.extractionCalls, 1);
+    expect(provider.lastAudio, same(segment));
+    expect(
+      provider.lastInstructions,
+      AiRecognitionRuntime.audioFieldExtractionInstructions,
+    );
+    expect(provider.closeCalls, 1);
+    expect(result.transcription.text, 'BG5DBL 宁波高新区');
+    expect(result.candidates.single.fields['callsign'], 'BG5DBL');
+  });
+
+  test('recognizeRecord rejects a missing mode A profile', () async {
+    final settings = AiRecognitionSettingsProvider(
+      credentialStore: AiCredentialStore(secureValues: _MemorySecureValues()),
+    );
+    await settings.initialized;
+
+    await expectLater(
+      AiRecognitionRuntime.recognizeRecord(
+        _segment(),
+        settings,
+        AiCancellationToken(),
+      ),
+      throwsA(
+        isA<AiRecognitionException>().having(
+          (error) => error.kind,
+          'kind',
+          AiRecognitionErrorKind.invalidConfiguration,
+        ),
+      ),
+    );
+  });
+}
+
+Future<AiRecognitionSettingsProvider> _settingsWithAudioFieldProfile() async {
+  final settings = AiRecognitionSettingsProvider(
+    credentialStore: AiCredentialStore(secureValues: _MemorySecureValues()),
+  );
+  await settings.initialized;
+  await settings.upsertProfile(_audioFieldExtractionProfile());
+  return settings;
+}
+
+AudioSegment _segment() => AudioSegment(
       bytes: Uint8List.fromList(const [1, 2, 3]),
       mimeType: 'audio/wav',
       fileName: 's.wav',
     );
-    final result = await AiRecognitionRuntime.recognizeRecordWith(
-      segment,
-      (audio, instructions) async {
-        calls++;
-        expect(instructions, 'extract one record');
-        return AiRecognitionResult(
-          transcription: Transcription(text: 'BG5DBL 宁波高新区'),
-          candidates: [
-            RecognitionCandidate(
-              fields: const {'callsign': 'BG5DBL'},
-              sourceText: 'BG5DBL 宁波高新区',
-            ),
-          ],
-        );
-      },
-      instructions: 'extract one record',
+
+AiProviderProfile _audioFieldExtractionProfile() => AiProviderProfile(
+      id: 'audio-extractor',
+      name: 'Audio fields',
+      kind: AiProviderKind.audioFieldExtraction,
+      protocol: AiProtocol.openAiChatCompletionsAudio,
+      baseUrl: Uri.parse('https://speech.example/v1'),
+      model: 'omni-model',
+      capabilities: const AiProviderCapabilities(
+        supportsAudioFieldExtraction: true,
+      ),
     );
 
-    expect(calls, 1);
-    expect(result.transcription.text, 'BG5DBL 宁波高新区');
-    expect(result.candidates.single.fields['callsign'], 'BG5DBL');
+final class _FakeAudioFieldExtractionProvider
+    implements AudioFieldExtractionProvider {
+  _FakeAudioFieldExtractionProvider({
+    required this.profile,
+    required this.result,
   });
+
+  @override
+  final AiProviderProfile profile;
+
+  final AiRecognitionResult result;
+  int extractionCalls = 0;
+  int closeCalls = 0;
+  AudioSegment? lastAudio;
+  String? lastInstructions;
+
+  @override
+  AiProviderCapabilities get capabilities => profile.capabilities;
+
+  @override
+  Future<AiRecognitionResult> extractFieldsFromAudio(
+    AudioSegment audio, {
+    String? instructions,
+    AiRequestOptions options = const AiRequestOptions(),
+  }) async {
+    extractionCalls++;
+    lastAudio = audio;
+    lastInstructions = instructions;
+    return result;
+  }
+
+  @override
+  void close() => closeCalls++;
+}
+
+final class _MemorySecureValues implements SecureValueStore {
+  final Map<String, String> values = <String, String>{};
+
+  @override
+  Future<void> delete(String key) async {
+    values.remove(key);
+  }
+
+  @override
+  Future<String?> read(String key) async => values[key];
+
+  @override
+  Future<void> write(String key, String value) async {
+    values[key] = value;
+  }
 }

@@ -64,6 +64,9 @@ final class AiRecognitionSettingsProvider with ChangeNotifier {
   /// 只按 [AiProviderKind.audioFieldExtraction] 判定：`kind` 是这一用途的唯一
   /// 权威来源。`capabilities.supportsAudioFieldExtraction` 只是给界面看的声明，
   /// 不参与选择——否则会出现「档案配好了却选不中」这种难查的问题。
+  ///
+  /// 临时方案：目前取第一个 kind 匹配的档案。Plan 2 引入配置界面时会改为
+  /// 与 [activeFieldExtractionProfile] 一致的显式 active-id 选择。
   AiProviderProfile? get activeAudioFieldExtractionProfile {
     for (final profile in _profiles) {
       if (profile.kind == AiProviderKind.audioFieldExtraction) return profile;

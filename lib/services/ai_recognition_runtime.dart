@@ -17,6 +17,8 @@ typedef AiFieldExtractionExecutor = Future<AiRecognitionResult> Function(
   AiCancellationToken cancellationToken, {
   String? referenceContext,
 });
+typedef AudioFieldExtractionProviderFactory = AudioFieldExtractionProvider
+    Function(AiProviderProfile profile);
 
 abstract final class AiRecognitionRuntime {
   static const transcriptionPrompt =
@@ -74,43 +76,33 @@ Return {"transcript":"…","fields":{}} when the audio has no check-in data.
   static Future<AiRecognitionResult> recognizeRecord(
     AudioSegment audio,
     AiRecognitionSettingsProvider settings,
-    AiCancellationToken cancellationToken,
-  ) async {
+    AiCancellationToken cancellationToken, {
+    AudioFieldExtractionProviderFactory? providerFactory,
+  }) async {
     await settings.initialized;
-    return recognizeRecordWith(
-      audio,
-      (segment, instructions) async {
-        final profile = settings.activeAudioFieldExtractionProfile;
-        if (profile == null) {
-          throw StateError('AI_AUDIO_FIELD_EXTRACTION_PROFILE_REQUIRED');
-        }
-        final provider = AiProviderFactory.createAudioFieldExtraction(profile);
-        try {
-          return await provider.extractFieldsFromAudio(
-            segment,
-            instructions: instructions,
-            options: AiRequestOptions(
-              credentialResolver: settings.credentialResolver,
-              cancellationToken: cancellationToken,
-            ),
-          );
-        } finally {
-          provider.close();
-        }
-      },
-      instructions: audioFieldExtractionInstructions,
+    final profile = settings.activeAudioFieldExtractionProfile;
+    if (profile == null) {
+      throw const AiRecognitionException(
+        kind: AiRecognitionErrorKind.invalidConfiguration,
+        message: 'No audio field extraction profile is configured',
+      );
+    }
+    final provider =
+        (providerFactory ?? AiProviderFactory.createAudioFieldExtraction)(
+      profile,
     );
-  }
-
-  /// 与 [recognizeRecord] 相同，但执行器可由调用方注入，便于测试。
-  static Future<AiRecognitionResult> recognizeRecordWith(
-    AudioSegment audio,
-    Future<AiRecognitionResult> Function(
-            AudioSegment audio, String? instructions)
-        execute, {
-    String? instructions,
-  }) {
-    return execute(audio, instructions);
+    try {
+      return await provider.extractFieldsFromAudio(
+        audio,
+        instructions: audioFieldExtractionInstructions,
+        options: AiRequestOptions(
+          credentialResolver: settings.credentialResolver,
+          cancellationToken: cancellationToken,
+        ),
+      );
+    } finally {
+      provider.close();
+    }
   }
 
   static Future<Transcription> transcribe(
