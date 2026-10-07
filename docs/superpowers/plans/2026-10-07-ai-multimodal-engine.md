@@ -672,6 +672,12 @@ group('ProtocolAudioFieldExtractionProvider', () {
 });
 ```
 
+**实施时必须对上面的测试样例做三处修正**——这是实施中发现的原样例真实缺陷，已在提交中修正，记录如下以免后人照抄：
+
+1. **凭据**：`profileWith` 造出的档案走默认 `AiCredentialTransport.bearer()`（`isRequired: true`），请求会在解析之前抛 `missingCredentials`，四条用例全部失败。给该档案加 `credentialTransport: const AiCredentialTransport.none(),`。
+2. **编码**：`http.Response(String, ...)` 在未给 `content-type` 时按 **latin1** 编码，中文响应体（`宁波高新区`、`嗯…` 等）会直接抛错并被包成 `network`。三个 mock 响应都要加 `headers: const {'content-type': 'application/json; charset=utf-8'}`。
+3. **await**：非 JSON 那条若写成 `expect(() => future, throwsA(...))`，同步闭包不会 await，紧随的 `provider.close()` 会中止在途请求，实际得到 `closed` 而非 `invalidResponse`。改为 `await expectLater(provider.extractFieldsFromAudio(segment()), throwsA(...))`。
+
 - [ ] **Step 2: 运行测试确认失败**
 
 Run: `flutter test test/services/ai_recognition/audio_field_extraction_test.dart`
