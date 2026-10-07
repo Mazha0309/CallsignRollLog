@@ -59,6 +59,18 @@ final class AiRecognitionSettingsProvider with ChangeNotifier {
   AiProviderProfile? get activeFieldExtractionProfile =>
       _profileById(_activeFieldExtractionProfileId);
 
+  /// 当前用于模式 A 的多模态档案；未配置时返回 null。
+  ///
+  /// 只按 [AiProviderKind.audioFieldExtraction] 判定：`kind` 是这一用途的唯一
+  /// 权威来源。`capabilities.supportsAudioFieldExtraction` 只是给界面看的声明，
+  /// 不参与选择——否则会出现「档案配好了却选不中」这种难查的问题。
+  AiProviderProfile? get activeAudioFieldExtractionProfile {
+    for (final profile in _profiles) {
+      if (profile.kind == AiProviderKind.audioFieldExtraction) return profile;
+    }
+    return null;
+  }
+
   AiCredentialResolver get credentialResolver => resolveCredentials;
 
   Future<void> _load() async {

@@ -43,6 +43,22 @@ explicit equipment and QTH statements before omitting those fields.
 Keep RST sent and received separate.
 ''';
 
+  /// 模式 A 的指令：一次调用同时要转写与字段。
+  static const audioFieldExtractionInstructions = '''
+Listen to one amateur-radio net check-in and return a single JSON object:
+{"transcript":"<verbatim transcript>","fields":{...},"uncertain":[...]}
+
+"fields" accepts only these optional string keys:
+callsign, device, antenna, power, qth, height, rstSent, rstRcvd, remarks.
+Never return time. Never return the net controller callsign; it belongs to the
+session context. Omit any field not clearly spoken. Do not infer or invent
+values. Normalize explicitly spoken transmit power to digits plus W.
+Decode NATO phonetic spelling when it clearly forms a callsign, and return
+callsigns uppercase without spaces.
+List in "uncertain" any field you had to guess or that was hard to hear.
+Return {"transcript":"…","fields":{}} when the audio has no check-in data.
+''';
+
   static Future<AiRecognitionResult> recognize(
     AudioSegment audio,
     AiRecognitionSettingsProvider settings,
@@ -50,6 +66,50 @@ Keep RST sent and received separate.
   ) async {
     final transcription = await transcribe(audio, settings, cancellationToken);
     return extractFields(transcription, settings, cancellationToken);
+  }
+
+  /// 模式 A 的入口：一次调用拿到转写与字段。
+  ///
+  /// 与 [recognize] 的区别是不经过独立的 ASR 与文字助手两次网络往返。
+  static Future<AiRecognitionResult> recognizeRecord(
+    AudioSegment audio,
+    AiRecognitionSettingsProvider settings,
+    AiCancellationToken cancellationToken,
+  ) {
+    return recognizeRecordWith(
+      audio,
+      (segment, instructions) async {
+        final profile = settings.activeAudioFieldExtractionProfile;
+        if (profile == null) {
+          throw StateError('AI_AUDIO_FIELD_EXTRACTION_PROFILE_REQUIRED');
+        }
+        final provider = AiProviderFactory.createAudioFieldExtraction(profile);
+        try {
+          return await provider.extractFieldsFromAudio(
+            segment,
+            instructions: instructions,
+            options: AiRequestOptions(
+              credentialResolver: settings.credentialResolver,
+              cancellationToken: cancellationToken,
+            ),
+          );
+        } finally {
+          provider.close();
+        }
+      },
+      instructions: audioFieldExtractionInstructions,
+    );
+  }
+
+  /// 与 [recognizeRecord] 相同，但执行器可由调用方注入，便于测试。
+  static Future<AiRecognitionResult> recognizeRecordWith(
+    AudioSegment audio,
+    Future<AiRecognitionResult> Function(
+            AudioSegment audio, String? instructions)
+        execute, {
+    String? instructions,
+  }) {
+    return execute(audio, instructions);
   }
 
   static Future<Transcription> transcribe(
