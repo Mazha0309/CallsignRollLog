@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 import 'errors.dart';
@@ -780,9 +779,7 @@ final class _MultipartBody {
 
 /// 构造 Chat Completions 的音频消息内容块。
 ///
-/// ASR 与音频字段抽取共用（模式 A 直接把音频变成结构化字段），
-/// 避免两份实现漂移。
-@visibleForTesting
+/// ASR 与音频字段抽取共享此构造，避免两份实现漂移。
 List<Object?> buildChatAudioContent(
   AiProviderProfile profile,
   AudioSegment audio, {

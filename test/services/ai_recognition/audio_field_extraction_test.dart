@@ -97,6 +97,31 @@ void main() {
       expect(audio['type'], 'input_audio');
       final payload = audio['input_audio']! as Map<String, Object?>;
       expect(payload['data'], 'data:audio/wav;base64,AQID');
+      // includeAudioFormat 默认 true，fileName 的扩展名即音频率格式。
+      expect(payload['format'], 'wav');
+    });
+
+    test('rejects an unknown audio encoding', () {
+      final profile = AiProviderProfile(
+        id: 'p',
+        name: 'qwen',
+        kind: AiProviderKind.audioFieldExtraction,
+        protocol: AiProtocol.openAiChatCompletionsAudio,
+        baseUrl: Uri.parse('https://example.com/v1'),
+        model: 'm',
+        requestOptions: const {'audioDataEncoding': 'bogus'},
+      );
+      expect(
+        () => buildChatAudioContent(
+          profile,
+          AudioSegment(
+            bytes: Uint8List.fromList(const [1, 2, 3]),
+            mimeType: 'audio/wav',
+            fileName: 's.wav',
+          ),
+        ),
+        throwsFormatException,
+      );
     });
   });
 }
