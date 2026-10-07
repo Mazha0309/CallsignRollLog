@@ -55,3 +55,4 @@ app.*.map.json
 # Superpowers (brainstorming artifacts)
 .superpowers/
 .worktrees/
+test/fixtures/ai_eval/*.wav
