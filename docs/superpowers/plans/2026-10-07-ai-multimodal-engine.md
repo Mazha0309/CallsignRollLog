@@ -233,6 +233,8 @@ git add lib/services/ai_recognition/models.dart test/services/ai_recognition/mod
 git commit -m "feat(ai): declare the audio field extraction capability"
 ```
 
+**关于这个标志的定位**（复查后补充）：它**只作声明**，不参与任何选择逻辑。判断一个档案是否用于「音频→字段」一律看 `kind`（见 Task 6）。之所以不删掉它，是因为本类既有的模式就是「一项能力一个布尔」，且后续配置界面可以用它做提示；但**它不能与 `kind` 形成两个需要同时设置的开关**，否则会造出「档案配好了却选不中」的隐蔽问题。
+
 ---
 
 ### Task 3: 把 `AiRecognitionResult` 迁到 models.dart 并新增 provider 接口
@@ -246,7 +248,9 @@ git commit -m "feat(ai): declare the audio field extraction capability"
 
 - [ ] **Step 1: 写失败的测试**
 
-新建 `test/services/ai_recognition/audio_field_extraction_test.dart`：
+新建 `test/services/ai_recognition/audio_field_extraction_test.dart`。
+
+**注意**：只断言「`AiRecognitionResult` 可用」是**不够**的——搬迁前 barrel 仍从 `pipeline.dart` 导出它，测试会直接通过，构不成红灯。因此这里用一个假实现逼出新接口：
 
 ```dart
 import 'dart:typed_data';
@@ -254,39 +258,81 @@ import 'dart:typed_data';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:openlogtool/services/ai_recognition/ai_recognition.dart';
 
+/// 实现新接口的假对象。接口不存在时本文件无法编译，这才是真正的红灯。
+final class _FakeAudioFieldExtractionProvider
+    implements AudioFieldExtractionProvider {
+  _FakeAudioFieldExtractionProvider(this.profile);
+
+  @override
+  final AiProviderProfile profile;
+
+  @override
+  AiProviderCapabilities get capabilities => profile.capabilities;
+
+  @override
+  Future<AiRecognitionResult> extractFieldsFromAudio(
+    AudioSegment audio, {
+    String? instructions,
+    AiRequestOptions options = const AiRequestOptions(),
+  }) async =>
+      AiRecognitionResult(
+        transcription: Transcription(text: 'BG5DBL 宁波高新区'),
+        candidates: [
+          RecognitionCandidate(
+            fields: const {'callsign': 'BG5DBL'},
+            sourceText: 'BG5DBL 宁波高新区',
+          ),
+        ],
+      );
+
+  @override
+  void close() {}
+}
+
 void main() {
-  test('AiRecognitionResult is reachable from models and holds both parts', () {
-    final result = AiRecognitionResult(
-      transcription: Transcription(text: 'BG5DBL 宁波高新区'),
-      candidates: [
-        RecognitionCandidate(
-          fields: const {'callsign': 'BG5DBL'},
-          sourceText: 'BG5DBL 宁波高新区',
-        ),
-      ],
+  AiProviderProfile profile() => AiProviderProfile(
+        id: 'p',
+        name: 'qwen',
+        kind: AiProviderKind.audioFieldExtraction,
+        protocol: AiProtocol.openAiChatCompletionsAudio,
+        baseUrl: Uri.parse('https://example.com/v1'),
+        model: 'm',
+      );
+
+  AudioSegment segment() => AudioSegment(
+        bytes: Uint8List.fromList(const [1, 2, 3]),
+        mimeType: 'audio/wav',
+        fileName: 's.wav',
+        sampleRateHz: 16000,
+      );
+
+  test('the audio field extraction contract returns transcript and fields',
+      () async {
+    final provider = _FakeAudioFieldExtractionProvider(profile());
+    final result = await provider.extractFieldsFromAudio(
+      segment(),
+      instructions: 'extract one record',
     );
-    expect(result.transcription.text, contains('BG5DBL'));
+    expect(result.transcription.text, 'BG5DBL 宁波高新区');
     expect(result.candidates.single.fields['callsign'], 'BG5DBL');
   });
 
-  test('AudioSegment carries what a provider needs to build a request', () {
-    final segment = AudioSegment(
-      bytes: Uint8List.fromList(const [1, 2, 3]),
-      mimeType: 'audio/wav',
-      fileName: 'segment.wav',
-      sampleRateHz: 16000,
-      channelCount: 1,
+  test('AiRecognitionResult is reachable from models.dart', () {
+    // 搬迁的目的：providers.dart 能引用它而不形成循环依赖。
+    // 这里的类型检查会在它仍定义于 pipeline.dart 时失败。
+    final AiRecognitionResult result = AiRecognitionResult(
+      transcription: Transcription(text: 'x'),
+      candidates: const [],
     );
-    expect(segment.mimeType, 'audio/wav');
-    expect(segment.sampleRateHz, 16000);
+    expect(result.candidates, isEmpty);
   });
 }
 ```
 
-- [ ] **Step 2: 运行测试确认失败**
+**Step 2: 运行测试确认失败**
 
 Run: `flutter test test/services/ai_recognition/audio_field_extraction_test.dart`
-Expected: FAIL，`AiRecognitionResult` 不在 `models.dart` 的作用域内（barrel 仍能导出，因此只有在 Step 3 删掉 pipeline 中的定义后才会真正失败；先跑一遍确认当前通过，再进入 Step 3）
+Expected: 编译失败，`AudioFieldExtractionProvider` 未定义
 
 - [ ] **Step 3: 搬迁并新增接口**
 
@@ -1038,11 +1084,14 @@ Return {"transcript":"…","fields":{}} when the audio has no check-in data.
 
 ```dart
   /// 当前用于模式 A 的多模态档案；未配置时返回 null。
+  ///
+  /// 只按 [AiProviderKind.audioFieldExtraction] 判定：`kind` 是这一用途的唯一
+  /// 权威来源。`capabilities.supportsAudioFieldExtraction` 只是给界面看的声明，
+  /// 不参与选择——否则会出现「档案配好了却选不中」这种难查的问题。
   AiProviderProfile? get activeAudioFieldExtractionProfile =>
       _profiles.firstWhereOrNull(
         (profile) =>
-            profile.kind == AiProviderKind.audioFieldExtraction &&
-            profile.capabilities.supportsAudioFieldExtraction,
+            profile.kind == AiProviderKind.audioFieldExtraction,
       );
 ```
 
