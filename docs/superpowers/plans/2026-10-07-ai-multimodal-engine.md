@@ -1126,6 +1126,14 @@ git add lib/services/ai_recognition_runtime.dart lib/providers/ai_recognition_se
 git commit -m "feat(ai): add the single-call record recognition entry"
 ```
 
+**实施中发现的三处修订**（复查后落地，以实际提交为准）：
+
+1. **不要 `recognizeRecordWith` 这种静态转发接缝**。它让测试变成恒真断言——把 `recognizeRecord` 的函数体整段删掉，测试照样全绿。改为给 `recognizeRecord` 加一个可选的工厂参数 `AudioFieldExtractionProviderFactory? providerFactory`（默认 `AiProviderFactory.createAudioFieldExtraction`），并让测试**真的走 `recognizeRecord`**：配置一个真实档案、注入计数用的假 provider、断言工厂与 provider 各被调用一次、`instructions` 等于真实常量、`close()` 被调用、以及未配置档案时抛错。这与本仓既有的构造器/参数注入风格一致。
+2. **不要用 `StateError` 抛内部码**。`StateError('AI_AUDIO_FIELD_EXTRACTION_PROFILE_REQUIRED')` 属 §13 禁止进入界面的内部标识，而 UI 的兜底 `catch` 会 `error.toString()` 把它弹给用户。改用 `AiRecognitionException(kind: AiRecognitionErrorKind.invalidConfiguration, message: 'No audio field extraction profile is configured')`——引擎边界统一抛这一种异常，Task 7 的 kind 映射即可自动接住。
+3. **`activeAudioFieldExtractionProfile` 的取值策略是临时方案**，需在注释中标注：目前取第一个 kind 匹配的档案；Plan 2 引入配置界面时改为与 `activeFieldExtractionProfile` 一致的显式 active-id 选择（现在补 id 槽位而没有界面去设置，只会让它永远是 null，反而使模式 A 不可用）。
+
+**关于本任务新增符号尚无生产调用方**：`recognizeRecord`、`audioFieldExtractionInstructions`、`activeAudioFieldExtractionProfile` 属为 Plan 2 预埋，**不要**当成遗留代码清理。
+
 ---
 
 ### Task 7: 错误文案映射（`§13` 的引擎侧）
