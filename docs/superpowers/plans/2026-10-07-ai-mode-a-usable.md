@@ -609,6 +609,13 @@ Expected: FAIL，`pumpLogFormWithAi` 不接受 `recognizer`（或控件没有该
 
 **同时**：`AiRecognitionSettingsProvider.setEnabled`（`:142-151`）现在在开启时要求有 ASR，否则抛 `StateError('AI_ASR_PROFILE_REQUIRED')`——纯多模态用户根本开不了开关。改为「ASR 或 多模态 至少有一个」，否则抛同一含义的错误。这一条很关键，漏了会导致「配好了档案但开关打不开」。
 
+**还有两处同样硬绑 ASR，必须一并改掉**（代码复查时发现计划漏写，若只按上面两条做，纯多模态用户仍然不可用）：
+
+1. **设置页的总开关被禁用**：`lib/widgets/settings/ai_recognition_settings.dart:57-65` 的 `onChanged` 在 `activeAsr == null` 时为 `null`（开关直接禁用），副标题固定用 `aiRecognitionNeedsAsr`。改为「没有 ASR **且**没有多模态档案」时才禁用，并按实际情况切换副标题文案（需要新增一个 l10n 键，例如 `aiRecognitionNeedsAnyProfile`）。
+2. **重启后 `enabled` 被归零**：`ai_recognition_settings_provider.dart:134` 的 `_restore` 里是 `_enabled = json['enabled'] == true && _activeAsrProfileId != null`。即使开关打开过，只要没配 ASR，重启后就会被判为关闭。改为「有任意一种可用档案」即可。
+
+请为这两处各补一条测试：设置页开关在「只有多模态档案」时可点击；provider 在有 `enabled: true` 与多模态 active 的存档下 `_restore` 后 `enabled` 仍为 true。
+
 - [ ] **Step 5: 运行确认通过**
 
 Run: `flutter test test/widgets/log_form_ai_recognition_test.dart test/providers/ai_recognition_settings_provider_test.dart`
