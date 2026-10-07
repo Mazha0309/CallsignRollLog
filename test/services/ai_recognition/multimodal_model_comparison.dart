@@ -49,6 +49,7 @@ void main() {
           protocol: AiProtocol.openAiChatCompletionsAudio,
           baseUrl: Uri.parse(base),
           model: model,
+          credentialTransport: const AiCredentialTransport.bearer(),
           capabilities: const AiProviderCapabilities(
             supportsAudioFieldExtraction: true,
           ),
