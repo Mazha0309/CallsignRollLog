@@ -71,4 +71,32 @@ void main() {
     );
     expect(result.candidates, isEmpty);
   });
+
+  group('shared audio message builder', () {
+    test('emits a data URL when the profile asks for it', () {
+      final profile = AiProviderProfile(
+        id: 'p',
+        name: 'qwen',
+        kind: AiProviderKind.audioFieldExtraction,
+        protocol: AiProtocol.openAiChatCompletionsAudio,
+        baseUrl: Uri.parse('https://example.com/v1'),
+        model: 'm',
+        requestOptions: const {'audioDataEncoding': 'dataUrl'},
+      );
+      final content = buildChatAudioContent(
+        profile,
+        AudioSegment(
+          bytes: Uint8List.fromList(const [1, 2, 3]),
+          mimeType: 'audio/wav',
+          fileName: 's.wav',
+        ),
+        prompt: 'listen',
+      );
+      expect(content.first, {'type': 'text', 'text': 'listen'});
+      final audio = content.last! as Map<String, Object?>;
+      expect(audio['type'], 'input_audio');
+      final payload = audio['input_audio']! as Map<String, Object?>;
+      expect(payload['data'], 'data:audio/wav;base64,AQID');
+    });
+  });
 }

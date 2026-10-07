@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 import 'errors.dart';
@@ -184,37 +185,7 @@ final class ProtocolAsrProvider implements AsrProvider {
       'chat',
       'completions',
     ]);
-    final content = <Object?>[];
-    if (_optionBool(profile, 'includePrompt', fallback: true)) {
-      if (_nonEmptyOrNull(prompt) case final promptText?) {
-        content.add({'type': 'text', 'text': promptText});
-      }
-    }
-    final base64Audio = base64Encode(audio.bytes);
-    final audioDataEncoding = _optionString(
-      profile,
-      'audioDataEncoding',
-      fallback: 'base64',
-    );
-    if (audioDataEncoding != 'base64' && audioDataEncoding != 'dataUrl') {
-      throw const FormatException(
-        'audioDataEncoding must be base64 or dataUrl',
-      );
-    }
-    content.add({
-      'type': 'input_audio',
-      'input_audio': {
-        'data': audioDataEncoding == 'dataUrl'
-            ? 'data:${audio.mimeType};base64,$base64Audio'
-            : base64Audio,
-        if (_optionBool(profile, 'includeAudioFormat', fallback: true))
-          'format': _optionString(
-            profile,
-            'audioFormat',
-            fallback: _audioFormat(audio),
-          ),
-      },
-    });
+    final content = buildChatAudioContent(profile, audio, prompt: prompt);
 
     final messages = <Object?>[];
     if (_optionStringOrNull(profile, 'systemPrompt') case final systemPrompt?) {
@@ -805,4 +776,48 @@ final class _MultipartBody {
 
   final String boundary;
   final Uint8List bytes;
+}
+
+/// 构造 Chat Completions 的音频消息内容块。
+///
+/// ASR 与音频字段抽取共用（模式 A 直接把音频变成结构化字段），
+/// 避免两份实现漂移。
+@visibleForTesting
+List<Object?> buildChatAudioContent(
+  AiProviderProfile profile,
+  AudioSegment audio, {
+  String? prompt,
+}) {
+  final content = <Object?>[];
+  if (_optionBool(profile, 'includePrompt', fallback: true)) {
+    if (_nonEmptyOrNull(prompt) case final promptText?) {
+      content.add({'type': 'text', 'text': promptText});
+    }
+  }
+  final base64Audio = base64Encode(audio.bytes);
+  final audioDataEncoding = _optionString(
+    profile,
+    'audioDataEncoding',
+    fallback: 'base64',
+  );
+  if (audioDataEncoding != 'base64' && audioDataEncoding != 'dataUrl') {
+    throw const FormatException(
+      'audioDataEncoding must be base64 or dataUrl',
+    );
+  }
+  content.add({
+    'type': 'input_audio',
+    'input_audio': {
+      'data': audioDataEncoding == 'dataUrl'
+          ? 'data:${audio.mimeType};base64,$base64Audio'
+          : base64Audio,
+      if (_optionBool(profile, 'includeAudioFormat', fallback: true))
+        'format': _optionString(
+          profile,
+          'audioFormat',
+          fallback: _audioFormat(audio),
+        ),
+    },
+  });
+  return content;
 }
