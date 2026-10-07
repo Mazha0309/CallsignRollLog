@@ -129,13 +129,16 @@ void main() {
     }
   });
 
-  test('the multimodal presets ask for the encoding the provider needs', () {
+  test('the multimodal presets ask for the encoding and turn thinking off', () {
     final bailian = aiProviderPresets
         .firstWhere((preset) => preset.id == 'bailian-audio');
+    final profile =
+        bailian.buildProfile(id: 'p', name: 'n', model: 'm');
+    // 前者决定请求能否被接受，后者决定它是否可用（见 Task 1 的结论文档）。
+    expect(profile.requestOptions['audioDataEncoding'], 'dataUrl');
     expect(
-      bailian.buildProfile(id: 'p', name: 'n', model: 'm')
-          .requestOptions['audioDataEncoding'],
-      'dataUrl', // Task 1 的结论；若结论不同，此处同步改
+      (profile.requestOptions['body'] as Map)['enable_thinking'],
+      isFalse,
     );
   });
 
@@ -226,8 +229,14 @@ const aiProviderPresets = <AiProviderPreset>[
     protocol: AiProtocol.openAiChatCompletionsAudio,
     baseUrl: Uri.parse('https://dashscope.aliyuncs.com/compatible-mode/v1'),
     defaultModel: 'qwen3.8-omni-flash',
-    // Task 1 的结论：裸 base64 会被当成 URL 拒绝，必须带 data URL 前缀。
-    requestOptions: {'audioDataEncoding': 'dataUrl'},
+    // Task 1 的实测结论：两者缺一不可。
+    //   audioDataEncoding —— 决定请求能否被接受（裸 base64 会被当成 URL 拒绝）
+    //   enable_thinking    —— 决定它是否可用（开启思考时单条 174 秒；关闭后 3 秒）
+    // 后者是服务商专属参数，正是预设该承载的东西。
+    requestOptions: {
+      'audioDataEncoding': 'dataUrl',
+      'body': {'enable_thinking': false},
+    },
   ),
   AiProviderPreset(
     id: 'siliconflow-audio',
