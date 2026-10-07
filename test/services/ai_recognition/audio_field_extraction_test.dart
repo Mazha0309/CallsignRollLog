@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:openlogtool/services/ai_recognition/ai_recognition.dart';
+import 'package:openlogtool/services/ai_recognition/models.dart' as models;
 
 /// 实现新接口的假对象。接口不存在时本文件无法编译，这才是真正的红灯。
 final class _FakeAudioFieldExtractionProvider
@@ -62,10 +63,10 @@ void main() {
     expect(result.candidates.single.fields['callsign'], 'BG5DBL');
   });
 
-  test('AiRecognitionResult is reachable from models.dart', () {
-    // 搬迁的目的：providers.dart 能引用它而不形成循环依赖。
-    final AiRecognitionResult result = AiRecognitionResult(
-      transcription: Transcription(text: 'x'),
+  test('AiRecognitionResult lives in models.dart', () {
+    // 通过 models.dart 直接引用：若该类仍定义在 pipeline.dart，本文件将编译失败。
+    final models.AiRecognitionResult result = models.AiRecognitionResult(
+      transcription: models.Transcription(text: 'x'),
       candidates: const [],
     );
     expect(result.candidates, isEmpty);

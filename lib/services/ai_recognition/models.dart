@@ -693,9 +693,9 @@ Object? _copyJsonValue(Object? value) {
   throw ArgumentError.value(value, 'value', 'must contain only JSON values');
 }
 
-/// 一次调用的完整产出：原始转写与从中提取的字段。
+/// 一次调用的完整产出：原始转写与从中提取的候选字段。
 ///
-/// 从 pipeline.dart 迁来，使 provider 能在不依赖 pipeline 的情况下返回它。
+/// 模式 A（音频直接产出字段）与既有两跳链路都用它作为统一返回类型。
 final class AiRecognitionResult {
   const AiRecognitionResult({
     required this.transcription,
