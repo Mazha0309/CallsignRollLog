@@ -75,7 +75,8 @@ Return {"transcript":"…","fields":{}} when the audio has no check-in data.
     AudioSegment audio,
     AiRecognitionSettingsProvider settings,
     AiCancellationToken cancellationToken,
-  ) {
+  ) async {
+    await settings.initialized;
     return recognizeRecordWith(
       audio,
       (segment, instructions) async {
