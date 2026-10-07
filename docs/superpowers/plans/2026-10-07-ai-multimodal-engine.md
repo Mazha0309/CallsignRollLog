@@ -1245,6 +1245,12 @@ git add lib/services/ai_recognition/errors.dart test/services/ai_recognition/err
 git commit -m "feat(ai): add user-facing error messages"
 ```
 
+**复查后的两处补充与一条显式取舍**（以实际提交为准）：
+
+1. **泄漏测试必须连 camelCase 的 kind 名一起挡**。原样例的正则 `[A-Z][A-Z0-9_]{4,}|Exception|internal detail` 只抓大写内部码，而 §13.1 明确把 `missingCredentials`、`invalidConfiguration` 这类 kind 名列为禁止进入界面的标识——实测把文案改成 `error.kind.name` 时旧正则抓不到全小写的 `cancelled`。遍历 kind 时要额外断言 `expect(message, isNot(contains(kind.name)))`。
+2. **状态码分支要断言全**：`413 || 415` 这条 arm 原样例没覆盖，`statusCode == null` 与未知码（如 500）也只是被「顺带」执行，需各自补断言。
+3. **显式取舍：本任务暂时硬编码简体中文，Plan 2 必须改为本地化**。仓库支持英文界面（`lib/l10n/app_en.arb` 在维护、`resolveAppLocale` 支持 `en_US`），而 §13 要求的是「格式化**与本地化**」，所以硬编码中文不是最终形态。选择现在不搬进 `.arb`，是为了让它与 Plan 2 的其他 AI 文案（服务商预设、连接测试、复核面板）一起本地化，避免把一件事拆成两处。该限制须写进函数文档注释，并在 Plan 2 范围内跟踪——**连同 UI 侧仍在用 `error.toString()` / `error.message` / `$error` 的现存泄漏点一起改**：`lib/widgets/ai_recognition_control.dart:148,196,204,234,241,316,320,415` 与 `lib/widgets/dictionary_manager.dart:510`（§13.2 要求的四处位置，不只是兜底 `catch`）。
+
 ---
 
 ### Task 8: 横评实验（设计文档 §10.1）
