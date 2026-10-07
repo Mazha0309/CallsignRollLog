@@ -886,6 +886,9 @@ AiRecognitionResult _parseAudioFieldExtraction(
   }
 
   final rawFields = resolved['fields'];
+  if (rawFields != null && rawFields is! Map) {
+    throw _invalidResponse(profile, 'The fields member is not an object');
+  }
   final fields = <String, Object?>{};
   if (rawFields is Map) {
     for (final entry in rawFields.entries) {
@@ -926,7 +929,8 @@ AiRecognitionResult _parseAudioFieldExtraction(
               fields: fields,
               sourceText: transcription.text,
               metadata: {
-                'provider': profile.id,
+                'providerId': profile.id,
+                'protocol': profile.protocol.name,
                 'model': profile.model,
                 if (uncertain.isNotEmpty) 'uncertain': uncertain,
               },
