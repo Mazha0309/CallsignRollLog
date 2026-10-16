@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>把已有会话给另一个账号 · 使用手册 · CRL</title>
+<meta name="description" content="Callsign Roll Log 使用手册：把已有会话给另一个账号。">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Callsign Roll Log">
+<meta property="og:title" content="把已有会话给另一个账号 · 使用手册 · CRL">
+<meta property="og:description" content="Callsign Roll Log 使用手册：把已有会话给另一个账号。">
+<meta property="og:url" content="https://crl.mazha0309.com/docs/share.html">
+<meta property="og:image" content="https://crl.mazha0309.com/icon.png">
+<meta name="twitter:card" content="summary">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="../icon.png" type="image/png">
+<link rel="stylesheet" href="../docs.css">
+</head>
+<body>
+<header>
+  <div class="wrap hd">
+    <a class="brand" href="../index.html">
+      <img src="../icon.png" alt="">
+      <span class="t">CRL <span>Callsign Roll Log</span></span>
+    </a>
+    <nav class="site" id="nav">
+      <a href="../index.html#features">功能</a>
+      <a href="../index.html#collab">协作</a>
+      <a href="../docs.html" aria-current="page">文档</a>
+      <a href="../index.html#download">下载</a>
+      <a href="../index.html#open">开源</a>
+    </nav>
+    <button class="ic" id="hamb" aria-label="菜单"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+    <button class="ic" id="theme" aria-label="深浅色"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path id="tg" d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+  </div>
+</header>
+<main>
+<div class="frame">
+<aside class="rail">
+<button class="rail-toggle" type="button" aria-expanded="false">手册目录</button>
+<nav class="sidenav" aria-label="手册分页">
+<a class="overview" href="../docs.html">概述</a>
+<p>使用</p>
+<a href="register.html">注册账号</a>
+<a href="login.html">登录</a>
+<a href="friends.html">加好友</a>
+<a href="invite.html">邀请别人一起记</a>
+<a href="invite-code.html">用邀请码加入</a>
+<a href="apply.html">申请加入一场</a>
+<a href="local.html">自己记一场</a>
+<a href="export.html">导出、词库和备份</a>
+<a href="cloud.html">换一台设备</a>
+<a href="share.html" aria-current="page">把已有会话给另一个账号</a>
+<a href="public.html">发公开页</a>
+<a href="files.html">数据在这台设备的哪里</a>
+<a href="install.html">安装客户端</a>
+<p>部署</p>
+<a href="deploy.html">开始之前</a>
+<a href="deploy-compose.html">Docker Compose 一键</a>
+<a href="deploy-docker.html">已经克隆好的 Docker</a>
+<a href="deploy-node.html">原生 Node.js 一键</a>
+<a href="deploy-run.html">直接运行</a>
+<a href="admin.html">第一个管理员</a>
+<a href="web.html">网页客户端</a>
+<a href="update.html">更新已有服务器</a>
+<a href="https.html">前面加 HTTPS</a>
+<p>配置</p>
+<a href="config.html">配置</a>
+<p>继续开发</p>
+<a href="dev.html">继续开发</a>
+</nav></aside>
+<article class="wrap doc">
+  <h1>把已有会话给另一个账号</h1>
+<p>将当前账号中已有的会话授权给另一个账号查看；在允许修改时，对方可以修改记录。对方须在同一台服务器上有账号，不必先成为好友。对方不会因此加入该会话的实时协作，当前正在记录的会话也不会被切换。</p>
+  <h3>入口</h3>
+  <p>先<a href="login.html">登录</a>。回到「会话」，在展开的「同步与协作（可选）」里。服务器还提供这项旧能力时，才会有下面三个名字之一的按钮：</p>
+  <ul>
+    <li>服务器能一次共享多场：按钮是「共享会话」。</li>
+    <li>服务器有好友、但这边仍是旧入口：按钮是「旧版共享」。</li>
+    <li>服务器没有好友功能、只剩旧的账号共享：按钮是「跨账号共享」。</li>
+  </ul>
+  <p>没有该按钮，表示这台服务器不再提供旧共享入口。新的共同记录从「好友与邀请」进入，见<a href="invite.html">邀请别人一起记</a>。</p>
+  <h3>发送</h3>
+  <ol>
+    <li>点上面那个按钮。能多选时，对话框标题是「共享会话」。</li>
+    <li>范围二选一。「持续共享全部」包含现在和以后新建的本人会话。新的本地会话要先完成个人云同步，对方才看得到。「多选会话」只共享勾上的场，以后新建的不会自动算进去，也不会把他人共享来的会话再次转出。</li>
+    <li>权限。「仅查看」只能看。「允许新增、修改记录」可以改。要允许删记录，必须另外打开，而且必须同时允许修改。删除整个会话、结束会话、再转授给别人，始终只有所有者能做。已经结束的会话只能查看。</li>
+    <li>接收人：选择好友，或输入同一台服务器上的用户名。没选人、又没勾场，也没选持续共享全部时，发不出去。</li>
+    <li>点「发送共享邀请」。</li>
+  </ol>
+  <h3>对方接受</h3>
+  <ol>
+    <li>对方在同一台服务器登录。收到的在「收到的共享邀请」。没有待处理时，这里是「暂无待处理的共享邀请」。</li>
+    <li>接受之后，提示是：已接受共享邀请，可以在「历史会话 → 共享」中查看。当前记录会话不会切换。</li>
+    <li>对方到「会话」的历史里打开「共享」，再点击「浏览共享会话」查看被授权的会话。</li>
+  </ol>
+  <div class="callout">
+    <p>完成后，对方看到的是被授权的会话，而不是一场实时共同记录。两人同时记录同一会话时，使用<a href="invite.html">邀请别人一起记</a>。</p>
+  </div>
+  <h3>词库开关</h3>
+  <p>「共享词库」是这项授权上的一个开关，新开的授权默认打开。更早发出、当时还没有这个开关的授权保持关闭。服务器太旧、没有这项能力时，客户端不显示这个开关。</p>
+  <p>打开之后，对方只能在这些共享会话中使用授权方的设备、天线、QTH 做联想。在被允许修改记录时，还可以按呼号填回设备、天线、QTH、功率和高度。对方不能修改授权方的词库，内容也不会写入对方自己的词库或数据库。关闭开关或撤销授权后，对方不能再使用。</p>
+  <h3>撤销</h3>
+  <p>「已发出的共享」里点「撤销共享」。撤销后，对方不能再靠这项授权查看或操作。已经另外加入某场协作的人，不因这次撤销被移出那场协作。</p>
+  <h3>无法完成</h3>
+  <ul>
+    <li>找不到「共享会话」「旧版共享」或「跨账号共享」：还没登录，或这台服务器已经不再提供这个入口。</li>
+    <li>接受后当前会话没有切换：接受共享邀请不会切换正在记录的会话。共享来的会话在历史的「共享」中查看。</li>
+    <li>对方看不到新建会话：范围为「多选会话」时，新建会话不会自动包含。改为「持续共享全部」，或另行勾选该会话。持续共享的新建会话须先完成云同步。</li>
+  </ul>
+
+</article>
+</div>
+</main>
+<footer>
+  <div class="wrap foot">
+    <span>CRL · Callsign Roll Log · © 2026 Mazha0309 · BG5CRL · AGPL-3.0</span>
+    <nav>
+      <a href="../index.html">首页</a>
+      <a href="../index.html#download">下载</a>
+      <a href="https://github.com/Mazha0309/CallsignRollLog">客户端仓库</a>
+      <a href="https://github.com/Mazha0309/CallsignRollLogServer">服务端仓库</a>
+      <a href="https://github.com/Mazha0309/CallsignRollLog/issues">反馈</a>
+    </nav>
+  </div>
+</footer>
+<script>
+(function(){
+  var root=document.documentElement,KEY='crl-theme',saved=null;
+  try{saved=localStorage.getItem(KEY);}catch(e){}
+  root.setAttribute('data-theme',saved||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'));
+  function tg(){document.getElementById('tg').setAttribute('d',root.getAttribute('data-theme')==='dark'
+    ?'M12 3v2m0 14v2M5.6 5.6l1.4 1.4m10 10 1.4 1.4M3 12h2m14 0h2M5.6 18.4l1.4-1.4m10-10 1.4-1.4M16 12a4 4 0 1 1-8 0 4 4 0 0 1 8 0z'
+    :'M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z');}
+  tg();
+  document.getElementById('theme').addEventListener('click',function(){
+    var n=root.getAttribute('data-theme')==='dark'?'light':'dark';
+    root.setAttribute('data-theme',n);tg();try{localStorage.setItem(KEY,n);}catch(e){}
+  });
+  var nav=document.getElementById('nav');
+  document.getElementById('hamb').addEventListener('click',function(){nav.classList.toggle('open');});
+  nav.addEventListener('click',function(e){if(e.target.tagName==='A')nav.classList.remove('open');});
+
+  var toggle=document.querySelector('.rail-toggle');
+  if(toggle) toggle.addEventListener('click',function(){
+    var rail=toggle.closest('.rail');
+    var open=rail.classList.toggle('open');
+    toggle.setAttribute('aria-expanded',open?'true':'false');
+  });
+  var cur=document.querySelector('.sidenav a[aria-current=page]');
+  if(cur){
+    var rail=cur.closest('.rail');
+    if(rail && matchMedia('(min-width:861px)').matches) rail.scrollTop=Math.max(0,cur.offsetTop-rail.clientHeight/3);
+  }
+})();
+</script>
+</body>
+</html>

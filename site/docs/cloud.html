@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>换一台设备 · 使用手册 · CRL</title>
+<meta name="description" content="Callsign Roll Log 使用手册：换一台设备。">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Callsign Roll Log">
+<meta property="og:title" content="换一台设备 · 使用手册 · CRL">
+<meta property="og:description" content="Callsign Roll Log 使用手册：换一台设备。">
+<meta property="og:url" content="https://crl.mazha0309.com/docs/cloud.html">
+<meta property="og:image" content="https://crl.mazha0309.com/icon.png">
+<meta name="twitter:card" content="summary">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="../icon.png" type="image/png">
+<link rel="stylesheet" href="../docs.css">
+</head>
+<body>
+<header>
+  <div class="wrap hd">
+    <a class="brand" href="../index.html">
+      <img src="../icon.png" alt="">
+      <span class="t">CRL <span>Callsign Roll Log</span></span>
+    </a>
+    <nav class="site" id="nav">
+      <a href="../index.html#features">功能</a>
+      <a href="../index.html#collab">协作</a>
+      <a href="../docs.html" aria-current="page">文档</a>
+      <a href="../index.html#download">下载</a>
+      <a href="../index.html#open">开源</a>
+    </nav>
+    <button class="ic" id="hamb" aria-label="菜单"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+    <button class="ic" id="theme" aria-label="深浅色"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path id="tg" d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+  </div>
+</header>
+<main>
+<div class="frame">
+<aside class="rail">
+<button class="rail-toggle" type="button" aria-expanded="false">手册目录</button>
+<nav class="sidenav" aria-label="手册分页">
+<a class="overview" href="../docs.html">概述</a>
+<p>使用</p>
+<a href="register.html">注册账号</a>
+<a href="login.html">登录</a>
+<a href="friends.html">加好友</a>
+<a href="invite.html">邀请别人一起记</a>
+<a href="invite-code.html">用邀请码加入</a>
+<a href="apply.html">申请加入一场</a>
+<a href="local.html">自己记一场</a>
+<a href="export.html">导出、词库和备份</a>
+<a href="cloud.html" aria-current="page">换一台设备</a>
+<a href="share.html">把已有会话给另一个账号</a>
+<a href="public.html">发公开页</a>
+<a href="files.html">数据在这台设备的哪里</a>
+<a href="install.html">安装客户端</a>
+<p>部署</p>
+<a href="deploy.html">开始之前</a>
+<a href="deploy-compose.html">Docker Compose 一键</a>
+<a href="deploy-docker.html">已经克隆好的 Docker</a>
+<a href="deploy-node.html">原生 Node.js 一键</a>
+<a href="deploy-run.html">直接运行</a>
+<a href="admin.html">第一个管理员</a>
+<a href="web.html">网页客户端</a>
+<a href="update.html">更新已有服务器</a>
+<a href="https.html">前面加 HTTPS</a>
+<p>配置</p>
+<a href="config.html">配置</a>
+<p>继续开发</p>
+<a href="dev.html">继续开发</a>
+</nav></aside>
+<article class="wrap doc">
+  <h1>换一台设备</h1>
+<p>更换电脑或手机后继续记录自己的会话，使用个人云。两台设备登录<strong>同一个账号</strong>，且服务器须提供个人云。这不是将会话交给他人，也不是协作。</p>
+  <h3>入口</h3>
+  <p>「数据 → 本地数据库」，区域名称为「个人云同步」。说明为：个人会话、点名记录和词库改动会在已登录设备间自动双向同步；协作会话仍走自己的实时协作。</p>
+  <p>未登录时，此处显示「登录服务器后自动同步个人记录和词库改动」。登录后会自动同步。进行中显示「正在同步个人记录和词库改动…」。完成后显示「个人记录和词库改动均已同步」。也可点击「同步个人快照」立即同步一次。</p>
+  <p>这一块会列出本机有多少场、多少条，以及账户云快照有多少场、多少条。词库另计已修改的项，不是整份内置词库。</p>
+  <h3>配对</h3>
+  <ol>
+    <li>第一台按<a href="login.html">登录</a>登进这台服务器，确认上面的状态变成已同步。本机上的个人会话才会进入云快照。</li>
+    <li>第二台安装客户端，填<strong>同一台</strong>服务器，用同一个用户名和密码登录。</li>
+    <li>打开「数据 → 本地数据库」。两边改的不是同一处时，会自动合并。首次配对或需要确认时，状态为「首次配对或真实编辑冲突需要确认；互不冲突的改动已安全合并。」核对两边数量后，点击「确认安全合并」。</li>
+  </ol>
+  <div class="callout">
+    <p>从云端换下来的是个人记录和词库改动。不会改这台设备的设置，也不会改协作会话。个人记录不会写进协作会话，也不会出现在服务器的协作会话列表里。</p>
+  </div>
+  <h3>字段冲突</h3>
+  <p>只有同一个字段两边都改过，才需要选择。打开「数据 → 同步冲突」。页标题是「个人云同步冲突」。说明是：逐项比较本机、云端和共同基线。每一项都须明确选择后才会合并。协作会话的冲突不在此页，仍在会话中处理。</p>
+  <ul>
+    <li>可以「全部选本机」或「全部选云端」，也可以逐项「保留本机」「保留云端」。</li>
+    <li>进度是「已选择多少项」。没有全部选完时，「应用选择」不会做完。</li>
+    <li>完成后提示「冲突选择已应用并完成同步」。</li>
+  </ul>
+  <p>没有字段冲突、但还要确认第一次合并时，此页要求返回「本地数据库」核对数量，再点击「确认安全合并」。</p>
+  <h3>整份替换</h3>
+  <p>都在「本地数据库」的个人云一块里。两项操作都要求输入完整确认句。</p>
+  <ul>
+    <li>「以本机替换云快照」：用这台设备上的个人记录，整份换掉账户云里的个人记录，其他已登录设备随后也会变成这份。确认句是「用本机记录替换账户云快照」。不会写入或修改协作会话。</li>
+    <li>「从云快照恢复本机」：用账户云里的个人记录换掉这台设备上的个人记录。词库、设置和协作会话不受影响。确认句是「用账户云快照替换本机记录」。</li>
+  </ul>
+  <p>整库导入或清空之后，自动覆盖会先停住，等待确认新的同步基线。尚未核对两边数量时，不要点击「以本机替换云快照」。</p>
+  <h3>无法完成</h3>
+  <ul>
+    <li>「当前服务器版本不支持账户个人云快照，请先升级服务器」：这台服务器太旧。升级之前，换设备只能走<a href="export.html">导出、词库和备份</a>里的整库文件。</li>
+    <li>第二台已登录但会话为空：账号不同、服务器不同，或第一台尚未同步完成。返回第一台，确认状态是否为「均已同步」。</li>
+    <li>将会话交给另一账号不使用个人云。共同记录见<a href="invite.html">邀请别人一起记</a>。已有会话授权见<a href="share.html">把已有会话给另一个账号</a>。</li>
+  </ul>
+
+</article>
+</div>
+</main>
+<footer>
+  <div class="wrap foot">
+    <span>CRL · Callsign Roll Log · © 2026 Mazha0309 · BG5CRL · AGPL-3.0</span>
+    <nav>
+      <a href="../index.html">首页</a>
+      <a href="../index.html#download">下载</a>
+      <a href="https://github.com/Mazha0309/CallsignRollLog">客户端仓库</a>
+      <a href="https://github.com/Mazha0309/CallsignRollLogServer">服务端仓库</a>
+      <a href="https://github.com/Mazha0309/CallsignRollLog/issues">反馈</a>
+    </nav>
+  </div>
+</footer>
+<script>
+(function(){
+  var root=document.documentElement,KEY='crl-theme',saved=null;
+  try{saved=localStorage.getItem(KEY);}catch(e){}
+  root.setAttribute('data-theme',saved||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'));
+  function tg(){document.getElementById('tg').setAttribute('d',root.getAttribute('data-theme')==='dark'
+    ?'M12 3v2m0 14v2M5.6 5.6l1.4 1.4m10 10 1.4 1.4M3 12h2m14 0h2M5.6 18.4l1.4-1.4m10-10 1.4-1.4M16 12a4 4 0 1 1-8 0 4 4 0 0 1 8 0z'
+    :'M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z');}
+  tg();
+  document.getElementById('theme').addEventListener('click',function(){
+    var n=root.getAttribute('data-theme')==='dark'?'light':'dark';
+    root.setAttribute('data-theme',n);tg();try{localStorage.setItem(KEY,n);}catch(e){}
+  });
+  var nav=document.getElementById('nav');
+  document.getElementById('hamb').addEventListener('click',function(){nav.classList.toggle('open');});
+  nav.addEventListener('click',function(e){if(e.target.tagName==='A')nav.classList.remove('open');});
+
+  var toggle=document.querySelector('.rail-toggle');
+  if(toggle) toggle.addEventListener('click',function(){
+    var rail=toggle.closest('.rail');
+    var open=rail.classList.toggle('open');
+    toggle.setAttribute('aria-expanded',open?'true':'false');
+  });
+  var cur=document.querySelector('.sidenav a[aria-current=page]');
+  if(cur){
+    var rail=cur.closest('.rail');
+    if(rail && matchMedia('(min-width:861px)').matches) rail.scrollTop=Math.max(0,cur.offsetTop-rail.clientHeight/3);
+  }
+})();
+</script>
+</body>
+</html>

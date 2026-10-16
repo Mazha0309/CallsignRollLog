@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>申请加入一场 · 使用手册 · CRL</title>
+<meta name="description" content="Callsign Roll Log 使用手册：申请加入一场。">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Callsign Roll Log">
+<meta property="og:title" content="申请加入一场 · 使用手册 · CRL">
+<meta property="og:description" content="Callsign Roll Log 使用手册：申请加入一场。">
+<meta property="og:url" content="https://crl.mazha0309.com/docs/apply.html">
+<meta property="og:image" content="https://crl.mazha0309.com/icon.png">
+<meta name="twitter:card" content="summary">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="../icon.png" type="image/png">
+<link rel="stylesheet" href="../docs.css">
+</head>
+<body>
+<header>
+  <div class="wrap hd">
+    <a class="brand" href="../index.html">
+      <img src="../icon.png" alt="">
+      <span class="t">CRL <span>Callsign Roll Log</span></span>
+    </a>
+    <nav class="site" id="nav">
+      <a href="../index.html#features">功能</a>
+      <a href="../index.html#collab">协作</a>
+      <a href="../docs.html" aria-current="page">文档</a>
+      <a href="../index.html#download">下载</a>
+      <a href="../index.html#open">开源</a>
+    </nav>
+    <button class="ic" id="hamb" aria-label="菜单"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+    <button class="ic" id="theme" aria-label="深浅色"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path id="tg" d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+  </div>
+</header>
+<main>
+<div class="frame">
+<aside class="rail">
+<button class="rail-toggle" type="button" aria-expanded="false">手册目录</button>
+<nav class="sidenav" aria-label="手册分页">
+<a class="overview" href="../docs.html">概述</a>
+<p>使用</p>
+<a href="register.html">注册账号</a>
+<a href="login.html">登录</a>
+<a href="friends.html">加好友</a>
+<a href="invite.html">邀请别人一起记</a>
+<a href="invite-code.html">用邀请码加入</a>
+<a href="apply.html" aria-current="page">申请加入一场</a>
+<a href="local.html">自己记一场</a>
+<a href="export.html">导出、词库和备份</a>
+<a href="cloud.html">换一台设备</a>
+<a href="share.html">把已有会话给另一个账号</a>
+<a href="public.html">发公开页</a>
+<a href="files.html">数据在这台设备的哪里</a>
+<a href="install.html">安装客户端</a>
+<p>部署</p>
+<a href="deploy.html">开始之前</a>
+<a href="deploy-compose.html">Docker Compose 一键</a>
+<a href="deploy-docker.html">已经克隆好的 Docker</a>
+<a href="deploy-node.html">原生 Node.js 一键</a>
+<a href="deploy-run.html">直接运行</a>
+<a href="admin.html">第一个管理员</a>
+<a href="web.html">网页客户端</a>
+<a href="update.html">更新已有服务器</a>
+<a href="https.html">前面加 HTTPS</a>
+<p>配置</p>
+<a href="config.html">配置</a>
+<p>继续开发</p>
+<a href="dev.html">继续开发</a>
+</nav></aside>
+<article class="wrap doc">
+  <h1>申请加入一场</h1>
+<p>须由负责人开放该会话。申请者须已与负责人互为<a href="friends.html">好友</a>，并登录同一台服务器。默认会话为私有，好友不可见。</p>
+  <h3>开放加入</h3>
+  <ol>
+    <li>该会话须已是协作会话。仍只在本机时，先按<a href="invite.html">邀请别人一起记</a>里的「开启当前会话协作」上传。该步骤不会自动向好友公开。</li>
+    <li>打开「好友与邀请 → 会话」，找到自己是负责人的那场。</li>
+    <li>「加入方式」三选一，只影响这一场：</li>
+  </ol>
+  <div class="scroll">
+  <table>
+    <thead><tr><th>选项</th><th>好友侧结果</th></tr></thead>
+    <tbody>
+      <tr><td>仅邀请</td><td>该会话不出现在好友的列表中。只能由负责人点击「邀请参与」，或使用邀请码。界面上也会写成「仅邀请可加入」。</td></tr>
+      <tr><td>好友申请，审批后加入</td><td>好友能看到标题，按钮是「申请加入」。负责人在「消息」中接受后，对方才能查看记录。仅看到标题表示尚未加入。</td></tr>
+      <tr><td>好友直接加入</td><td>同一台服务器上的好友无需审批即可加入，并能看到该会话已有和此后新增的全部记录。打开前会要求确认。只影响这一场，其他会话仍然私有。该权限只对之后直接加入的人生效，已在会话中的成员不变。已被移出的人须重新邀请或再次审批。</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <h3>提交申请</h3>
+  <ol>
+    <li>打开「好友与邀请 → 会话」。没有开放的会话时，显示「暂无好友开放的会话。你也可以把当前会话用于协作。」</li>
+    <li>在对方的该会话上，需要审批时点击「申请加入」。对话框显示该会话名称。选择「共同记录」或「只能查看」后，再次点击「申请加入」。</li>
+    <li>对方开启直接加入时，按钮为「直接加入」，并标明新成员是「共同记录」还是「只能查看」。</li>
+    <li>需要审批时，负责人到「好友与邀请 → 消息 → 收到的」，这条类型是「加入申请」，点「接受」或「拒绝」。自己发出的请求在「我发出的」。</li>
+  </ol>
+  <div class="callout">
+    <p>接受后，申请者会下载该会话并可以打开。在此之前，申请者只能在列表中看到标题。负责人也可以不等待申请，直接使用「邀请参与」邀请指定好友。</p>
+  </div>
+  <h3>无法完成</h3>
+  <ul>
+    <li>好友的「会话」中没有该会话：加入方式仍为「仅邀请」，或对方登录的不是这台服务器，或双方还不是好友。</li>
+    <li>「申请加入」不可用：该申请已处于「等待对方处理」。等待负责人处理，或在被拒绝后重新申请。</li>
+    <li>负责人已改为必须审批，而页面仍是旧状态：刷新。界面会提示负责人已改为申请加入，请刷新后提交申请。</li>
+    <li>已被移出该会话时，不能通过原来的直接加入再次进入。提示为「你已被移出此会话，请联系负责人重新邀请。」</li>
+  </ul>
+
+</article>
+</div>
+</main>
+<footer>
+  <div class="wrap foot">
+    <span>CRL · Callsign Roll Log · © 2026 Mazha0309 · BG5CRL · AGPL-3.0</span>
+    <nav>
+      <a href="../index.html">首页</a>
+      <a href="../index.html#download">下载</a>
+      <a href="https://github.com/Mazha0309/CallsignRollLog">客户端仓库</a>
+      <a href="https://github.com/Mazha0309/CallsignRollLogServer">服务端仓库</a>
+      <a href="https://github.com/Mazha0309/CallsignRollLog/issues">反馈</a>
+    </nav>
+  </div>
+</footer>
+<script>
+(function(){
+  var root=document.documentElement,KEY='crl-theme',saved=null;
+  try{saved=localStorage.getItem(KEY);}catch(e){}
+  root.setAttribute('data-theme',saved||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'));
+  function tg(){document.getElementById('tg').setAttribute('d',root.getAttribute('data-theme')==='dark'
+    ?'M12 3v2m0 14v2M5.6 5.6l1.4 1.4m10 10 1.4 1.4M3 12h2m14 0h2M5.6 18.4l1.4-1.4m10-10 1.4-1.4M16 12a4 4 0 1 1-8 0 4 4 0 0 1 8 0z'
+    :'M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z');}
+  tg();
+  document.getElementById('theme').addEventListener('click',function(){
+    var n=root.getAttribute('data-theme')==='dark'?'light':'dark';
+    root.setAttribute('data-theme',n);tg();try{localStorage.setItem(KEY,n);}catch(e){}
+  });
+  var nav=document.getElementById('nav');
+  document.getElementById('hamb').addEventListener('click',function(){nav.classList.toggle('open');});
+  nav.addEventListener('click',function(e){if(e.target.tagName==='A')nav.classList.remove('open');});
+
+  var toggle=document.querySelector('.rail-toggle');
+  if(toggle) toggle.addEventListener('click',function(){
+    var rail=toggle.closest('.rail');
+    var open=rail.classList.toggle('open');
+    toggle.setAttribute('aria-expanded',open?'true':'false');
+  });
+  var cur=document.querySelector('.sidenav a[aria-current=page]');
+  if(cur){
+    var rail=cur.closest('.rail');
+    if(rail && matchMedia('(min-width:861px)').matches) rail.scrollTop=Math.max(0,cur.offsetTop-rail.clientHeight/3);
+  }
+})();
+</script>
+</body>
+</html>

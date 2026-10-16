@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>自己记一场 · 使用手册 · CRL</title>
+<meta name="description" content="Callsign Roll Log 使用手册：自己记一场。">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Callsign Roll Log">
+<meta property="og:title" content="自己记一场 · 使用手册 · CRL">
+<meta property="og:description" content="Callsign Roll Log 使用手册：自己记一场。">
+<meta property="og:url" content="https://crl.mazha0309.com/docs/local.html">
+<meta property="og:image" content="https://crl.mazha0309.com/icon.png">
+<meta name="twitter:card" content="summary">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="../icon.png" type="image/png">
+<link rel="stylesheet" href="../docs.css">
+</head>
+<body>
+<header>
+  <div class="wrap hd">
+    <a class="brand" href="../index.html">
+      <img src="../icon.png" alt="">
+      <span class="t">CRL <span>Callsign Roll Log</span></span>
+    </a>
+    <nav class="site" id="nav">
+      <a href="../index.html#features">功能</a>
+      <a href="../index.html#collab">协作</a>
+      <a href="../docs.html" aria-current="page">文档</a>
+      <a href="../index.html#download">下载</a>
+      <a href="../index.html#open">开源</a>
+    </nav>
+    <button class="ic" id="hamb" aria-label="菜单"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+    <button class="ic" id="theme" aria-label="深浅色"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path id="tg" d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+  </div>
+</header>
+<main>
+<div class="frame">
+<aside class="rail">
+<button class="rail-toggle" type="button" aria-expanded="false">手册目录</button>
+<nav class="sidenav" aria-label="手册分页">
+<a class="overview" href="../docs.html">概述</a>
+<p>使用</p>
+<a href="register.html">注册账号</a>
+<a href="login.html">登录</a>
+<a href="friends.html">加好友</a>
+<a href="invite.html">邀请别人一起记</a>
+<a href="invite-code.html">用邀请码加入</a>
+<a href="apply.html">申请加入一场</a>
+<a href="local.html" aria-current="page">自己记一场</a>
+<a href="export.html">导出、词库和备份</a>
+<a href="cloud.html">换一台设备</a>
+<a href="share.html">把已有会话给另一个账号</a>
+<a href="public.html">发公开页</a>
+<a href="files.html">数据在这台设备的哪里</a>
+<a href="install.html">安装客户端</a>
+<p>部署</p>
+<a href="deploy.html">开始之前</a>
+<a href="deploy-compose.html">Docker Compose 一键</a>
+<a href="deploy-docker.html">已经克隆好的 Docker</a>
+<a href="deploy-node.html">原生 Node.js 一键</a>
+<a href="deploy-run.html">直接运行</a>
+<a href="admin.html">第一个管理员</a>
+<a href="web.html">网页客户端</a>
+<a href="update.html">更新已有服务器</a>
+<a href="https.html">前面加 HTTPS</a>
+<p>配置</p>
+<a href="config.html">配置</a>
+<p>继续开发</p>
+<a href="dev.html">继续开发</a>
+</nav></aside>
+<article class="wrap doc">
+  <h1>自己记一场</h1>
+<p>不需要服务器，也不需要账号。记录留在这台设备上。结束记录不会上传，也不会变成公开页。</p>
+  <h3>新建</h3>
+  <ol>
+    <li>打开本机客户端，或已部署的网页客户端。尚未安装时见<a href="install.html">安装客户端</a>。</li>
+    <li>点「会话」。这一页的主按钮是「新建会话」。没有服务器时，这里不会出现「加入协作」或公开分享。</li>
+    <li>对话框标题是「新建点名会话」。名称预填为当前日期和时间，可以修改。取消则不创建。确认后，该会话成为当前会话。</li>
+  </ol>
+  <h3>点名台</h3>
+  <p>点「点名台」。没有当前会话时，这里不是一张能填的空表，而是提示先新建会话或加入协作。此页不能注册。</p>
+  <ol>
+    <li>一条记录上有：主控呼号、来台呼号、设备、天线、功率、QTH、高度、时间、信号报告、备注。</li>
+    <li>呼号会转为大写。主控呼号填写后会保留，连续记录下一条时不必再填。</li>
+    <li>设备、天线、呼号和 QTH 会按词库联想。新输入的内容会进入这四类词库。功率和高度不进这四类词库。</li>
+    <li>来台呼号为空时不能保存，提示「请输入点名呼号」。填写后点击「保存记录」。成功时提示「记录已添加」。</li>
+    <li>刚保存的上一条可以撤销。表中已有记录可以再次打开并编辑，或删除。</li>
+  </ol>
+  <div class="callout">
+    <p>在「设置 → 工作台」打开「呼号历史一键复用」后，呼号栏可按本机以往记录填回设备、天线、QTH、功率和高度。使用的是本机历史，不是他人的词库。</p>
+  </div>
+  <h3>结束与继续</h3>
+  <ol>
+    <li>返回「会话」，在该会话上点击「结束记录」。确认框标题为「结束记录」。正文为：结束这场的记录吗？已有记录会保留，可随时查看或恢复。此操作不会删除数据。</li>
+    <li>确认后提示「记录已结束，已有记录已保留」。切换页面、关闭软件或暂时离开不会结束记录。客户端不会因闲置自动结束记录。</li>
+    <li>历史可按「全部」「我的记录」「共同记录」「已结束」筛选。没有任何协作副本时，不显示「共同记录」。历史区说明为：「已结束」只按会话状态筛选，不代表公开归档。</li>
+    <li>仍在进行中的会话，点击「继续记录」。已结束的本地会话，点击「重新激活」。确认框为：恢复这场并切换过去继续记录吗？其他会话不受影响。协作会话不能在此作为本地会话重新打开，须由发起人在「协作与成员」中恢复。</li>
+  </ol>
+  <h3>删除本机会话</h3>
+  <p>「永久删除本机数据」要求输入完整会话名。删除的是本机上的该会话及其记录。确认文案说明：不会删除或关闭服务器上的共享会话。停止记录使用「结束记录」，不使用删除。</p>
+  <h3>无法完成</h3>
+  <ul>
+    <li>点名台没有表单：没有当前会话。返回「会话」，点击「新建会话」。</li>
+    <li>「结束记录」被拒绝并提示这是共同记录：该会话已在协作中。在「协作与成员」中选择「结束共同记录」，或点击「离开协作」。不能按仅本机会话结束。</li>
+  </ul>
+
+</article>
+</div>
+</main>
+<footer>
+  <div class="wrap foot">
+    <span>CRL · Callsign Roll Log · © 2026 Mazha0309 · BG5CRL · AGPL-3.0</span>
+    <nav>
+      <a href="../index.html">首页</a>
+      <a href="../index.html#download">下载</a>
+      <a href="https://github.com/Mazha0309/CallsignRollLog">客户端仓库</a>
+      <a href="https://github.com/Mazha0309/CallsignRollLogServer">服务端仓库</a>
+      <a href="https://github.com/Mazha0309/CallsignRollLog/issues">反馈</a>
+    </nav>
+  </div>
+</footer>
+<script>
+(function(){
+  var root=document.documentElement,KEY='crl-theme',saved=null;
+  try{saved=localStorage.getItem(KEY);}catch(e){}
+  root.setAttribute('data-theme',saved||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'));
+  function tg(){document.getElementById('tg').setAttribute('d',root.getAttribute('data-theme')==='dark'
+    ?'M12 3v2m0 14v2M5.6 5.6l1.4 1.4m10 10 1.4 1.4M3 12h2m14 0h2M5.6 18.4l1.4-1.4m10-10 1.4-1.4M16 12a4 4 0 1 1-8 0 4 4 0 0 1 8 0z'
+    :'M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z');}
+  tg();
+  document.getElementById('theme').addEventListener('click',function(){
+    var n=root.getAttribute('data-theme')==='dark'?'light':'dark';
+    root.setAttribute('data-theme',n);tg();try{localStorage.setItem(KEY,n);}catch(e){}
+  });
+  var nav=document.getElementById('nav');
+  document.getElementById('hamb').addEventListener('click',function(){nav.classList.toggle('open');});
+  nav.addEventListener('click',function(e){if(e.target.tagName==='A')nav.classList.remove('open');});
+
+  var toggle=document.querySelector('.rail-toggle');
+  if(toggle) toggle.addEventListener('click',function(){
+    var rail=toggle.closest('.rail');
+    var open=rail.classList.toggle('open');
+    toggle.setAttribute('aria-expanded',open?'true':'false');
+  });
+  var cur=document.querySelector('.sidenav a[aria-current=page]');
+  if(cur){
+    var rail=cur.closest('.rail');
+    if(rail && matchMedia('(min-width:861px)').matches) rail.scrollTop=Math.max(0,cur.offsetTop-rail.clientHeight/3);
+  }
+})();
+</script>
+</body>
+</html>

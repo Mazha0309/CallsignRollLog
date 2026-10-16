@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>开始之前 · 使用手册 · CRL</title>
+<meta name="description" content="Callsign Roll Log 使用手册：开始之前。">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Callsign Roll Log">
+<meta property="og:title" content="开始之前 · 使用手册 · CRL">
+<meta property="og:description" content="Callsign Roll Log 使用手册：开始之前。">
+<meta property="og:url" content="https://crl.mazha0309.com/docs/deploy.html">
+<meta property="og:image" content="https://crl.mazha0309.com/icon.png">
+<meta name="twitter:card" content="summary">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="../icon.png" type="image/png">
+<link rel="stylesheet" href="../docs.css">
+</head>
+<body>
+<header>
+  <div class="wrap hd">
+    <a class="brand" href="../index.html">
+      <img src="../icon.png" alt="">
+      <span class="t">CRL <span>Callsign Roll Log</span></span>
+    </a>
+    <nav class="site" id="nav">
+      <a href="../index.html#features">功能</a>
+      <a href="../index.html#collab">协作</a>
+      <a href="../docs.html" aria-current="page">文档</a>
+      <a href="../index.html#download">下载</a>
+      <a href="../index.html#open">开源</a>
+    </nav>
+    <button class="ic" id="hamb" aria-label="菜单"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+    <button class="ic" id="theme" aria-label="深浅色"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path id="tg" d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+  </div>
+</header>
+<main>
+<div class="frame">
+<aside class="rail">
+<button class="rail-toggle" type="button" aria-expanded="false">手册目录</button>
+<nav class="sidenav" aria-label="手册分页">
+<a class="overview" href="../docs.html">概述</a>
+<p>使用</p>
+<a href="register.html">注册账号</a>
+<a href="login.html">登录</a>
+<a href="friends.html">加好友</a>
+<a href="invite.html">邀请别人一起记</a>
+<a href="invite-code.html">用邀请码加入</a>
+<a href="apply.html">申请加入一场</a>
+<a href="local.html">自己记一场</a>
+<a href="export.html">导出、词库和备份</a>
+<a href="cloud.html">换一台设备</a>
+<a href="share.html">把已有会话给另一个账号</a>
+<a href="public.html">发公开页</a>
+<a href="files.html">数据在这台设备的哪里</a>
+<a href="install.html">安装客户端</a>
+<p>部署</p>
+<a href="deploy.html" aria-current="page">开始之前</a>
+<a href="deploy-compose.html">Docker Compose 一键</a>
+<a href="deploy-docker.html">已经克隆好的 Docker</a>
+<a href="deploy-node.html">原生 Node.js 一键</a>
+<a href="deploy-run.html">直接运行</a>
+<a href="admin.html">第一个管理员</a>
+<a href="web.html">网页客户端</a>
+<a href="update.html">更新已有服务器</a>
+<a href="https.html">前面加 HTTPS</a>
+<p>配置</p>
+<a href="config.html">配置</a>
+<p>继续开发</p>
+<a href="dev.html">继续开发</a>
+</nav></aside>
+<article class="wrap doc">
+  <h1>开始之前</h1>
+<p>仅在本机记录时不必部署服务器。按<a href="install.html">安装客户端</a>下载。</p>
+  <p>需要注册、好友、共同记录、个人云或公开页时，部署这套服务器。网页客户端可以与服务器放在同一网站，也可以单独部署，见<a href="web.html">网页客户端</a>。</p>
+  <p>四种安装方式选择一种，直到本机可以打开页面。密钥只生成一次。升级时不要重新生成，否则已经发出的登录、邀请码和 Live Share 链接会失效。</p>
+  <ul>
+    <li>新机器、希望少执行命令：<a href="deploy-compose.html">Docker Compose 一键</a>。</li>
+    <li>仓库已经克隆在这台机器上，用 Docker：<a href="deploy-docker.html">已经克隆好的 Docker</a>。</li>
+    <li>不使用 Docker，由脚本拉取代码并保持运行：<a href="deploy-node.html">原生 Node.js 一键</a>。</li>
+    <li>在本机前台运行或修改代码：<a href="deploy-run.html">直接运行</a>。</li>
+  </ul>
+  <h3>服务器要先有四把密钥</h3>
+  <p>一键脚本会生成并写入 <code>.env</code>。自行使用 Docker 或 <code>npm start</code> 时，在服务器仓库目录先做这一步：</p>
+  <pre><code>cp .env.example .env
+openssl rand -hex 32
+openssl rand -hex 24
+openssl rand -hex 32
+openssl rand -hex 32</code></pre>
+  <p>四个输出各使用一次，填入 <code>.env</code>。四项不能使用同一个值：</p>
+  <pre><code>JWT_SECRET=&lt;至少 32 字节&gt;
+ADMIN_BOOTSTRAP_TOKEN=&lt;至少 24 字节&gt;
+INVITE_HMAC_KEY=&lt;至少 32 字节&gt;
+PUBLIC_SHARE_HMAC_KEY=&lt;至少 32 字节&gt;</code></pre>
+  <ul>
+    <li><code>JWT_SECRET</code>：登录之后的令牌。生产环境不接受示例里的默认值。</li>
+    <li><code>ADMIN_BOOTSTRAP_TOKEN</code>：空库创建第一个管理员时用的引导密钥。空库第一次启动必须有它。创建管理员之后，不要把它当作日常登录密码。</li>
+    <li><code>INVITE_HMAC_KEY</code>：旧邀请码。不能和登录密钥相同。</li>
+    <li><code>PUBLIC_SHARE_HMAC_KEY</code>：Live Share 和公开页。必须单独设置，不能与其他密钥相同。</li>
+  </ul>
+  <p><code>.env</code> 不要提交到仓库，也不要发送给他人。在线备份是整份数据库，含密码哈希，但不包含 <code>.env</code>。更换机器时，数据库和 <code>.env</code> 都要保留。</p>
+  <div class="callout">
+    <p>页面可以打开后，下一步不是开放 <code>/register</code>。空库须先完成<a href="admin.html">第一个管理员</a>。管理员创建后，普通成员才能注册。</p>
+  </div>
+
+</article>
+</div>
+</main>
+<footer>
+  <div class="wrap foot">
+    <span>CRL · Callsign Roll Log · © 2026 Mazha0309 · BG5CRL · AGPL-3.0</span>
+    <nav>
+      <a href="../index.html">首页</a>
+      <a href="../index.html#download">下载</a>
+      <a href="https://github.com/Mazha0309/CallsignRollLog">客户端仓库</a>
+      <a href="https://github.com/Mazha0309/CallsignRollLogServer">服务端仓库</a>
+      <a href="https://github.com/Mazha0309/CallsignRollLog/issues">反馈</a>
+    </nav>
+  </div>
+</footer>
+<script>
+(function(){
+  var root=document.documentElement,KEY='crl-theme',saved=null;
+  try{saved=localStorage.getItem(KEY);}catch(e){}
+  root.setAttribute('data-theme',saved||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'));
+  function tg(){document.getElementById('tg').setAttribute('d',root.getAttribute('data-theme')==='dark'
+    ?'M12 3v2m0 14v2M5.6 5.6l1.4 1.4m10 10 1.4 1.4M3 12h2m14 0h2M5.6 18.4l1.4-1.4m10-10 1.4-1.4M16 12a4 4 0 1 1-8 0 4 4 0 0 1 8 0z'
+    :'M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z');}
+  tg();
+  document.getElementById('theme').addEventListener('click',function(){
+    var n=root.getAttribute('data-theme')==='dark'?'light':'dark';
+    root.setAttribute('data-theme',n);tg();try{localStorage.setItem(KEY,n);}catch(e){}
+  });
+  var nav=document.getElementById('nav');
+  document.getElementById('hamb').addEventListener('click',function(){nav.classList.toggle('open');});
+  nav.addEventListener('click',function(e){if(e.target.tagName==='A')nav.classList.remove('open');});
+
+  var toggle=document.querySelector('.rail-toggle');
+  if(toggle) toggle.addEventListener('click',function(){
+    var rail=toggle.closest('.rail');
+    var open=rail.classList.toggle('open');
+    toggle.setAttribute('aria-expanded',open?'true':'false');
+  });
+  var cur=document.querySelector('.sidenav a[aria-current=page]');
+  if(cur){
+    var rail=cur.closest('.rail');
+    if(rail && matchMedia('(min-width:861px)').matches) rail.scrollTop=Math.max(0,cur.offsetTop-rail.clientHeight/3);
+  }
+})();
+</script>
+</body>
+</html>

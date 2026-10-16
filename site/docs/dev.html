@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>继续开发 · 使用手册 · CRL</title>
+<meta name="description" content="Callsign Roll Log 使用手册：继续开发。">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Callsign Roll Log">
+<meta property="og:title" content="继续开发 · 使用手册 · CRL">
+<meta property="og:description" content="Callsign Roll Log 使用手册：继续开发。">
+<meta property="og:url" content="https://crl.mazha0309.com/docs/dev.html">
+<meta property="og:image" content="https://crl.mazha0309.com/icon.png">
+<meta name="twitter:card" content="summary">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="../icon.png" type="image/png">
+<link rel="stylesheet" href="../docs.css">
+</head>
+<body>
+<header>
+  <div class="wrap hd">
+    <a class="brand" href="../index.html">
+      <img src="../icon.png" alt="">
+      <span class="t">CRL <span>Callsign Roll Log</span></span>
+    </a>
+    <nav class="site" id="nav">
+      <a href="../index.html#features">功能</a>
+      <a href="../index.html#collab">协作</a>
+      <a href="../docs.html" aria-current="page">文档</a>
+      <a href="../index.html#download">下载</a>
+      <a href="../index.html#open">开源</a>
+    </nav>
+    <button class="ic" id="hamb" aria-label="菜单"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+    <button class="ic" id="theme" aria-label="深浅色"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path id="tg" d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+  </div>
+</header>
+<main>
+<div class="frame">
+<aside class="rail">
+<button class="rail-toggle" type="button" aria-expanded="false">手册目录</button>
+<nav class="sidenav" aria-label="手册分页">
+<a class="overview" href="../docs.html">概述</a>
+<p>使用</p>
+<a href="register.html">注册账号</a>
+<a href="login.html">登录</a>
+<a href="friends.html">加好友</a>
+<a href="invite.html">邀请别人一起记</a>
+<a href="invite-code.html">用邀请码加入</a>
+<a href="apply.html">申请加入一场</a>
+<a href="local.html">自己记一场</a>
+<a href="export.html">导出、词库和备份</a>
+<a href="cloud.html">换一台设备</a>
+<a href="share.html">把已有会话给另一个账号</a>
+<a href="public.html">发公开页</a>
+<a href="files.html">数据在这台设备的哪里</a>
+<a href="install.html">安装客户端</a>
+<p>部署</p>
+<a href="deploy.html">开始之前</a>
+<a href="deploy-compose.html">Docker Compose 一键</a>
+<a href="deploy-docker.html">已经克隆好的 Docker</a>
+<a href="deploy-node.html">原生 Node.js 一键</a>
+<a href="deploy-run.html">直接运行</a>
+<a href="admin.html">第一个管理员</a>
+<a href="web.html">网页客户端</a>
+<a href="update.html">更新已有服务器</a>
+<a href="https.html">前面加 HTTPS</a>
+<p>配置</p>
+<a href="config.html">配置</a>
+<p>继续开发</p>
+<a href="dev.html" aria-current="page">继续开发</a>
+</nav></aside>
+<article class="wrap doc">
+  <h1>继续开发</h1>
+<p>本页说明代码位置和验证命令。某个按钮的现行行为以软件和本手册为准。<code>docs/superpowers/</code> 是某次功能的设计和施工记录，不是现行说明书。和代码不一致时，以代码、测试和 <code>*-api-v1.md</code> 为准。</p>
+  <p>不要把签名私钥、keystore 口令、API 密钥写进仓库、文档或测试。不要为了查看效果而修改生产数据库，也不要使用真实账号登录生产服务器做试验。</p>
+  <h3>客户端</h3>
+  <p>仓库是 <a href="https://github.com/Mazha0309/CallsignRollLog">Mazha0309/CallsignRollLog</a>。界面在 <code>lib/</code>，本机数据库在 <code>rust/</code>。文案在 <code>lib/l10n/</code> 的 ARB 里。<code>lib/l10n/generated/</code> 不要手工修改，修改 ARB 后生成。</p>
+  <pre><code>git clone https://github.com/Mazha0309/CallsignRollLog.git
+cd CallsignRollLog
+flutter pub get</code></pre>
+  <p>需要 Flutter 3.44+、Dart 3.12+、Rust 1.91.1（<code>rust-toolchain.toml</code> 会固定）。Linux 构建还要 <code>libsecret-1-dev</code>。各平台的打包命令、Web 构建依赖和版本号工具在仓库 README。修改范围和提交前的检查见 <code>docs/development.md</code>。</p>
+  <p>改界面文案时，四个 ARB 一起改：<code>app_zh.arb</code>、<code>app_zh_CN.arb</code>、<code>app_en.arb</code>、<code>app_en_US.arb</code>。然后：</p>
+  <pre><code>flutter gen-l10n</code></pre>
+  <p>先运行本次修改对应的测试，不必一开始运行全部测试：</p>
+  <pre><code>flutter test test/providers/account_share_dictionary_test.dart
+flutter analyze</code></pre>
+  <p>将路径换成本次修改对应的测试。Rust 侧在 <code>rust/</code> 目录执行 <code>cargo test</code>。ARB 和生成文件一起提交。</p>
+  <h3>服务端</h3>
+  <p>仓库是 <a href="https://github.com/Mazha0309/CallsignRollLogServer">Mazha0309/CallsignRollLogServer</a>。HTTP 在 <code>src/api/</code>，成员门户在 <code>web/</code>，公开 Live Share 在 <code>live/</code>。迁移全在 <code>src/db/migrations.ts</code>。已发布的迁移正文不要修改。需要改表时新增一份迁移。</p>
+  <pre><code>git clone https://github.com/Mazha0309/CallsignRollLogServer.git
+cd CallsignRollLogServer
+cp .env.example .env
+npm ci
+(cd web &amp;&amp; npm ci)
+(cd live &amp;&amp; npm ci)
+npm run dev</code></pre>
+  <p>需要 Node.js 24.18+ 和 npm 10+。<code>.env</code> 按<a href="deploy.html">开始之前</a>的四把密钥填。空库还要能按<a href="admin.html">第一个管理员</a>创建管理员。<code>npm run dev</code> 仅用于本机，不要指向生产数据库。</p>
+  <p>提交前，先跑和这次改动对应的检查：</p>
+  <pre><code>npm run typecheck
+npx tsx --test test/某份测试.test.ts</code></pre>
+  <p>整次验证用 <code>npm run verify</code>。该命令耗时较长，且不使用仓库中的生产数据库。目录、迁移规则和测试写法在 <code>docs/development.md</code>。某个接口的字段和错误码在同目录的 <code>*-api-v1.md</code>，不要复制进这份使用手册。</p>
+  <p>实时连接和限流都在一个 Node 进程的内存里。不要为了能跑而开多个副本去分担同一份库。两个进程同时打开同一个 <code>data/openlogtool.db</code> 会坏。</p>
+  <p>记录客户端的源码不在这个仓库。改完客户端后，用<a href="web.html">网页客户端</a>里「和服务器放在一起」的命令装进 <code>web-client/</code>，再重启服务器，<code>/client/</code> 才是新的那一版。</p>
+
+</article>
+</div>
+</main>
+<footer>
+  <div class="wrap foot">
+    <span>CRL · Callsign Roll Log · © 2026 Mazha0309 · BG5CRL · AGPL-3.0</span>
+    <nav>
+      <a href="../index.html">首页</a>
+      <a href="../index.html#download">下载</a>
+      <a href="https://github.com/Mazha0309/CallsignRollLog">客户端仓库</a>
+      <a href="https://github.com/Mazha0309/CallsignRollLogServer">服务端仓库</a>
+      <a href="https://github.com/Mazha0309/CallsignRollLog/issues">反馈</a>
+    </nav>
+  </div>
+</footer>
+<script>
+(function(){
+  var root=document.documentElement,KEY='crl-theme',saved=null;
+  try{saved=localStorage.getItem(KEY);}catch(e){}
+  root.setAttribute('data-theme',saved||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'));
+  function tg(){document.getElementById('tg').setAttribute('d',root.getAttribute('data-theme')==='dark'
+    ?'M12 3v2m0 14v2M5.6 5.6l1.4 1.4m10 10 1.4 1.4M3 12h2m14 0h2M5.6 18.4l1.4-1.4m10-10 1.4-1.4M16 12a4 4 0 1 1-8 0 4 4 0 0 1 8 0z'
+    :'M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z');}
+  tg();
+  document.getElementById('theme').addEventListener('click',function(){
+    var n=root.getAttribute('data-theme')==='dark'?'light':'dark';
+    root.setAttribute('data-theme',n);tg();try{localStorage.setItem(KEY,n);}catch(e){}
+  });
+  var nav=document.getElementById('nav');
+  document.getElementById('hamb').addEventListener('click',function(){nav.classList.toggle('open');});
+  nav.addEventListener('click',function(e){if(e.target.tagName==='A')nav.classList.remove('open');});
+
+  var toggle=document.querySelector('.rail-toggle');
+  if(toggle) toggle.addEventListener('click',function(){
+    var rail=toggle.closest('.rail');
+    var open=rail.classList.toggle('open');
+    toggle.setAttribute('aria-expanded',open?'true':'false');
+  });
+  var cur=document.querySelector('.sidenav a[aria-current=page]');
+  if(cur){
+    var rail=cur.closest('.rail');
+    if(rail && matchMedia('(min-width:861px)').matches) rail.scrollTop=Math.max(0,cur.offsetTop-rail.clientHeight/3);
+  }
+})();
+</script>
+</body>
+</html>

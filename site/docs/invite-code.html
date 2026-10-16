@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>用邀请码加入 · 使用手册 · CRL</title>
+<meta name="description" content="Callsign Roll Log 使用手册：用邀请码加入。">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Callsign Roll Log">
+<meta property="og:title" content="用邀请码加入 · 使用手册 · CRL">
+<meta property="og:description" content="Callsign Roll Log 使用手册：用邀请码加入。">
+<meta property="og:url" content="https://crl.mazha0309.com/docs/invite-code.html">
+<meta property="og:image" content="https://crl.mazha0309.com/icon.png">
+<meta name="twitter:card" content="summary">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="../icon.png" type="image/png">
+<link rel="stylesheet" href="../docs.css">
+</head>
+<body>
+<header>
+  <div class="wrap hd">
+    <a class="brand" href="../index.html">
+      <img src="../icon.png" alt="">
+      <span class="t">CRL <span>Callsign Roll Log</span></span>
+    </a>
+    <nav class="site" id="nav">
+      <a href="../index.html#features">功能</a>
+      <a href="../index.html#collab">协作</a>
+      <a href="../docs.html" aria-current="page">文档</a>
+      <a href="../index.html#download">下载</a>
+      <a href="../index.html#open">开源</a>
+    </nav>
+    <button class="ic" id="hamb" aria-label="菜单"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+    <button class="ic" id="theme" aria-label="深浅色"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path id="tg" d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+  </div>
+</header>
+<main>
+<div class="frame">
+<aside class="rail">
+<button class="rail-toggle" type="button" aria-expanded="false">手册目录</button>
+<nav class="sidenav" aria-label="手册分页">
+<a class="overview" href="../docs.html">概述</a>
+<p>使用</p>
+<a href="register.html">注册账号</a>
+<a href="login.html">登录</a>
+<a href="friends.html">加好友</a>
+<a href="invite.html">邀请别人一起记</a>
+<a href="invite-code.html" aria-current="page">用邀请码加入</a>
+<a href="apply.html">申请加入一场</a>
+<a href="local.html">自己记一场</a>
+<a href="export.html">导出、词库和备份</a>
+<a href="cloud.html">换一台设备</a>
+<a href="share.html">把已有会话给另一个账号</a>
+<a href="public.html">发公开页</a>
+<a href="files.html">数据在这台设备的哪里</a>
+<a href="install.html">安装客户端</a>
+<p>部署</p>
+<a href="deploy.html">开始之前</a>
+<a href="deploy-compose.html">Docker Compose 一键</a>
+<a href="deploy-docker.html">已经克隆好的 Docker</a>
+<a href="deploy-node.html">原生 Node.js 一键</a>
+<a href="deploy-run.html">直接运行</a>
+<a href="admin.html">第一个管理员</a>
+<a href="web.html">网页客户端</a>
+<a href="update.html">更新已有服务器</a>
+<a href="https.html">前面加 HTTPS</a>
+<p>配置</p>
+<a href="config.html">配置</a>
+<p>继续开发</p>
+<a href="dev.html">继续开发</a>
+</nav></aside>
+<article class="wrap doc">
+  <h1>用邀请码加入</h1>
+<p>这是旧入口，目前仍可用。两个人已经是好友时，优先用<a href="invite.html">邀请别人一起记</a>。邀请码不是 Live Share 链接，也不是账号密码。</p>
+  <h3>使用邀请码</h3>
+  <p>须先<a href="login.html">登录</a>发放邀请码的那一台服务器。未登录时，「会话」页不显示「加入协作」。</p>
+  <ol>
+    <li>登录后回到「会话」，在「同步与协作（可选）」里点「加入协作」。</li>
+    <li>对话框标题是「加入协作」。说明是「输入成员邀请码。成功后会以远端相同的 Session ID 安装完整本地副本。」</li>
+    <li>「邀请码」一栏的例子是 <code>ABCDE-12345</code>。大小写会按呼号那样处理。为空时「加入」不可用。</li>
+    <li>点「加入」。成功时提示「已加入协作会话」，并打开该会话。本机安装的是与服务器相同的那一场，不是新建的另一场。</li>
+  </ol>
+  <h3>生成邀请码</h3>
+  <p>操作者须为该会话的负责人。会话须已是协作会话，且服务器仍提供邀请码。</p>
+  <ol>
+    <li>在「会话」中打开该会话。已是协作会话时，按钮中有「协作与成员」。点击进入。</li>
+    <li>页面包含成员、邀请码、公开页等部分。点击「邀请码（兼容旧版）」。</li>
+    <li>该部分标题为「成员邀请」。先选「编辑者」或「只读成员」，再点「生成」。</li>
+    <li>成功提示「邀请码已生成」。邀请码只在本次创建响应中显示。须立即复制。关闭或刷新后无法再次查看，只能重新生成。尚未使用的旧码可在列表中撤销。</li>
+  </ol>
+  <div class="callout">
+    <p>对方用这个码加入之后，权限为生成时选择的那一档。「编辑者」对应能改记录，「只读成员」只能看。和好友邀请里的「共同记录」「只能查看」是同一类区别，只是入口不同。</p>
+  </div>
+  <h3>无法完成</h3>
+  <ul>
+    <li>找不到「加入协作」：尚未登录。登录后它位于「同步与协作（可选）」卡片，不在「点名台」。</li>
+    <li>找不到「协作与成员」：该会话仍只在本机，尚未开启协作。先按邀请页上传该会话，或当前没有会话。</li>
+    <li>没有「邀请码（兼容旧版）」这一段：这台服务器不再提供旧邀请码。改用好友邀请。</li>
+    <li>将 Live Share 链接或网页地址填入邀请码：无法匹配。邀请码是生成时单独显示的那一串字符。</li>
+    <li>对方提示邀请码无效：该码可能已撤销或不再被服务器接受。重新生成后发送新的邀请码。</li>
+  </ul>
+
+</article>
+</div>
+</main>
+<footer>
+  <div class="wrap foot">
+    <span>CRL · Callsign Roll Log · © 2026 Mazha0309 · BG5CRL · AGPL-3.0</span>
+    <nav>
+      <a href="../index.html">首页</a>
+      <a href="../index.html#download">下载</a>
+      <a href="https://github.com/Mazha0309/CallsignRollLog">客户端仓库</a>
+      <a href="https://github.com/Mazha0309/CallsignRollLogServer">服务端仓库</a>
+      <a href="https://github.com/Mazha0309/CallsignRollLog/issues">反馈</a>
+    </nav>
+  </div>
+</footer>
+<script>
+(function(){
+  var root=document.documentElement,KEY='crl-theme',saved=null;
+  try{saved=localStorage.getItem(KEY);}catch(e){}
+  root.setAttribute('data-theme',saved||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'));
+  function tg(){document.getElementById('tg').setAttribute('d',root.getAttribute('data-theme')==='dark'
+    ?'M12 3v2m0 14v2M5.6 5.6l1.4 1.4m10 10 1.4 1.4M3 12h2m14 0h2M5.6 18.4l1.4-1.4m10-10 1.4-1.4M16 12a4 4 0 1 1-8 0 4 4 0 0 1 8 0z'
+    :'M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z');}
+  tg();
+  document.getElementById('theme').addEventListener('click',function(){
+    var n=root.getAttribute('data-theme')==='dark'?'light':'dark';
+    root.setAttribute('data-theme',n);tg();try{localStorage.setItem(KEY,n);}catch(e){}
+  });
+  var nav=document.getElementById('nav');
+  document.getElementById('hamb').addEventListener('click',function(){nav.classList.toggle('open');});
+  nav.addEventListener('click',function(e){if(e.target.tagName==='A')nav.classList.remove('open');});
+
+  var toggle=document.querySelector('.rail-toggle');
+  if(toggle) toggle.addEventListener('click',function(){
+    var rail=toggle.closest('.rail');
+    var open=rail.classList.toggle('open');
+    toggle.setAttribute('aria-expanded',open?'true':'false');
+  });
+  var cur=document.querySelector('.sidenav a[aria-current=page]');
+  if(cur){
+    var rail=cur.closest('.rail');
+    if(rail && matchMedia('(min-width:861px)').matches) rail.scrollTop=Math.max(0,cur.offsetTop-rail.clientHeight/3);
+  }
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>导出、词库和备份 · 使用手册 · CRL</title>
+<meta name="description" content="Callsign Roll Log 使用手册：导出、词库和备份。">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Callsign Roll Log">
+<meta property="og:title" content="导出、词库和备份 · 使用手册 · CRL">
+<meta property="og:description" content="Callsign Roll Log 使用手册：导出、词库和备份。">
+<meta property="og:url" content="https://crl.mazha0309.com/docs/export.html">
+<meta property="og:image" content="https://crl.mazha0309.com/icon.png">
+<meta name="twitter:card" content="summary">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="../icon.png" type="image/png">
+<link rel="stylesheet" href="../docs.css">
+</head>
+<body>
+<header>
+  <div class="wrap hd">
+    <a class="brand" href="../index.html">
+      <img src="../icon.png" alt="">
+      <span class="t">CRL <span>Callsign Roll Log</span></span>
+    </a>
+    <nav class="site" id="nav">
+      <a href="../index.html#features">功能</a>
+      <a href="../index.html#collab">协作</a>
+      <a href="../docs.html" aria-current="page">文档</a>
+      <a href="../index.html#download">下载</a>
+      <a href="../index.html#open">开源</a>
+    </nav>
+    <button class="ic" id="hamb" aria-label="菜单"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+    <button class="ic" id="theme" aria-label="深浅色"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path id="tg" d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+  </div>
+</header>
+<main>
+<div class="frame">
+<aside class="rail">
+<button class="rail-toggle" type="button" aria-expanded="false">手册目录</button>
+<nav class="sidenav" aria-label="手册分页">
+<a class="overview" href="../docs.html">概述</a>
+<p>使用</p>
+<a href="register.html">注册账号</a>
+<a href="login.html">登录</a>
+<a href="friends.html">加好友</a>
+<a href="invite.html">邀请别人一起记</a>
+<a href="invite-code.html">用邀请码加入</a>
+<a href="apply.html">申请加入一场</a>
+<a href="local.html">自己记一场</a>
+<a href="export.html" aria-current="page">导出、词库和备份</a>
+<a href="cloud.html">换一台设备</a>
+<a href="share.html">把已有会话给另一个账号</a>
+<a href="public.html">发公开页</a>
+<a href="files.html">数据在这台设备的哪里</a>
+<a href="install.html">安装客户端</a>
+<p>部署</p>
+<a href="deploy.html">开始之前</a>
+<a href="deploy-compose.html">Docker Compose 一键</a>
+<a href="deploy-docker.html">已经克隆好的 Docker</a>
+<a href="deploy-node.html">原生 Node.js 一键</a>
+<a href="deploy-run.html">直接运行</a>
+<a href="admin.html">第一个管理员</a>
+<a href="web.html">网页客户端</a>
+<a href="update.html">更新已有服务器</a>
+<a href="https.html">前面加 HTTPS</a>
+<p>配置</p>
+<a href="config.html">配置</a>
+<p>继续开发</p>
+<a href="dev.html">继续开发</a>
+</nav></aside>
+<article class="wrap doc">
+  <h1>导出、词库和备份</h1>
+<p>这些都在「数据」里。上面有四个标签：「记录与导出」「查询词库」「本地数据库」「同步冲突」。</p>
+  <h3>当前会话</h3>
+  <p>位于「记录与导出」。此页管理的是<strong>当前会话</strong>的点名记录，不是整台设备的库。</p>
+  <ul>
+    <li>「导出 JSON」：标准 JSON，带全部字段，适合备份和迁到别的程序。</li>
+    <li>「导出 Excel」：<code>.xlsx</code>，带分组的主控行、颜色和页脚，适合查看、转发和打印。账号如果同步了 Excel 样式，导出会按那套抬头和文件名来。要改抬头、颜色或文件名模板，点「编辑设置」。</li>
+    <li>「导出 ADIF」：按每个主控呼号各出一份 <code>.adi</code>，可以再导入 LoTW 或 QRZ。多个主控时打成一个 zip。本机记录里没有模式和频段，导出前对话框标题是「导出 ADIF」，须选择本次使用的「模式」和「频段」。</li>
+    <li>「导入 JSON」「导入 Excel」：把文件里的点名记录导入<strong>当前这场</strong>。先确认「会话」中打开的是准备导入的目标会话。</li>
+  </ul>
+  <p>「导出路径」留空时，用系统下载目录。该栏说明为「留空时使用系统下载目录」。</p>
+  <h3>词库</h3>
+  <p>「查询词库」管的是点名时用来联想的设备、天线、呼号和 QTH。可以搜索，也可以把词库导出成 JSON，或从 JSON 导入。</p>
+  <p>软件自带的条目与用户添加的条目不同。个人云只上传用户添加的词条，以及删除内置词条的记录，不会再次上传整份内置词库。</p>
+  <p>可选的「文字助手」在「设置 → AI 辅助」，默认关闭。它只根据本机历史提出「词库里缺了什么、要不要改名或合并」。确认之前不修改词库，也不修改已有记录。</p>
+  <h3>整库备份</h3>
+  <p>更换设备，或需要防备本机故障时，使用「本地数据库」，不要只使用上面的单场导出。</p>
+  <ol>
+    <li>「导出本机数据库」。说明是：备份会话、记录、词库，以及本机协作副本和待同步状态。成功提示「本机数据库备份已导出」。</li>
+    <li>在另一台，或在这台恢复时，点「导入本机数据库」。先选 JSON 备份。预览标题是「确认导入备份」，里面有备份格式版本、导出时间、会话数、点名记录数、词库条目数、协作副本数、待同步或待复核的数量。</li>
+    <li>核对后再点击「覆盖并导入」。警告写明：这会完整覆盖当前这台设备的库，包括还没同步的更改。服务器上的会话、安全存储里的登录凭据、应用设置都不受影响。内置词库会按当前版本补齐。此操作不可撤销。备份里如果有协作副本，服务器地址和登录账户对得上时，导入后可能继续同步。</li>
+    <li>成功提示「本机数据库已导入，界面数据已刷新」，并显示会话数和记录数。可在「会话」中查看历史。</li>
+  </ol>
+  <div class="callout">
+    <p>「清空本机数据」会清掉本机的会话、点名记录、协作副本、待同步队列和自定义词条，并把内置词库恢复成默认。不会删除或关闭服务器上的会话，也不会退出登录或重置外观。确认时必须输入「清空全部数据」，按钮才是「永久清空本机数据」。</p>
+  </div>
+  <h3>同步冲突</h3>
+  <p>「同步冲突」只在登录并打开了个人云、而且两边改了同一处时才要进。没有冲突时，这一页会说当前没有需要选择的冲突，同步入口在「本地数据库」。怎么选，见<a href="cloud.html">换一台设备</a>。</p>
+  <h3>无法完成</h3>
+  <ul>
+    <li>导出为空：当前会话中还没有记录，或「会话」中打开的不是目标会话。</li>
+    <li>导入整库时提示正在发布、加入或处理别的协作：等待该操作完成后再导入。不要在协作操作进行中覆盖本机库。</li>
+    <li>选中的文件提示不是有效的数据库备份：该文件是单场记录 JSON，不是「导出本机数据库」生成的整库文件。单场文件使用「记录与导出」中的导入。</li>
+  </ul>
+
+</article>
+</div>
+</main>
+<footer>
+  <div class="wrap foot">
+    <span>CRL · Callsign Roll Log · © 2026 Mazha0309 · BG5CRL · AGPL-3.0</span>
+    <nav>
+      <a href="../index.html">首页</a>
+      <a href="../index.html#download">下载</a>
+      <a href="https://github.com/Mazha0309/CallsignRollLog">客户端仓库</a>
+      <a href="https://github.com/Mazha0309/CallsignRollLogServer">服务端仓库</a>
+      <a href="https://github.com/Mazha0309/CallsignRollLog/issues">反馈</a>
+    </nav>
+  </div>
+</footer>
+<script>
+(function(){
+  var root=document.documentElement,KEY='crl-theme',saved=null;
+  try{saved=localStorage.getItem(KEY);}catch(e){}
+  root.setAttribute('data-theme',saved||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'));
+  function tg(){document.getElementById('tg').setAttribute('d',root.getAttribute('data-theme')==='dark'
+    ?'M12 3v2m0 14v2M5.6 5.6l1.4 1.4m10 10 1.4 1.4M3 12h2m14 0h2M5.6 18.4l1.4-1.4m10-10 1.4-1.4M16 12a4 4 0 1 1-8 0 4 4 0 0 1 8 0z'
+    :'M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z');}
+  tg();
+  document.getElementById('theme').addEventListener('click',function(){
+    var n=root.getAttribute('data-theme')==='dark'?'light':'dark';
+    root.setAttribute('data-theme',n);tg();try{localStorage.setItem(KEY,n);}catch(e){}
+  });
+  var nav=document.getElementById('nav');
+  document.getElementById('hamb').addEventListener('click',function(){nav.classList.toggle('open');});
+  nav.addEventListener('click',function(e){if(e.target.tagName==='A')nav.classList.remove('open');});
+
+  var toggle=document.querySelector('.rail-toggle');
+  if(toggle) toggle.addEventListener('click',function(){
+    var rail=toggle.closest('.rail');
+    var open=rail.classList.toggle('open');
+    toggle.setAttribute('aria-expanded',open?'true':'false');
+  });
+  var cur=document.querySelector('.sidenav a[aria-current=page]');
+  if(cur){
+    var rail=cur.closest('.rail');
+    if(rail && matchMedia('(min-width:861px)').matches) rail.scrollTop=Math.max(0,cur.offsetTop-rail.clientHeight/3);
+  }
+})();
+</script>
+</body>
+</html>

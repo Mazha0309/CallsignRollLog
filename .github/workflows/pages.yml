@@ -33,8 +33,9 @@ jobs:
       - name: Stage public files
         run: |
           set -euo pipefail
-          mkdir -p _site
-          cp site/index.html site/docs.html site/icon.png site/wechat-zjra.svg _site/
+          mkdir -p _site/docs
+          cp site/index.html site/docs.html site/docs.css site/icon.png site/wechat-zjra.svg _site/
+          cp site/docs/*.html _site/docs/
           cp -R site/fonts _site/fonts
 
       - name: Configure Pages

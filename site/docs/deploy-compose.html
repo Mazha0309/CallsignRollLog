@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Docker Compose 一键 · 使用手册 · CRL</title>
+<meta name="description" content="Callsign Roll Log 使用手册：Docker Compose 一键。">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Callsign Roll Log">
+<meta property="og:title" content="Docker Compose 一键 · 使用手册 · CRL">
+<meta property="og:description" content="Callsign Roll Log 使用手册：Docker Compose 一键。">
+<meta property="og:url" content="https://crl.mazha0309.com/docs/deploy-compose.html">
+<meta property="og:image" content="https://crl.mazha0309.com/icon.png">
+<meta name="twitter:card" content="summary">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="../icon.png" type="image/png">
+<link rel="stylesheet" href="../docs.css">
+</head>
+<body>
+<header>
+  <div class="wrap hd">
+    <a class="brand" href="../index.html">
+      <img src="../icon.png" alt="">
+      <span class="t">CRL <span>Callsign Roll Log</span></span>
+    </a>
+    <nav class="site" id="nav">
+      <a href="../index.html#features">功能</a>
+      <a href="../index.html#collab">协作</a>
+      <a href="../docs.html" aria-current="page">文档</a>
+      <a href="../index.html#download">下载</a>
+      <a href="../index.html#open">开源</a>
+    </nav>
+    <button class="ic" id="hamb" aria-label="菜单"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+    <button class="ic" id="theme" aria-label="深浅色"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path id="tg" d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+  </div>
+</header>
+<main>
+<div class="frame">
+<aside class="rail">
+<button class="rail-toggle" type="button" aria-expanded="false">手册目录</button>
+<nav class="sidenav" aria-label="手册分页">
+<a class="overview" href="../docs.html">概述</a>
+<p>使用</p>
+<a href="register.html">注册账号</a>
+<a href="login.html">登录</a>
+<a href="friends.html">加好友</a>
+<a href="invite.html">邀请别人一起记</a>
+<a href="invite-code.html">用邀请码加入</a>
+<a href="apply.html">申请加入一场</a>
+<a href="local.html">自己记一场</a>
+<a href="export.html">导出、词库和备份</a>
+<a href="cloud.html">换一台设备</a>
+<a href="share.html">把已有会话给另一个账号</a>
+<a href="public.html">发公开页</a>
+<a href="files.html">数据在这台设备的哪里</a>
+<a href="install.html">安装客户端</a>
+<p>部署</p>
+<a href="deploy.html">开始之前</a>
+<a href="deploy-compose.html" aria-current="page">Docker Compose 一键</a>
+<a href="deploy-docker.html">已经克隆好的 Docker</a>
+<a href="deploy-node.html">原生 Node.js 一键</a>
+<a href="deploy-run.html">直接运行</a>
+<a href="admin.html">第一个管理员</a>
+<a href="web.html">网页客户端</a>
+<a href="update.html">更新已有服务器</a>
+<a href="https.html">前面加 HTTPS</a>
+<p>配置</p>
+<a href="config.html">配置</a>
+<p>继续开发</p>
+<a href="dev.html">继续开发</a>
+</nav></aside>
+<article class="wrap doc">
+  <h1>Docker Compose 一键</h1>
+<p>适合一台新的机器。脚本负责克隆、密钥、构建和启动。机器上要有 Git、Docker 和 Docker Compose v2，不必再装 Node.js。</p>
+  <h3>执行</h3>
+  <p>末尾的 <code>3000</code> 是宿主机端口。使用其他端口时，将该数字替换为实际端口。</p>
+  <pre><code>curl --proto '=https' --tlsv1.2 -fsSL \
+  https://raw.githubusercontent.com/Mazha0309/CallsignRollLogServer/main/deploy-docker.sh \
+  | bash -s -- 3000</code></pre>
+  <p>脚本从 <code>main</code> 克隆或快进，生成并保留四把密钥，构建镜像，启动后做健康检查。已有数据库会在镜像构建成功后停服，备份到 <code>~/OpenLogToolServer-backups/&lt;时间&gt;/</code>。不会覆盖已有代码修改，也不会更换已有密钥。</p>
+  <h3>完成后</h3>
+  <ol>
+    <li>本机浏览器打开 <code>http://127.0.0.1:3000</code>，能看到服务器页面，而不是连接被拒绝。</li>
+    <li>再打开 <code>http://127.0.0.1:3000/api/v1/server-info</code>，能返回服务器信息，而不是 502 或空响应。</li>
+    <li>仓库目录里已经有 <code>.env</code>。以后升级不要删它，也不要重新跑四次 <code>openssl</code> 去覆盖。</li>
+  </ol>
+  <p>该地址仅供本机访问。向他人提供访问前，按<a href="https.html">前面加 HTTPS</a>放到反向代理后面，不要把明文 HTTP 的 3000 端口直接暴露到公网。</p>
+  <p>下一步做<a href="admin.html">第一个管理员</a>。网页客户端还没装时，<code>/client/</code> 打不开记录软件，成员门户和接口不受影响。要装的话看<a href="web.html">网页客户端</a>。</p>
+  <h3>无法完成</h3>
+  <ul>
+    <li>提示没有 docker 或 compose：先安装 Docker Engine 和 Compose v2，再执行。不要改用旧命令名 <code>docker-compose</code>，除非该命令实际为 Compose v2。</li>
+    <li>仓库里有未提交的已跟踪修改，或不能快进：脚本会停。先处理这些修改。不要为了让脚本继续而丢弃改动。</li>
+    <li>构建时 npm 较慢：一键脚本不提供镜像源参数。仓库已克隆且需要指定镜像源时，改用<a href="deploy-docker.html">已经克隆好的 Docker</a> 里的 <code>NPM_REGISTRY</code>。</li>
+    <li>页面无法打开：在仓库目录执行 <code>docker compose ps</code>。服务不是 Up 时，查看 <code>docker compose logs server</code>。常见是 <code>data</code> 目录容器写不进去，或端口 3000 已经被占用。</li>
+  </ul>
+
+</article>
+</div>
+</main>
+<footer>
+  <div class="wrap foot">
+    <span>CRL · Callsign Roll Log · © 2026 Mazha0309 · BG5CRL · AGPL-3.0</span>
+    <nav>
+      <a href="../index.html">首页</a>
+      <a href="../index.html#download">下载</a>
+      <a href="https://github.com/Mazha0309/CallsignRollLog">客户端仓库</a>
+      <a href="https://github.com/Mazha0309/CallsignRollLogServer">服务端仓库</a>
+      <a href="https://github.com/Mazha0309/CallsignRollLog/issues">反馈</a>
+    </nav>
+  </div>
+</footer>
+<script>
+(function(){
+  var root=document.documentElement,KEY='crl-theme',saved=null;
+  try{saved=localStorage.getItem(KEY);}catch(e){}
+  root.setAttribute('data-theme',saved||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'));
+  function tg(){document.getElementById('tg').setAttribute('d',root.getAttribute('data-theme')==='dark'
+    ?'M12 3v2m0 14v2M5.6 5.6l1.4 1.4m10 10 1.4 1.4M3 12h2m14 0h2M5.6 18.4l1.4-1.4m10-10 1.4-1.4M16 12a4 4 0 1 1-8 0 4 4 0 0 1 8 0z'
+    :'M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z');}
+  tg();
+  document.getElementById('theme').addEventListener('click',function(){
+    var n=root.getAttribute('data-theme')==='dark'?'light':'dark';
+    root.setAttribute('data-theme',n);tg();try{localStorage.setItem(KEY,n);}catch(e){}
+  });
+  var nav=document.getElementById('nav');
+  document.getElementById('hamb').addEventListener('click',function(){nav.classList.toggle('open');});
+  nav.addEventListener('click',function(e){if(e.target.tagName==='A')nav.classList.remove('open');});
+
+  var toggle=document.querySelector('.rail-toggle');
+  if(toggle) toggle.addEventListener('click',function(){
+    var rail=toggle.closest('.rail');
+    var open=rail.classList.toggle('open');
+    toggle.setAttribute('aria-expanded',open?'true':'false');
+  });
+  var cur=document.querySelector('.sidenav a[aria-current=page]');
+  if(cur){
+    var rail=cur.closest('.rail');
+    if(rail && matchMedia('(min-width:861px)').matches) rail.scrollTop=Math.max(0,cur.offsetTop-rail.clientHeight/3);
+  }
+})();
+</script>
+</body>
+</html>

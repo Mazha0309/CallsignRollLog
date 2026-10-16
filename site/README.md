@@ -1,6 +1,6 @@
 # 官网（`site/`）
 
-`CRL · Callsign Roll Log · 呼号点名日志` 的产品主页。**纯静态、零构建**：`index.html`、使用手册 `docs.html`、图片资源（`icon.png`、`wechat-zjra.svg`）与自托管的 `fonts/`。GitHub Pages / Cloudflare Pages / Vercel 都能直接托管。
+`CRL · Callsign Roll Log · 呼号点名日志` 的产品主页。**纯静态、零构建**：`index.html`、使用手册目录 `docs.html`、分页 `docs/*.html`、样式 `docs.css`、图片资源（`icon.png`、`wechat-zjra.svg`）与自托管的 `fonts/`。GitHub Pages / Cloudflare Pages / Vercel 都能直接托管。
 
 线上地址：<https://crl.mazha0309.com/>（主域子域，不额外购买）。旧地址 `mazha0309.github.io/CallsignRollLog/` 会 301 跳到这里。
 
@@ -18,7 +18,7 @@ npx serve site
 
 ### GitHub Pages（Actions，发布 `site/` 的公开文件）
 
-`main` 上改动 `site/` 或 `.github/workflows/pages.yml` 时，`.github/workflows/pages.yml` 把 `index.html`、`docs.html`、`icon.png`、`wechat-zjra.svg`、`fonts/` 发布到 GitHub Pages。使用手册的公开地址是 <https://crl.mazha0309.com/docs.html>。分支部署只接受仓库根目录或 `/docs`，不能直接选 `/site`，所以走 Actions。自定义域 `crl.mazha0309.com` 已绑定并强制 HTTPS，证书由 GitHub 自动续期。
+`main` 上改动 `site/` 或 `.github/workflows/pages.yml` 时，`.github/workflows/pages.yml` 把 `index.html`、`docs.html`、`docs.css`、`docs/*.html`、`icon.png`、`wechat-zjra.svg`、`fonts/` 发布到 GitHub Pages。使用手册的目录是 <https://crl.mazha0309.com/docs.html>，每一件事单独一页。分支部署只接受仓库根目录或 `/docs`，不能直接选 `/site`，所以走 Actions。自定义域 `crl.mazha0309.com` 已绑定并强制 HTTPS，证书由 GitHub 自动续期。
 
 ### Cloudflare Pages
 

@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>配置 · 使用手册 · CRL</title>
+<meta name="description" content="Callsign Roll Log 使用手册：配置。">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Callsign Roll Log">
+<meta property="og:title" content="配置 · 使用手册 · CRL">
+<meta property="og:description" content="Callsign Roll Log 使用手册：配置。">
+<meta property="og:url" content="https://crl.mazha0309.com/docs/config.html">
+<meta property="og:image" content="https://crl.mazha0309.com/icon.png">
+<meta name="twitter:card" content="summary">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="../icon.png" type="image/png">
+<link rel="stylesheet" href="../docs.css">
+</head>
+<body>
+<header>
+  <div class="wrap hd">
+    <a class="brand" href="../index.html">
+      <img src="../icon.png" alt="">
+      <span class="t">CRL <span>Callsign Roll Log</span></span>
+    </a>
+    <nav class="site" id="nav">
+      <a href="../index.html#features">功能</a>
+      <a href="../index.html#collab">协作</a>
+      <a href="../docs.html" aria-current="page">文档</a>
+      <a href="../index.html#download">下载</a>
+      <a href="../index.html#open">开源</a>
+    </nav>
+    <button class="ic" id="hamb" aria-label="菜单"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+    <button class="ic" id="theme" aria-label="深浅色"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path id="tg" d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+  </div>
+</header>
+<main>
+<div class="frame">
+<aside class="rail">
+<button class="rail-toggle" type="button" aria-expanded="false">手册目录</button>
+<nav class="sidenav" aria-label="手册分页">
+<a class="overview" href="../docs.html">概述</a>
+<p>使用</p>
+<a href="register.html">注册账号</a>
+<a href="login.html">登录</a>
+<a href="friends.html">加好友</a>
+<a href="invite.html">邀请别人一起记</a>
+<a href="invite-code.html">用邀请码加入</a>
+<a href="apply.html">申请加入一场</a>
+<a href="local.html">自己记一场</a>
+<a href="export.html">导出、词库和备份</a>
+<a href="cloud.html">换一台设备</a>
+<a href="share.html">把已有会话给另一个账号</a>
+<a href="public.html">发公开页</a>
+<a href="files.html">数据在这台设备的哪里</a>
+<a href="install.html">安装客户端</a>
+<p>部署</p>
+<a href="deploy.html">开始之前</a>
+<a href="deploy-compose.html">Docker Compose 一键</a>
+<a href="deploy-docker.html">已经克隆好的 Docker</a>
+<a href="deploy-node.html">原生 Node.js 一键</a>
+<a href="deploy-run.html">直接运行</a>
+<a href="admin.html">第一个管理员</a>
+<a href="web.html">网页客户端</a>
+<a href="update.html">更新已有服务器</a>
+<a href="https.html">前面加 HTTPS</a>
+<p>配置</p>
+<a href="config.html" aria-current="page">配置</a>
+<p>继续开发</p>
+<a href="dev.html">继续开发</a>
+</nav></aside>
+<article class="wrap doc">
+  <h1>配置</h1>
+<p>客户端里能改的，在「设置」。服务器上能改的，在 <code>.env</code> 或管理后台。改完 <code>.env</code> 要重启进程才生效。后台里已经保存的同一项，优先于 <code>.env</code>。</p>
+  <h3>客户端地址</h3>
+  <p>「设置 → 服务器与账户」。页面标题为「服务器与账户」。地址填服务器的根，例如 <code>https://log.example.com</code>。不要填成 <code>/api/v1</code> 或其他接口路径。</p>
+  <p>服务器 <code>/connect</code> 页上的地址和二维码用于此处。整段粘贴 <code>/connect</code>、<code>/client/</code> 或门户链接也可以，软件会取出根地址。扫到或粘贴出一个和当前不同的地址时，会先说明要换成哪一台。取消则保持原来的服务器和登录状态。</p>
+  <p>填写地址后点击「确认地址并连接」。需要账号时再点击「登录」或「注册」。仅填写地址不会登录。</p>
+  <h3>公开注册</h3>
+  <p>管理后台 → 服务器设置 →「允许公开注册」。</p>
+  <p>关掉之后，客户端的「注册」和网页的 <code>/register</code> 都会失败。已经有的账号仍能登录。管理员仍可在后台创建账号。空库的第一位管理员不由该开关产生，而由 <code>/bootstrap</code> 产生，见<a href="admin.html">第一个管理员</a>。新安装默认允许。</p>
+  <h3>环境变量</h3>
+  <p>常用的这些。完整表在服务端仓库 README 的「环境变量」。</p>
+  <div class="scroll">
+  <table>
+    <thead><tr><th>变量</th><th>用途</th></tr></thead>
+    <tbody>
+      <tr><td><code>PORT</code></td><td>Node 监听的端口，默认 3000。改了之后，健康检查和反代的上游都要改成同一个端口。</td></tr>
+      <tr><td><code>HOST_PORT</code></td><td>只在 Docker 里。发布到宿主机的端口。容器里面仍是 3000。</td></tr>
+      <tr><td><code>BIND_ADDRESS</code></td><td>默认只给本机。仅在需要局域网直接连接该端口时修改。公网优先使用反向代理，不要绑定到所有网卡。</td></tr>
+      <tr><td><code>DB_PATH</code></td><td>SQLite 文件，默认 <code>./data/openlogtool.db</code>。更换路径前先停止进程，并将原文件复制到新路径。</td></tr>
+      <tr><td><code>JWT_SECRET</code></td><td>登录密钥，至少 32 字节。装好之后不要换。</td></tr>
+      <tr><td><code>ADMIN_BOOTSTRAP_TOKEN</code></td><td>空库创建第一个管理员，至少 24 字节。不是日常密码。</td></tr>
+      <tr><td><code>INVITE_HMAC_KEY</code></td><td>邀请码密钥，至少 32 字节，不能和登录密钥相同。换了之后，旧邀请码失效。</td></tr>
+      <tr><td><code>PUBLIC_SHARE_HMAC_KEY</code></td><td>公开页密钥，至少 32 字节，须独立设置。换了之后，已经发出的 Live Share 链接失效。</td></tr>
+      <tr><td><code>CORS_ORIGINS</code></td><td>允许的网页客户端来源，逗号分隔。原生客户端不用填。见下一节。</td></tr>
+      <tr><td><code>TRUST_PROXY</code></td><td>前面有几层可信代理。默认不信任。见<a href="https.html">前面加 HTTPS</a>。</td></tr>
+      <tr><td><code>WEB_CLIENT_DIR</code></td><td>网页客户端文件的位置，默认同目录的 <code>./web-client</code>。一般不用改，除非构建产物不在默认目录。</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>四个密钥升级时不要换。在线备份是整份数据库，含密码哈希，不包含 <code>.env</code>。更换机器时，数据库和 <code>.env</code> 都要保留。</p>
+  <h3>网页和服务器不同源</h3>
+  <p>原生客户端不受浏览器跨域限制。网页客户端如果和服务器的协议、域名或端口不同，服务器要写网页客户端的完整来源，不是写 API 自己的地址。例如网页在 <code>https://log.example.com</code>，服务器在另一台：</p>
+  <pre><code>CORS_ORIGINS=https://log.example.com</code></pre>
+  <p>多个来源用逗号分隔，不要写成 <code>*</code>。改完后重建或重启服务器。挂在同一台服务器的 <code>/client/</code> 上、并且反代保留了所需响应头时，不用另填。</p>
+  <p>网页客户端还要求 HTTPS（或浏览器承认的 localhost），以及响应头 <code>Cross-Origin-Opener-Policy: same-origin</code> 和 <code>Cross-Origin-Embedder-Policy: credentialless</code>。和服务器放在一起时，由服务器加上。单独部署时，仓库里的 Nginx 镜像已经带上。自行编写反向代理时须带上这两行。缺少时页面可以打开，但本机库无法初始化。</p>
+  <h3>AI 语音</h3>
+  <p>默认关闭，在「设置 → AI 辅助」。这一类里有「AI 辅助识别」和「文字助手」，各自开关，互不影响。</p>
+  <p>语音：音频直接发给所配置的服务，不经过协作服务器。识别结果只是候选，不会自动保存，也不会自动填时间和主控呼号。接口填写方式见客户端仓库的 <code>docs/ai-speech-recognition.md</code>。</p>
+  <p>文字助手：只对词库和字段格式提建议。确认之前不修改词库，也不修改已有记录。密钥放在这台设备的安全存储里，不会写进普通设置或导出文件。</p>
+  <p>服务器上的 Excel 校对是另一件事：管理员在后台「服务器设置 → 服务端 LLM」填写，所有者或可编辑成员在门户的记录页使用。模型不能直接写数据库，每一条都须人工确认。</p>
+  <h3>其他设置</h3>
+  <ul>
+    <li><strong>外观</strong>：主题色、深色模式、字体、界面语言。改完立即生效。界面缩放只留在这台设备上。</li>
+    <li><strong>工作台</strong>：标题是「点名台与布局」。「呼号历史一键复用」打开后，呼号栏可以根据本机以往记录填设备、天线、QTH、功率和高度。还有重复呼号提醒、表格分页。</li>
+    <li><strong>主控屏</strong>：场内显示。不是 Live Share。</li>
+    <li><strong>应用</strong>：关于、许可、诊断日志，以及「恢复默认设置」。恢复默认不会删点名记录。</li>
+  </ul>
+
+</article>
+</div>
+</main>
+<footer>
+  <div class="wrap foot">
+    <span>CRL · Callsign Roll Log · © 2026 Mazha0309 · BG5CRL · AGPL-3.0</span>
+    <nav>
+      <a href="../index.html">首页</a>
+      <a href="../index.html#download">下载</a>
+      <a href="https://github.com/Mazha0309/CallsignRollLog">客户端仓库</a>
+      <a href="https://github.com/Mazha0309/CallsignRollLogServer">服务端仓库</a>
+      <a href="https://github.com/Mazha0309/CallsignRollLog/issues">反馈</a>
+    </nav>
+  </div>
+</footer>
+<script>
+(function(){
+  var root=document.documentElement,KEY='crl-theme',saved=null;
+  try{saved=localStorage.getItem(KEY);}catch(e){}
+  root.setAttribute('data-theme',saved||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'));
+  function tg(){document.getElementById('tg').setAttribute('d',root.getAttribute('data-theme')==='dark'
+    ?'M12 3v2m0 14v2M5.6 5.6l1.4 1.4m10 10 1.4 1.4M3 12h2m14 0h2M5.6 18.4l1.4-1.4m10-10 1.4-1.4M16 12a4 4 0 1 1-8 0 4 4 0 0 1 8 0z'
+    :'M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z');}
+  tg();
+  document.getElementById('theme').addEventListener('click',function(){
+    var n=root.getAttribute('data-theme')==='dark'?'light':'dark';
+    root.setAttribute('data-theme',n);tg();try{localStorage.setItem(KEY,n);}catch(e){}
+  });
+  var nav=document.getElementById('nav');
+  document.getElementById('hamb').addEventListener('click',function(){nav.classList.toggle('open');});
+  nav.addEventListener('click',function(e){if(e.target.tagName==='A')nav.classList.remove('open');});
+
+  var toggle=document.querySelector('.rail-toggle');
+  if(toggle) toggle.addEventListener('click',function(){
+    var rail=toggle.closest('.rail');
+    var open=rail.classList.toggle('open');
+    toggle.setAttribute('aria-expanded',open?'true':'false');
+  });
+  var cur=document.querySelector('.sidenav a[aria-current=page]');
+  if(cur){
+    var rail=cur.closest('.rail');
+    if(rail && matchMedia('(min-width:861px)').matches) rail.scrollTop=Math.max(0,cur.offsetTop-rail.clientHeight/3);
+  }
+})();
+</script>
+</body>
+</html>

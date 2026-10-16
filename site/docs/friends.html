@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>加好友 · 使用手册 · CRL</title>
+<meta name="description" content="Callsign Roll Log 使用手册：加好友。">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Callsign Roll Log">
+<meta property="og:title" content="加好友 · 使用手册 · CRL">
+<meta property="og:description" content="Callsign Roll Log 使用手册：加好友。">
+<meta property="og:url" content="https://crl.mazha0309.com/docs/friends.html">
+<meta property="og:image" content="https://crl.mazha0309.com/icon.png">
+<meta name="twitter:card" content="summary">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="../icon.png" type="image/png">
+<link rel="stylesheet" href="../docs.css">
+</head>
+<body>
+<header>
+  <div class="wrap hd">
+    <a class="brand" href="../index.html">
+      <img src="../icon.png" alt="">
+      <span class="t">CRL <span>Callsign Roll Log</span></span>
+    </a>
+    <nav class="site" id="nav">
+      <a href="../index.html#features">功能</a>
+      <a href="../index.html#collab">协作</a>
+      <a href="../docs.html" aria-current="page">文档</a>
+      <a href="../index.html#download">下载</a>
+      <a href="../index.html#open">开源</a>
+    </nav>
+    <button class="ic" id="hamb" aria-label="菜单"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+    <button class="ic" id="theme" aria-label="深浅色"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path id="tg" d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+  </div>
+</header>
+<main>
+<div class="frame">
+<aside class="rail">
+<button class="rail-toggle" type="button" aria-expanded="false">手册目录</button>
+<nav class="sidenav" aria-label="手册分页">
+<a class="overview" href="../docs.html">概述</a>
+<p>使用</p>
+<a href="register.html">注册账号</a>
+<a href="login.html">登录</a>
+<a href="friends.html" aria-current="page">加好友</a>
+<a href="invite.html">邀请别人一起记</a>
+<a href="invite-code.html">用邀请码加入</a>
+<a href="apply.html">申请加入一场</a>
+<a href="local.html">自己记一场</a>
+<a href="export.html">导出、词库和备份</a>
+<a href="cloud.html">换一台设备</a>
+<a href="share.html">把已有会话给另一个账号</a>
+<a href="public.html">发公开页</a>
+<a href="files.html">数据在这台设备的哪里</a>
+<a href="install.html">安装客户端</a>
+<p>部署</p>
+<a href="deploy.html">开始之前</a>
+<a href="deploy-compose.html">Docker Compose 一键</a>
+<a href="deploy-docker.html">已经克隆好的 Docker</a>
+<a href="deploy-node.html">原生 Node.js 一键</a>
+<a href="deploy-run.html">直接运行</a>
+<a href="admin.html">第一个管理员</a>
+<a href="web.html">网页客户端</a>
+<a href="update.html">更新已有服务器</a>
+<a href="https.html">前面加 HTTPS</a>
+<p>配置</p>
+<a href="config.html">配置</a>
+<p>继续开发</p>
+<a href="dev.html">继续开发</a>
+</nav></aside>
+<article class="wrap doc">
+  <h1>加好友</h1>
+<p>双方均须已<a href="login.html">登录</a>同一台服务器。好友关系不开放历史记录、个人云或任一会话的记录。</p>
+  <h3>入口</h3>
+  <p>在「会话」中，登录后的「同步与协作（可选）」卡片上点击「好友与邀请」。页面标题为「好友与邀请」。说明为「添加搭档为好友，再邀请他们一起点名。好友关系不会自动开放个人记录。」</p>
+  <p>这一页有三个标签：</p>
+  <ul>
+    <li><strong>好友</strong>：已建立的好友，以及「添加好友」。</li>
+    <li><strong>消息</strong>：收到的请求，以及尚未处理的已发请求。有待处理项时，标签显示数量。</li>
+    <li><strong>会话</strong>：邀请共同记录或申请加入。添加好友不使用此标签。</li>
+  </ul>
+  <p>网页上登录后打开 <code>/app/friends</code>，处理的是同一批好友、邀请和申请。</p>
+  <h3>发出申请</h3>
+  <ol>
+    <li>在「好友」中点击「添加好友」。</li>
+    <li>搜索框提示为「输入用户名或注册呼号」。至少输入 2 个字符。说明为「仅搜索当前服务器上的用户，不会搜索或公开个人记录。」</li>
+    <li>点击「搜索」。无结果时显示「没有找到匹配的用户，请确认对方在同一服务器注册。」结果过多时提示「结果较多，请输入更完整的用户名。」</li>
+    <li>选中对方，点击「发送申请」。发送后状态为「等待对方处理」。</li>
+  </ol>
+  <h3>对方接受</h3>
+  <ol>
+    <li>对方打开「好友与邀请 → 消息」。</li>
+    <li>在「收到的」中找到「好友申请」，点击「接受」或「拒绝」。</li>
+    <li>取消自己发出且未处理的请求：在「我发出的」中取消。</li>
+  </ol>
+  <div class="callout">
+    <p>双方「好友」列表中都能看到对方后，好友关系才建立。仅发送、对方尚未接受时，列表中没有该好友，「邀请参与」也不能选择该用户。</p>
+  </div>
+  <h3>无法完成</h3>
+  <ul>
+    <li>会话页没有「好友与邀请」：尚未登录，或服务器不支持好友。不支持时页面显示「此服务器尚不支持好友功能，请更新服务器。」搜索提示「此服务器尚不支持用户搜索」时，同样需要先升级服务端。</li>
+    <li>未登录时显示「连接服务器并登录后，即可添加好友。」</li>
+    <li>「没有找到这个用户名」：对方未在这台服务器注册，或用户名与注册时不一致。</li>
+    <li>「不能添加自己」：搜索到的是当前用户名。</li>
+    <li>「目前无法向这个用户发送请求」：任一方已屏蔽另一方。</li>
+    <li>显示「对方已申请加你为好友」：在「消息 → 收到的」中接受，不要再次发送。</li>
+    <li>搜索太频繁会提示稍后再试。搜索失败则检查连接后点刷新。</li>
+  </ul>
+  <h3>删除与屏蔽</h3>
+  <p>可对好友执行「删除好友」或「屏蔽」。删除会取消双方尚未处理的邀请和申请。说明为：「已加入的会话成员由会话负责人单独管理。」删除好友不移除已在会话中的成员，也不撤销已发出的账号共享。屏蔽后，新的好友申请和邀请无法发送。</p>
+
+</article>
+</div>
+</main>
+<footer>
+  <div class="wrap foot">
+    <span>CRL · Callsign Roll Log · © 2026 Mazha0309 · BG5CRL · AGPL-3.0</span>
+    <nav>
+      <a href="../index.html">首页</a>
+      <a href="../index.html#download">下载</a>
+      <a href="https://github.com/Mazha0309/CallsignRollLog">客户端仓库</a>
+      <a href="https://github.com/Mazha0309/CallsignRollLogServer">服务端仓库</a>
+      <a href="https://github.com/Mazha0309/CallsignRollLog/issues">反馈</a>
+    </nav>
+  </div>
+</footer>
+<script>
+(function(){
+  var root=document.documentElement,KEY='crl-theme',saved=null;
+  try{saved=localStorage.getItem(KEY);}catch(e){}
+  root.setAttribute('data-theme',saved||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'));
+  function tg(){document.getElementById('tg').setAttribute('d',root.getAttribute('data-theme')==='dark'
+    ?'M12 3v2m0 14v2M5.6 5.6l1.4 1.4m10 10 1.4 1.4M3 12h2m14 0h2M5.6 18.4l1.4-1.4m10-10 1.4-1.4M16 12a4 4 0 1 1-8 0 4 4 0 0 1 8 0z'
+    :'M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z');}
+  tg();
+  document.getElementById('theme').addEventListener('click',function(){
+    var n=root.getAttribute('data-theme')==='dark'?'light':'dark';
+    root.setAttribute('data-theme',n);tg();try{localStorage.setItem(KEY,n);}catch(e){}
+  });
+  var nav=document.getElementById('nav');
+  document.getElementById('hamb').addEventListener('click',function(){nav.classList.toggle('open');});
+  nav.addEventListener('click',function(e){if(e.target.tagName==='A')nav.classList.remove('open');});
+
+  var toggle=document.querySelector('.rail-toggle');
+  if(toggle) toggle.addEventListener('click',function(){
+    var rail=toggle.closest('.rail');
+    var open=rail.classList.toggle('open');
+    toggle.setAttribute('aria-expanded',open?'true':'false');
+  });
+  var cur=document.querySelector('.sidenav a[aria-current=page]');
+  if(cur){
+    var rail=cur.closest('.rail');
+    if(rail && matchMedia('(min-width:861px)').matches) rail.scrollTop=Math.max(0,cur.offsetTop-rail.clientHeight/3);
+  }
+})();
+</script>
+</body>
+</html>
