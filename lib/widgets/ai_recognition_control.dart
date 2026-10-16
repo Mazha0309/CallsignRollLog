@@ -153,7 +153,10 @@ class _AiRecognitionControlState extends State<AiRecognitionControl> {
     } catch (error) {
       if (mounted) {
         setState(() => _stage = _AiControlStage.idle);
-        _showMessage(context.l10n.aiRecordingFailed(error.toString()));
+        _showMessage(_reportedFailure(
+          error,
+          ai: (message) => context.l10n.aiRecordingFailed(message),
+        ));
       }
     }
   }
@@ -206,7 +209,7 @@ class _AiRecognitionControlState extends State<AiRecognitionControl> {
         _retryChunks.add((sequence: sequence, audio: chunk));
       }
       if (mounted && generation == _captureGeneration) {
-        setState(() => _liveTranscriptionError = error.message);
+        setState(() => _liveTranscriptionError = _visibleFailure(error));
       }
       return;
     } catch (error) {
@@ -214,7 +217,7 @@ class _AiRecognitionControlState extends State<AiRecognitionControl> {
         _retryChunks.add((sequence: sequence, audio: chunk));
       }
       if (mounted && generation == _captureGeneration) {
-        setState(() => _liveTranscriptionError = error.toString());
+        setState(() => _liveTranscriptionError = _visibleFailure(error));
       }
       return;
     }
@@ -254,14 +257,14 @@ class _AiRecognitionControlState extends State<AiRecognitionControl> {
       if (error.kind == AiRecognitionErrorKind.cancelled) return;
       if (mounted && generation == _captureGeneration) {
         setState(() {
-          _liveTranscriptionError = error.message;
+          _liveTranscriptionError = _visibleFailure(error);
           _liveFormatting = false;
         });
       }
     } catch (error) {
       if (mounted && generation == _captureGeneration) {
         setState(() {
-          _liveTranscriptionError = error.toString();
+          _liveTranscriptionError = _visibleFailure(error);
           _liveFormatting = false;
         });
       }
@@ -354,11 +357,13 @@ class _AiRecognitionControlState extends State<AiRecognitionControl> {
       await _reviewResult(result, baseline, generation);
     } on AiRecognitionException catch (error) {
       if (error.kind != AiRecognitionErrorKind.cancelled && mounted) {
-        _showMessage(context.l10n.aiRecognitionFailed(error.message));
+        _showMessage(
+          context.l10n.aiRecognitionFailed(aiUserFacingErrorMessage(error)),
+        );
       }
     } catch (error) {
       if (mounted) {
-        _showMessage(context.l10n.aiRecognitionFailed(error.toString()));
+        _showMessage(context.l10n.aiUnknownFailure);
       }
     } finally {
       if (mounted && generation == _captureGeneration) {
@@ -454,7 +459,10 @@ class _AiRecognitionControlState extends State<AiRecognitionControl> {
       }
     } catch (error) {
       if (mounted) {
-        _showMessage(context.l10n.aiApplyFailed(error.toString()));
+        _showMessage(_reportedFailure(
+          error,
+          ai: (message) => context.l10n.aiApplyFailed(message),
+        ));
       }
     }
   }
@@ -522,6 +530,18 @@ class _AiRecognitionControlState extends State<AiRecognitionControl> {
     }
     return fields;
   }
+
+  String _visibleFailure(Object error) => error is AiRecognitionException
+      ? aiUserFacingErrorMessage(error)
+      : context.l10n.aiUnknownFailure;
+
+  String _reportedFailure(
+    Object error, {
+    required String Function(String message) ai,
+  }) =>
+      error is AiRecognitionException
+          ? ai(aiUserFacingErrorMessage(error))
+          : context.l10n.aiUnknownFailure;
 
   void _showMessage(String message) {
     ScaffoldMessenger.maybeOf(context)?.showLoggedSnackBar(

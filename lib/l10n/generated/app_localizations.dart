@@ -6029,6 +6029,12 @@ abstract class AppLocalizations {
   /// **'请先添加并选择语音识别或多模态配置。'**
   String get aiRecognitionNeedsAnyProfile;
 
+  /// No description provided for @aiUnknownFailure.
+  ///
+  /// In zh, this message translates to:
+  /// **'操作失败，请稍后重试'**
+  String get aiUnknownFailure;
+
   /// No description provided for @aiAsrStageTitle.
   ///
   /// In zh, this message translates to:

@@ -1,7 +1,11 @@
+import 'dart:typed_data';
+
+import 'package:excel/excel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:openlogtool/l10n/l10n.dart';
 import 'package:openlogtool/providers/ai_recognition_settings_provider.dart';
+import 'package:openlogtool/providers/log_provider.dart';
 import 'package:openlogtool/providers/session_provider.dart';
 import 'package:openlogtool/providers/settings_provider.dart';
 import 'package:openlogtool/services/ai_credential_store.dart';
@@ -210,6 +214,93 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Import Excel'), findsNothing);
+  });
+
+  testWidgets('closes the Excel import client after structuring',
+      (tester) async {
+    tester.view.physicalSize = const Size(900, 820);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final settings = SettingsProvider();
+    final sessions = SessionProvider();
+    final logs = LogProvider(
+      sessionListLoader: () async => [],
+      sessionLogPageLoader: (_, __, ___) async => [],
+    );
+    final aiSettings = AiRecognitionSettingsProvider(
+      credentialStore: AiCredentialStore(
+        secureValues: _MemorySecureValues(),
+      ),
+    );
+    addTearDown(settings.dispose);
+    addTearDown(sessions.dispose);
+    addTearDown(logs.dispose);
+    addTearDown(aiSettings.dispose);
+    await aiSettings.initialized;
+    await aiSettings.saveTextAssistant(
+      provider: TextAssistantProvider.openAi,
+      baseUrl: Uri.parse('https://api.openai.com/v1'),
+      model: 'gpt-4o-mini',
+      secret: 'test-key',
+    );
+    final client = TextAssistantClient(
+      config: TextAssistantConfig(
+        provider: TextAssistantProvider.openAi,
+        baseUrl: Uri.parse('https://api.openai.com/v1'),
+        model: 'gpt-4o-mini',
+        credentialId: 'excel-test',
+      ),
+      secretResolver: (_) async => 'test-key',
+    );
+    final workbook = Excel.createExcel();
+    workbook['Sheet1'].appendRow([TextCellValue('BG5DBL')]);
+    final bytes = workbook.encode();
+    expect(bytes, isNotNull);
+
+    await tester.pumpWidget(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider<SettingsProvider>.value(value: settings),
+          ChangeNotifierProvider<SessionProvider>.value(value: sessions),
+          ChangeNotifierProvider<LogProvider>.value(value: logs),
+          ChangeNotifierProvider<AiRecognitionSettingsProvider>.value(
+            value: aiSettings,
+          ),
+        ],
+        child: MaterialApp(
+          locale: const Locale('en', 'US'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: ExportPanel(
+              excelImportBytes: Uint8List.fromList(bytes!),
+              excelClientFactory: (_) => client,
+              excelStructure: (_, __) async =>
+                  throw StateError('structure failed'),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.ensureVisible(find.text('Import Excel'));
+    await tester.tap(find.text('Import Excel'));
+    await tester.pumpAndSettle();
+
+    await expectLater(
+      client.completeJson(systemPrompt: 'x', userPrompt: 'y'),
+      throwsA(
+        isA<StateError>().having(
+          (error) => error.message,
+          'message',
+          'TEXT_ASSISTANT_CLOSED',
+        ),
+      ),
+    );
+    expect(tester.takeException(), isNull);
   });
 }
 

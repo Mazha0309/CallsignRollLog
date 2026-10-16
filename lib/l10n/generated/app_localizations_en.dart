@@ -3515,6 +3515,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'Add and select a speech or multimodal profile first.';
 
   @override
+  String get aiUnknownFailure => 'Something went wrong. Try again.';
+
+  @override
   String get aiAsrStageTitle => 'Speech recognition (ASR)';
 
   @override
@@ -5516,6 +5519,9 @@ class AppLocalizationsEnUs extends AppLocalizationsEn {
   @override
   String get aiRecognitionNeedsAnyProfile =>
       'Add and select a speech or multimodal profile first.';
+
+  @override
+  String get aiUnknownFailure => 'Something went wrong. Try again.';
 
   @override
   String get aiAsrStageTitle => 'Speech recognition (ASR)';

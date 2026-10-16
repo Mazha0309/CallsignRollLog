@@ -362,6 +362,37 @@ void main() {
     expect(find.byKey(const Key('ai-review-panel')), findsOneWidget);
     expect(find.textContaining('Callsign: BG5DBL'), findsOneWidget);
   });
+
+  testWidgets('shows a readable message instead of the raw error',
+      (tester) async {
+    final aiSettings = AiRecognitionSettingsProvider();
+    addTearDown(aiSettings.dispose);
+    await aiSettings.initialized;
+    await _enableMultimodal(aiSettings);
+
+    await tester.pumpWidget(
+      _TestApp(
+        aiSettings: aiSettings,
+        recorder: _FakeAiAudioRecorder(),
+        recognizer: (audio, settings, cancellationToken) async =>
+            throw const AiRecognitionException(
+          kind: AiRecognitionErrorKind.missingCredentials,
+          message: 'missing credentials for provider multi',
+        ),
+      ),
+    );
+    await tester.pump();
+
+    await tester.ensureVisible(find.byKey(const Key('ai-start-recording')));
+    await tester.tap(find.byKey(const Key('ai-start-recording')));
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('ai-stop-recording')));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('还没填 API Key'), findsOneWidget);
+    expect(find.textContaining('missing credentials'), findsNothing);
+    expect(find.textContaining('AiRecognitionException'), findsNothing);
+  });
 }
 
 Future<void> _enableAi(AiRecognitionSettingsProvider settings) async {

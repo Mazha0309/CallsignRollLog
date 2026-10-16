@@ -3319,6 +3319,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get aiRecognitionNeedsAnyProfile => '请先添加并选择语音识别或多模态配置。';
 
   @override
+  String get aiUnknownFailure => '操作失败，请稍后重试';
+
+  @override
   String get aiAsrStageTitle => '语音识别（ASR）';
 
   @override
@@ -5224,6 +5227,9 @@ class AppLocalizationsZhCn extends AppLocalizationsZh {
 
   @override
   String get aiRecognitionNeedsAnyProfile => '请先添加并选择语音识别或多模态配置。';
+
+  @override
+  String get aiUnknownFailure => '操作失败，请稍后重试';
 
   @override
   String get aiAsrStageTitle => '语音识别（ASR）';

@@ -20,6 +20,11 @@ import 'package:provider/provider.dart';
 
 const double _wideDictionaryBreakpoint = 720;
 
+String _visibleFailure(AppLocalizations l10n, Object error) =>
+    error is AiRecognitionException
+        ? aiUserFacingErrorMessage(error)
+        : l10n.aiUnknownFailure;
+
 // Kept for compatibility with callers that used the previous grid helper.
 int dictionaryGridColumnCount(double width) => width >= 760 ? 2 : 1;
 
@@ -145,7 +150,9 @@ class _DictionaryManagerState extends State<DictionaryManager> {
     } catch (error) {
       if (!mounted) return;
       messenger.showLoggedSnackBar(
-        SnackBar(content: Text(l10n.libraryImportFailed('$error'))),
+        SnackBar(
+          content: Text(l10n.libraryImportFailed(_visibleFailure(l10n, error))),
+        ),
       );
     } finally {
       if (mounted) setState(() => _importing = false);
@@ -186,7 +193,9 @@ class _DictionaryManagerState extends State<DictionaryManager> {
     } catch (error) {
       if (!mounted) return;
       messenger.showLoggedSnackBar(
-        SnackBar(content: Text(l10n.libraryExportFailed('$error'))),
+        SnackBar(
+          content: Text(l10n.libraryExportFailed(_visibleFailure(l10n, error))),
+        ),
       );
     } finally {
       if (mounted) setState(() => _exporting = false);
@@ -217,7 +226,11 @@ class _DictionaryManagerState extends State<DictionaryManager> {
     } catch (error) {
       if (!mounted) return;
       messenger.showLoggedSnackBar(
-        SnackBar(content: Text(l10n.libraryItemAddFailed('$error'))),
+        SnackBar(
+          content: Text(
+            l10n.libraryItemAddFailed(_visibleFailure(l10n, error)),
+          ),
+        ),
       );
     } finally {
       if (mounted) setState(() => _busyLibraries.remove(library.type));
@@ -257,7 +270,11 @@ class _DictionaryManagerState extends State<DictionaryManager> {
     } catch (error) {
       if (!mounted) return;
       messenger.showLoggedSnackBar(
-        SnackBar(content: Text(l10n.libraryItemRenameFailed('$error'))),
+        SnackBar(
+          content: Text(
+            l10n.libraryItemRenameFailed(_visibleFailure(l10n, error)),
+          ),
+        ),
       );
     } finally {
       if (mounted) setState(() => _busyLibraries.remove(library.type));
@@ -310,7 +327,11 @@ class _DictionaryManagerState extends State<DictionaryManager> {
     } catch (error) {
       if (!mounted) return;
       messenger.showLoggedSnackBar(
-        SnackBar(content: Text(l10n.libraryItemDeleteFailed('$error'))),
+        SnackBar(
+          content: Text(
+            l10n.libraryItemDeleteFailed(_visibleFailure(l10n, error)),
+          ),
+        ),
       );
     } finally {
       if (mounted) setState(() => _busyLibraries.remove(library.type));
@@ -367,7 +388,9 @@ class _DictionaryManagerState extends State<DictionaryManager> {
     } catch (error) {
       if (!mounted) return;
       messenger.showLoggedSnackBar(
-        SnackBar(content: Text(l10n.libraryClearFailed('$error'))),
+        SnackBar(
+          content: Text(l10n.libraryClearFailed(_visibleFailure(l10n, error))),
+        ),
       );
     } finally {
       if (mounted) setState(() => _busyLibraries.remove(library.type));
@@ -507,14 +530,18 @@ class _DictionaryManagerState extends State<DictionaryManager> {
       if (progressOpen) Navigator.of(context, rootNavigator: true).pop();
       if (error.kind != AiRecognitionErrorKind.cancelled) {
         ScaffoldMessenger.of(context).showLoggedSnackBar(
-          SnackBar(content: Text(context.l10n.aiDictionaryFailed('$error'))),
+          SnackBar(
+            content: Text(
+              context.l10n.aiDictionaryFailed(aiUserFacingErrorMessage(error)),
+            ),
+          ),
         );
       }
     } catch (error) {
       if (!mounted) return;
       if (progressOpen) Navigator.of(context, rootNavigator: true).pop();
       ScaffoldMessenger.of(context).showLoggedSnackBar(
-        SnackBar(content: Text(context.l10n.aiDictionaryFailed('$error'))),
+        SnackBar(content: Text(context.l10n.aiUnknownFailure)),
       );
     } finally {
       progress.dispose();

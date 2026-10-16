@@ -15,17 +15,37 @@ import 'package:openlogtool/models/export_settings.dart';
 import 'package:openlogtool/models/log_entry.dart';
 import 'package:openlogtool/services/excel_import_service.dart';
 import 'package:openlogtool/services/export_service.dart';
+import 'package:openlogtool/services/text_assistant.dart';
 import 'package:openlogtool/utils/app_snack_bar.dart';
 import 'package:openlogtool/config/app_config.dart';
 import 'package:openlogtool/theme/app_theme.dart';
 import 'package:openlogtool/widgets/settings/settings_ui.dart';
 import 'package:openlogtool/widgets/theme_color_picker_dialog.dart';
 
+typedef ExcelClientFactory = TextAssistantClient Function(
+  AiRecognitionSettingsProvider settings,
+);
+typedef ExcelStructure = Future<List<Map<String, Object?>>> Function(
+  TextAssistantClient client,
+  String sheetText,
+);
+
 class ExportPanel extends StatefulWidget {
-  const ExportPanel({super.key, this.embedded = false});
+  const ExportPanel({
+    super.key,
+    this.embedded = false,
+    this.excelImportBytes,
+    this.excelClientFactory,
+    this.excelStructure,
+  });
 
   /// Omits the page-level title when hosted by the tabbed data workspace.
   final bool embedded;
+
+  /// Test seam. Production leaves this null and opens the file picker.
+  final Uint8List? excelImportBytes;
+  final ExcelClientFactory? excelClientFactory;
+  final ExcelStructure? excelStructure;
 
   @override
   State<ExportPanel> createState() => _ExportPanelState();
@@ -1356,16 +1376,22 @@ class _ExportPanelState extends State<ExportPanel> {
     final scaffoldMessenger = ScaffoldMessenger.of(context);
     if (!mounted) return;
 
+    TextAssistantClient? client;
     try {
-      final result = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: ['xlsx'],
-        withData: kIsWeb,
-      );
-      if (result == null || result.files.isEmpty) return;
-      final selected = result.files.single;
-      final bytes =
-          selected.bytes ?? (await File(selected.path!).readAsBytes());
+      final Uint8List bytes;
+      final injectedBytes = widget.excelImportBytes;
+      if (injectedBytes != null) {
+        bytes = injectedBytes;
+      } else {
+        final result = await FilePicker.platform.pickFiles(
+          type: FileType.custom,
+          allowedExtensions: ['xlsx'],
+          withData: kIsWeb,
+        );
+        if (result == null || result.files.isEmpty) return;
+        final selected = result.files.single;
+        bytes = selected.bytes ?? (await File(selected.path!).readAsBytes());
+      }
       if (bytes.isEmpty) {
         throw const FormatException('EXCEL_IMPORT_EMPTY_FILE');
       }
@@ -1375,16 +1401,21 @@ class _ExportPanelState extends State<ExportPanel> {
         throw const FormatException('EXCEL_IMPORT_NO_ROWS');
       }
 
-      final client = aiSettings.createTextAssistantClient(
-        timeout: const Duration(seconds: 60),
-      );
+      final opened = widget.excelClientFactory?.call(aiSettings) ??
+          aiSettings.createTextAssistantClient(
+            timeout: const Duration(seconds: 60),
+          );
+      client = opened;
       scaffoldMessenger.showLoggedSnackBar(
         SnackBar(
           content: Text(l10n.excelImportLlmProcessing),
           duration: const Duration(seconds: 5),
         ),
       );
-      final records = await structureWithLlm(client, buildSheetText(rows));
+      final records = await (widget.excelStructure ?? structureWithLlm)(
+        opened,
+        buildSheetText(rows),
+      );
       if (records.isEmpty) {
         throw const FormatException('EXCEL_IMPORT_NO_RECORDS');
       }
@@ -1476,6 +1507,8 @@ class _ExportPanelState extends State<ExportPanel> {
           backgroundColor: Colors.red,
         ),
       );
+    } finally {
+      client?.close();
     }
   }
 
