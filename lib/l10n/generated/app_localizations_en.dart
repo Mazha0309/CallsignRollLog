@@ -85,6 +85,21 @@ class AppLocalizationsEn extends AppLocalizations {
       'Only the owner can delete or close a session or grant access to others. Closed sessions are view-only.';
 
   @override
+  String get shareDictionary => 'Share dictionary';
+
+  @override
+  String get shareDictionaryHint =>
+      'The other person can use your dictionary suggestions only in these shared sessions, and can reuse device, antenna, QTH, power and height from those sessions. They cannot edit your dictionary, and nothing is copied into their dictionary or database.';
+
+  @override
+  String get shareDictionaryBadge => 'Dictionary';
+
+  @override
+  String sharedDictionarySource(String username) {
+    return 'From $username';
+  }
+
+  @override
   String get shareRecipientHint =>
       'Choose a friend or enter a username on this server';
 
@@ -3940,6 +3955,21 @@ class AppLocalizationsEn extends AppLocalizations {
 /// The translations for English, as used in the United States (`en_US`).
 class AppLocalizationsEnUs extends AppLocalizationsEn {
   AppLocalizationsEnUs() : super('en_US');
+
+  @override
+  String get shareDictionary => 'Share dictionary';
+
+  @override
+  String get shareDictionaryHint =>
+      'The other person can use your dictionary suggestions only in these shared sessions, and can reuse device, antenna, QTH, power and height from those sessions. They cannot edit your dictionary, and nothing is copied into their dictionary or database.';
+
+  @override
+  String get shareDictionaryBadge => 'Dictionary';
+
+  @override
+  String sharedDictionarySource(String username) {
+    return 'From $username';
+  }
 
   @override
   String get collaborationTechnicalDetails => 'Connection & diagnostics';

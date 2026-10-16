@@ -5,6 +5,24 @@ import 'package:openlogtool/models/account_share_dto.dart';
 import 'package:openlogtool/providers/account_share_provider.dart';
 import 'package:openlogtool/widgets/settings/settings_ui.dart';
 
+String shareGrantSummary(
+  AppLocalizations l,
+  AccountShareGrantDto grant, {
+  bool includeStatus = false,
+}) {
+  final scope = grant.scopeMode == 'all'
+      ? l.shareAll
+      : '${l.shareSelected} (${grant.selectedSessions.length})';
+  final edit = grant.canEditLogs ? l.shareEditLogs : l.shareViewOnly;
+  final delete = grant.canDeleteLogs ? ' · ${l.shareDeleteLogs}' : '';
+  final dictionary =
+      grant.shareDictionary ? ' · ${l.shareDictionaryBadge}' : '';
+  final pending = includeStatus && grant.status == 'pending'
+      ? ' · ${l.socialRequestSent}'
+      : '';
+  return '$scope · $edit$delete$dictionary$pending';
+}
+
 /// The same inbox is visible both in Sharing and in Messages.
 class ShareInvitationsPanel extends StatefulWidget {
   const ShareInvitationsPanel({super.key, this.showEmpty = true});
@@ -91,8 +109,7 @@ class _ShareInvitationsPanelState extends State<ShareInvitationsPanel> {
               title: l.shareInvitationFrom(grant.grantorUsername.isEmpty
                   ? grant.grantorUserId
                   : grant.grantorUsername),
-              description:
-                  '${grant.scopeMode == 'all' ? l.shareAll : '${l.shareSelected} (${grant.selectedSessions.length})'} · ${grant.canEditLogs ? l.shareEditLogs : l.shareViewOnly}${grant.canDeleteLogs ? ' · ${l.shareDeleteLogs}' : ''}',
+              description: shareGrantSummary(l, grant),
               child: Wrap(spacing: 8, runSpacing: 4, children: [
                 FilledButton.icon(
                     key: Key('accept-share-${grant.id}'),

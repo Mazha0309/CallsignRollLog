@@ -114,6 +114,7 @@ void main() {
         sessions: selection,
         canEditLogs: true,
         canDeleteLogs: false,
+        shareDictionary: false,
         expectedScope: sharing.accountScope);
     expect(bodies.single, {
       'granteeUsername': 'bob',
@@ -135,6 +136,7 @@ void main() {
         sessions: selection,
         canEditLogs: true,
         canDeleteLogs: true,
+        shareDictionary: false,
         expectedScope: sharing.accountScope,
         grantId: 'existing');
     expect(bodies.last['selectedSessions'], isEmpty);

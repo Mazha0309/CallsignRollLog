@@ -1,4 +1,9 @@
 {
+  "shareDictionary": "共享词库",
+  "shareDictionaryHint": "对方只能在这些共享会话里用你的词库联想，以及一键复用设备、天线、QTH、功率和高度。不能改你的词库，也不会写入对方的词库或数据库。",
+  "shareDictionaryBadge": "词库",
+  "sharedDictionarySource": "来自 {username}",
+  "@sharedDictionarySource": {"placeholders":{"username":{"type":"String"}}},
   "collaborationTechnicalDetails": "连接与诊断详情",
   "collaborationOverviewOnline": "已连接，正在与参与者同步记录。",
   "collaborationOverviewOffline": "连接暂时不可用，已有记录仍保留在本机。",

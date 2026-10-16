@@ -9,10 +9,12 @@ import 'package:openlogtool/providers/ai_recognition_settings_provider.dart';
 import 'package:openlogtool/providers/collaboration_provider.dart';
 import 'package:openlogtool/providers/log_provider.dart';
 import 'package:openlogtool/providers/session_provider.dart';
+import 'package:openlogtool/providers/account_share_provider.dart';
 import 'package:openlogtool/providers/dictionary_provider.dart';
 import 'package:openlogtool/providers/settings_provider.dart';
 import 'package:openlogtool/models/log_entry.dart';
 import 'package:openlogtool/models/dictionary_item.dart';
+import 'package:openlogtool/models/shared_dictionary.dart';
 import 'package:openlogtool/models/live_draft.dart';
 import 'package:openlogtool/utils/dictionary_ranking.dart';
 import 'package:openlogtool/utils/dictionary_usage_store.dart';
@@ -137,6 +139,7 @@ class _LogFormState extends State<LogForm> with AutomaticKeepAliveClientMixin {
   late final Map<String, TextEditingController> _draftControllers;
   late final Map<String, GlobalKey> _autocompleteOptionKeys;
   late final DictionaryUsageStore _dictionaryUsage;
+  String? _sharedDictionaryKey;
   late final Map<String, FocusNode> _draftFocusNodes;
   late final Map<String, VoidCallback> _draftControllerListeners;
   late final Map<String, VoidCallback> _draftFocusListeners;
@@ -399,6 +402,37 @@ class _LogFormState extends State<LogForm> with AutomaticKeepAliveClientMixin {
     } finally {
       _applyingSharedDraft = false;
     }
+  }
+
+  void _scheduleSharedDictionary() {
+    final sharing = context.read<AccountShareProvider?>();
+    final opened = sharing?.openedSharedSession;
+    if (sharing == null ||
+        opened == null ||
+        !sharing.supportsDictionarySharing) {
+      return;
+    }
+    final key = '${sharing.accountScope}|${opened.grantId}|${sharing.revision}';
+    if (_sharedDictionaryKey == key) return;
+    _sharedDictionaryKey = key;
+    unawaited(sharing.ensureSharedDictionary(opened.grantId));
+  }
+
+  List<DictionaryItem> _dictionaryOptions(
+    String type,
+    List<DictionaryItem> own,
+  ) {
+    final sharing = context.watch<AccountShareProvider?>();
+    final opened = sharing?.openedSharedSession;
+    final snapshot =
+        opened == null ? null : sharing?.dictionaryFor(opened.grantId);
+    if (sharing == null || snapshot == null) return own;
+    return mergeSharedDictionary(
+      own: own,
+      shared: snapshot.items.where((item) => item.dictType == type),
+      sourceLabel:
+          context.l10n.sharedDictionarySource(snapshot.grantorUsername),
+    );
   }
 
   void _scheduleSharedDraftSync() {
@@ -1569,6 +1603,15 @@ class _LogFormState extends State<LogForm> with AutomaticKeepAliveClientMixin {
     final collaboration = Provider.of<CollaborationProvider>(context);
     final aiSettings = Provider.of<AiRecognitionSettingsProvider?>(context);
     _scheduleSharedDraftSync();
+    _scheduleSharedDictionary();
+    final accountSharing = context.watch<AccountShareProvider?>();
+    final openedShare = accountSharing?.openedSharedSession;
+    final reuseGrant = accountSharing != null &&
+            openedShare != null &&
+            openedShare.canEditLogs &&
+            accountSharing.supportsDictionarySharing
+        ? openedShare
+        : null;
     final sharedDraft = collaboration.liveDraftSnapshot != null;
     final readOnly =
         widget.readOnly || (sharedDraft && !collaboration.canEditLiveDraft);
@@ -1701,6 +1744,28 @@ class _LogFormState extends State<LogForm> with AutomaticKeepAliveClientMixin {
                           historyEnabled:
                               settingsProvider.callSignQthLinkEnabled,
                           onReuseRecord: _reuseHistoryRecord,
+                          sharedHistoryGrantId: reuseGrant?.grantId,
+                          sharedHistoryLabel: reuseGrant == null
+                              ? ''
+                              : context.l10n.sharedDictionarySource(
+                                  reuseGrant.grantorUsername,
+                                ),
+                          sharedHistoryLoader: reuseGrant == null
+                              ? null
+                              : (callsign) {
+                                  final sharing =
+                                      context.read<AccountShareProvider?>();
+                                  if (sharing == null) {
+                                    return Future.value(
+                                        const <SharedCallsignReuse>[]);
+                                  }
+                                  return sharing.sharedCallsignHistory(
+                                    grantId: reuseGrant.grantId,
+                                    callsign: callsign,
+                                    canEditLogs: reuseGrant.canEditLogs,
+                                    expectedScope: sharing.accountScope,
+                                  );
+                                },
                           remotePreview: sharedDraft &&
                                   !collaboration
                                       .liveDraftHistoryPreviewOwnedHere
@@ -1730,7 +1795,10 @@ class _LogFormState extends State<LogForm> with AutomaticKeepAliveClientMixin {
                           hintText: context.l10n.inputFieldHint(
                             context.l10n.fieldDevice,
                           ),
-                          options: dictionaryProvider.deviceDict,
+                          options: _dictionaryOptions(
+                            'device',
+                            dictionaryProvider.deviceDict,
+                          ),
                           upperCase: false,
                           isCompact: isNarrow,
                           textInputAction: TextInputAction.next,
@@ -1747,7 +1815,10 @@ class _LogFormState extends State<LogForm> with AutomaticKeepAliveClientMixin {
                           hintText: context.l10n.inputFieldHint(
                             context.l10n.fieldAntenna,
                           ),
-                          options: dictionaryProvider.antennaDict,
+                          options: _dictionaryOptions(
+                            'antenna',
+                            dictionaryProvider.antennaDict,
+                          ),
                           upperCase: false,
                           isCompact: isNarrow,
                           textInputAction: TextInputAction.next,
@@ -1779,7 +1850,10 @@ class _LogFormState extends State<LogForm> with AutomaticKeepAliveClientMixin {
                           hintText: context.l10n.inputFieldHint(
                             context.l10n.fieldQth,
                           ),
-                          options: dictionaryProvider.qthDict,
+                          options: _dictionaryOptions(
+                            'qth',
+                            dictionaryProvider.qthDict,
+                          ),
                           upperCase: false,
                           isCompact: isNarrow,
                           textInputAction: TextInputAction.next,
@@ -2144,7 +2218,9 @@ class _LogFormState extends State<LogForm> with AutomaticKeepAliveClientMixin {
         if (selection.isAi) {
           _acceptedInlineAiValues[draftField] = selection.value;
         }
-        if (!selection.isAi && !selection.isFormat) {
+        if (!selection.isAi &&
+            !selection.isFormat &&
+            selection.item?.origin != 'shared') {
           _dictionaryUsage.recordSelection(draftField, selection.value);
         }
         controller.value = TextEditingValue(
@@ -2263,10 +2339,13 @@ class _LogFormState extends State<LogForm> with AutomaticKeepAliveClientMixin {
                                   color: theme.colorScheme.onSurfaceVariant,
                                 ),
                               )
-                            : item.item!.abbreviation.isNotEmpty ||
+                            : item.item!.sourceLabel.isNotEmpty ||
+                                    item.item!.abbreviation.isNotEmpty ||
                                     item.item!.pinyin.isNotEmpty
                                 ? Text(
                                     [
+                                      if (item.item!.sourceLabel.isNotEmpty)
+                                        item.item!.sourceLabel,
                                       if (item.item!.abbreviation.isNotEmpty)
                                         item.item!.abbreviation,
                                       if (item.item!.pinyin.isNotEmpty)

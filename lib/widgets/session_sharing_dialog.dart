@@ -51,7 +51,8 @@ class _SessionSharingDialogState extends State<SessionSharingDialog> {
   final _selected = <String>{};
   List<ShareSessionRef> _sessions = [];
   String _mode = 'selected';
-  bool _edit = false, _delete = false, _loading = true, _working = false;
+  bool _edit = false, _delete = false, _shareDictionary = false;
+  bool _loading = true, _working = false;
   String? _scope, _error;
   AccountShareGrantDto? _grant;
   int _loadEpoch = 0;
@@ -59,7 +60,9 @@ class _SessionSharingDialogState extends State<SessionSharingDialog> {
   @override
   void initState() {
     super.initState();
-    _scope = context.read<AccountShareProvider>().accountScope;
+    final sharing = context.read<AccountShareProvider>();
+    _scope = sharing.accountScope;
+    _shareDictionary = sharing.supportsDictionarySharing;
     unawaited(_load());
   }
 
@@ -119,6 +122,7 @@ class _SessionSharingDialogState extends State<SessionSharingDialog> {
         _mode = grant.scopeMode;
         _edit = grant.canEditLogs;
         _delete = grant.canDeleteLogs;
+        _shareDictionary = grant.shareDictionary;
         _selected
           ..clear()
           ..addAll(grant.selectedSessions.map((s) => s.identity));
@@ -175,6 +179,7 @@ class _SessionSharingDialogState extends State<SessionSharingDialog> {
           sessions: selected,
           canEditLogs: _edit,
           canDeleteLogs: _delete,
+          shareDictionary: _shareDictionary,
           expectedScope: _scope,
           grantId: _grant?.id);
       if (!mounted) return;
@@ -184,6 +189,7 @@ class _SessionSharingDialogState extends State<SessionSharingDialog> {
         _selected.clear();
         _mode = 'selected';
         _edit = _delete = false;
+        _shareDictionary = sharing.supportsDictionarySharing;
       });
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text(context.l10n.shareSaved)));
@@ -554,6 +560,18 @@ class _SessionSharingDialogState extends State<SessionSharingDialog> {
                                       ? null
                                       : (value) =>
                                           setState(() => _delete = value)),
+                              if (sharing.supportsDictionarySharing)
+                                SwitchListTile(
+                                  key: const Key('share-dictionary'),
+                                  contentPadding: EdgeInsets.zero,
+                                  title: Text(l.shareDictionary),
+                                  subtitle: Text(l.shareDictionaryHint),
+                                  value: _shareDictionary,
+                                  onChanged: disabled
+                                      ? null
+                                      : (value) => setState(
+                                          () => _shareDictionary = value),
+                                ),
                               Text(l.sharePermissionHint,
                                   style: Theme.of(context).textTheme.bodySmall),
                               Align(
@@ -574,8 +592,8 @@ class _SessionSharingDialogState extends State<SessionSharingDialog> {
                                       title: Text(grant.granteeUsername.isEmpty
                                           ? grant.granteeUserId
                                           : grant.granteeUsername),
-                                      subtitle: Text(
-                                          '${grant.scopeMode == 'all' ? l.shareAll : '${l.shareSelected} (${grant.selectedSessions.length})'} · ${grant.canEditLogs ? l.shareEditLogs : l.shareViewOnly}${grant.canDeleteLogs ? ' · ${l.shareDeleteLogs}' : ''}${grant.status == 'pending' ? ' · ${l.socialRequestSent}' : ''}'),
+                                      subtitle: Text(shareGrantSummary(l, grant,
+                                          includeStatus: true)),
                                       trailing: Row(
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
@@ -610,6 +628,8 @@ class _SessionSharingDialogState extends State<SessionSharingDialog> {
                             _selected.clear();
                             _mode = 'selected';
                             _edit = _delete = false;
+                            _shareDictionary =
+                                sharing.supportsDictionarySharing;
                           }),
                   child: Text(l.cancel)),
             FilledButton(

@@ -232,6 +232,30 @@ abstract class AppLocalizations {
   /// **'删除整个会话、结束会话和转授权仍由所有者控制；已结束的会话只能查看。'**
   String get sharePermissionHint;
 
+  /// No description provided for @shareDictionary.
+  ///
+  /// In zh, this message translates to:
+  /// **'共享词库'**
+  String get shareDictionary;
+
+  /// No description provided for @shareDictionaryHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'对方只能在这些共享会话里用你的词库联想，以及一键复用设备、天线、QTH、功率和高度。不能改你的词库，也不会写入对方的词库或数据库。'**
+  String get shareDictionaryHint;
+
+  /// No description provided for @shareDictionaryBadge.
+  ///
+  /// In zh, this message translates to:
+  /// **'词库'**
+  String get shareDictionaryBadge;
+
+  /// No description provided for @sharedDictionarySource.
+  ///
+  /// In zh, this message translates to:
+  /// **'来自 {username}'**
+  String sharedDictionarySource(String username);
+
   /// No description provided for @shareRecipientHint.
   ///
   /// In zh, this message translates to:

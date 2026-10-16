@@ -3,11 +3,13 @@ import 'dart:convert';
 import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:openlogtool/models/account_share_dto.dart';
+import 'package:openlogtool/models/shared_dictionary.dart';
 import 'package:openlogtool/models/social_dto.dart';
 import 'package:openlogtool/providers/server_provider.dart';
 import 'package:openlogtool/src/bridge/models/session.dart';
 import 'package:openlogtool/providers/session_provider.dart';
 import 'package:openlogtool/services/collaboration_sync.dart';
+import 'package:openlogtool/services/server_api.dart';
 import 'package:openlogtool/services/social_realtime.dart';
 
 class AccountShareProvider with ChangeNotifier {
@@ -20,6 +22,8 @@ class AccountShareProvider with ChangeNotifier {
   List<SharedSessionDto> _sharedSessions = const [];
   List<AccountShareGrantDto> _inbox = const [];
   List<AccountShareGrantDto> _outgoing = const [];
+  List<AccountShareGrantDto> _received = const [];
+  final Map<String, SharedDictionarySnapshot> _dictionaries = {};
   Object? _lastError;
   Object? _inboxError;
   SocialSnapshot _social = const SocialSnapshot();
@@ -62,6 +66,10 @@ class AccountShareProvider with ChangeNotifier {
   bool get supportsBatchSharing =>
       supportsLegacySharing &&
       (_server?.serverInfo?.features.contains('batchSessionSharing') ?? false);
+  bool get supportsDictionarySharing =>
+      supportsLegacySharing &&
+      (_server?.serverInfo?.features.contains('accountShareDictionary') ??
+          false);
   bool get supportsPersonalPromotion =>
       _server?.serverInfo?.features.contains('personalSharePromotion') ?? false;
   bool get supportsDirectJoin =>
@@ -78,6 +86,9 @@ class AccountShareProvider with ChangeNotifier {
   List<SharedSessionDto> get sharedSessions => _sharedSessions;
   List<AccountShareGrantDto> get inbox => _inbox;
   List<AccountShareGrantDto> get outgoing => _outgoing;
+  List<AccountShareGrantDto> get receivedGrants => _received;
+  SharedDictionarySnapshot? dictionaryFor(String grantId) =>
+      _dictionaries[grantId];
   Object? get inboxError => _inboxError;
   int get pendingShareCount =>
       inbox.where((grant) => grant.status == 'pending').length;
@@ -118,7 +129,7 @@ class AccountShareProvider with ChangeNotifier {
     _server = server;
     final nextScope = '${server.contextRevision}|${server.serverUrl}|'
         '${server.accountId}|${server.serverInfo?.serverInstanceId}|$supportsFriends|$isSupported|'
-        '${server.serverInfo?.features.contains('socialWebSocket')}|$supportsBatchSharing';
+        '${server.serverInfo?.features.contains('socialWebSocket')}|$supportsBatchSharing|$supportsDictionarySharing';
     if (_scope == nextScope) return;
     _scope = nextScope;
     _openedSession = null;
@@ -131,6 +142,8 @@ class AccountShareProvider with ChangeNotifier {
     _sharedSessions = const [];
     _inbox = const [];
     _outgoing = const [];
+    _received = const [];
+    _dictionaries.clear();
     _social = const SocialSnapshot();
     _lastError = null;
     _inboxError = null;
@@ -212,17 +225,27 @@ class AccountShareProvider with ChangeNotifier {
               if (upgraded != null) _openedSession = upgraded;
             }
           }),
-          if (supportsBatchSharing)
+          if (supportsBatchSharing || supportsDictionarySharing)
             load(
                 () => Future.wait([
                       api.listSessionShares('outbox'),
                       api.listSessionShares('active'),
-                    ]),
-                (value) => _outgoing = [
-                      ...value[0],
-                      ...value[1]
-                          .where((grant) => grant.grantorUserId == accountId),
-                    ]),
+                    ]), (value) {
+              if (supportsBatchSharing) {
+                _outgoing = [
+                  ...value[0],
+                  ...value[1]
+                      .where((grant) => grant.grantorUserId == accountId),
+                ];
+              }
+              _received = [
+                for (final grant in value[1])
+                  if (grant.granteeUserId == accountId &&
+                      grant.status == 'accepted')
+                    grant,
+              ];
+              _pruneDictionaries();
+            }),
         ],
       ]);
       if (_disposed || epoch != _epoch) return;
@@ -361,6 +384,7 @@ class AccountShareProvider with ChangeNotifier {
       required List<ShareSessionRef> sessions,
       required bool canEditLogs,
       required bool canDeleteLogs,
+      required bool shareDictionary,
       required String? expectedScope,
       String? grantId}) {
     if (!supportsBatchSharing) throw StateError('SHARING_UPGRADE_REQUIRED');
@@ -379,10 +403,101 @@ class AccountShareProvider with ChangeNotifier {
               : sessions.map((s) => s.toJson()).toList(),
           'canEditLogs': canEditLogs,
           'canDeleteLogs': canDeleteLogs,
+          if (supportsDictionarySharing) 'shareDictionary': shareDictionary,
           if (supportsPersonalPromotion)
             'requireCollaborationForPersonalEdits': true,
         },
         expectedScope);
+  }
+
+  bool _dictionaryReadable(String grantId) {
+    for (final grant in _received) {
+      if (grant.id == grantId &&
+          grant.status == 'accepted' &&
+          grant.shareDictionary) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  void _pruneDictionaries() {
+    final allowed = {
+      for (final grant in _received)
+        if (grant.shareDictionary) grant.id,
+    };
+    _dictionaries.removeWhere((id, _) => !allowed.contains(id));
+  }
+
+  void _dropDictionary(String grantId) {
+    if (_dictionaries.remove(grantId) != null) notifyListeners();
+  }
+
+  Future<SharedDictionarySnapshot?> ensureSharedDictionary(
+      String grantId) async {
+    if (_disposed ||
+        !supportsDictionarySharing ||
+        !_dictionaryReadable(grantId)) {
+      if (!_disposed) _dropDictionary(grantId);
+      return null;
+    }
+    final scope = _scope;
+    try {
+      final snapshot = await _server!.api.readSharedDictionary(grantId);
+      if (_disposed || scope != _scope || !_dictionaryReadable(grantId)) {
+        if (!_disposed && scope == _scope) _dropDictionary(grantId);
+        return null;
+      }
+      final previous = _dictionaries[grantId];
+      if (previous != null &&
+          previous.revision == snapshot.revision &&
+          previous.exists == snapshot.exists) {
+        return previous;
+      }
+      _dictionaries[grantId] = snapshot;
+      notifyListeners();
+      return snapshot;
+    } on ServerApiException catch (error) {
+      if (_disposed || scope != _scope) return null;
+      if (error.statusCode == 404 || error.code == 'NOT_FOUND') {
+        _dropDictionary(grantId);
+        return null;
+      }
+      return _dictionaries[grantId];
+    }
+  }
+
+  Future<List<SharedCallsignReuse>> sharedCallsignHistory({
+    required String grantId,
+    required String callsign,
+    required bool canEditLogs,
+    required String? expectedScope,
+  }) async {
+    final normalized = callsign.trim().toUpperCase();
+    if (!canEditLogs ||
+        !supportsDictionarySharing ||
+        expectedScope != _scope ||
+        !_dictionaryReadable(grantId) ||
+        normalized.length < 2 ||
+        normalized.length > 32) {
+      return const [];
+    }
+    final scope = _scope;
+    try {
+      final rows =
+          await _server!.api.listSharedCallsignHistory(grantId, normalized);
+      if (_disposed || scope != _scope || !_dictionaryReadable(grantId)) {
+        return const [];
+      }
+      return rows;
+    } on ServerApiException catch (error) {
+      if (!_disposed &&
+          scope == _scope &&
+          (error.statusCode == 404 || error.code == 'NOT_FOUND')) {
+        _dropDictionary(grantId);
+      }
+      return const [];
+    }
   }
 
   Future<List<ShareSessionRef>> loadShareCandidates() async {

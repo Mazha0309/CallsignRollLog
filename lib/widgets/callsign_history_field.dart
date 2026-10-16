@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:openlogtool/l10n/l10n.dart';
 import 'package:openlogtool/models/live_draft.dart';
+import 'package:openlogtool/models/shared_dictionary.dart';
 import 'package:openlogtool/src/bridge/rust_api.dart';
 import 'package:openlogtool/src/bridge/models/log_entry.dart' as bridge;
 import 'package:openlogtool/utils/ime_safe_upper_case_formatter.dart';
@@ -16,6 +17,9 @@ typedef CallsignHistoryLoader = Future<List<bridge.LogEntry>> Function(
   String callsign,
   int limit,
 );
+
+typedef SharedCallsignHistoryLoader = Future<List<SharedCallsignReuse>>
+    Function(String callsign);
 
 typedef CallsignHistoryReuseCallback = Future<void> Function(
   bridge.LogEntry record,
@@ -47,6 +51,9 @@ class CallsignHistoryField extends StatefulWidget {
   final bool historyEnabled;
   final String? Function(String?)? validator;
   final CallsignHistoryLoader? historyLoader;
+  final SharedCallsignHistoryLoader? sharedHistoryLoader;
+  final String? sharedHistoryGrantId;
+  final String sharedHistoryLabel;
   final bool Function(String field)? canFillField;
   final CallsignHistoryReuseCallback? onReuseRecord;
   final LiveDraftHistoryPreviewDto? remotePreview;
@@ -73,6 +80,9 @@ class CallsignHistoryField extends StatefulWidget {
     this.historyEnabled = true,
     this.validator,
     this.historyLoader,
+    this.sharedHistoryLoader,
+    this.sharedHistoryGrantId,
+    this.sharedHistoryLabel = '',
     this.canFillField,
     this.onReuseRecord,
     this.remotePreview,
@@ -89,6 +99,7 @@ class _CallsignHistoryFieldState extends State<CallsignHistoryField>
   static const int _historyLimit = 10;
 
   List<bridge.LogEntry> _history = [];
+  List<SharedCallsignReuse> _sharedHistory = const [];
   final LayerLink _layerLink = LayerLink();
   OverlayEntry? _overlayEntry;
   final GlobalKey _overlayPanelKey = GlobalKey();
@@ -206,6 +217,8 @@ class _CallsignHistoryFieldState extends State<CallsignHistoryField>
       _invalidateLocalHistory(notifyClosed: true);
     } else if (!wasUsable && _canUseLocalHistory) {
       _loadHistory();
+    } else if (oldWidget.sharedHistoryGrantId != widget.sharedHistoryGrantId) {
+      _loadHistory();
     }
     if (!identical(oldWidget.remotePreview, widget.remotePreview)) {
       if (_overlayMode == _HistoryOverlayMode.remote) _hideOverlay();
@@ -320,14 +333,17 @@ class _CallsignHistoryFieldState extends State<CallsignHistoryField>
     }
     final callsign = widget.callsignController.text.trim().toUpperCase();
     if (callsign.length < 2) {
-      if (mounted) setState(() => _history = []);
+      if (mounted) {
+        setState(() {
+          _history = [];
+          _sharedHistory = const [];
+        });
+      }
       _invalidateLocalHistory(notifyClosed: true);
       _refreshOverlayForCurrentState();
       return;
     }
-    if (_effFocus.hasFocus &&
-        _history.isNotEmpty &&
-        _history.first.callsign.trim().toUpperCase() == callsign) {
+    if (_effFocus.hasFocus && _reuseMatches(callsign)) {
       _showLocalOverlay();
     } else if (!_effFocus.hasFocus) {
       _focusLossTimer = Timer(const Duration(milliseconds: 300), () {
@@ -353,7 +369,12 @@ class _CallsignHistoryFieldState extends State<CallsignHistoryField>
     }
     final callsign = widget.callsignController.text.trim().toUpperCase();
     if (callsign.length < 2) {
-      if (mounted) setState(() => _history = []);
+      if (mounted) {
+        setState(() {
+          _history = [];
+          _sharedHistory = const [];
+        });
+      }
       _invalidateLocalHistory(notifyClosed: true);
       _refreshOverlayForCurrentState();
       return;
@@ -361,6 +382,15 @@ class _CallsignHistoryFieldState extends State<CallsignHistoryField>
     try {
       final loader = widget.historyLoader ?? _loadHistoryFromDatabase;
       final rows = await loader(callsign, _historyLimit);
+      var shared = const <SharedCallsignReuse>[];
+      final sharedLoader = widget.sharedHistoryLoader;
+      if (sharedLoader != null) {
+        try {
+          shared = await sharedLoader(callsign);
+        } catch (_) {
+          shared = const [];
+        }
+      }
       if (!mounted || !_canUseLocalHistory) return;
       if (requestGeneration != _historyRequestGeneration) return;
       if (ImeSafeUpperCaseTextFormatter.hasActiveComposition(
@@ -374,13 +404,15 @@ class _CallsignHistoryFieldState extends State<CallsignHistoryField>
         // Controller listener already started the request for the latest text.
         return;
       }
-      setState(() => _history = rows);
+      setState(() {
+        _history = rows;
+        _sharedHistory = shared;
+      });
       if (_effFocus.hasFocus &&
-          _history.isNotEmpty &&
-          _history.first.callsign.trim().toUpperCase() == current &&
+          _reuseMatches(current) &&
           _activeRemotePreview == null) {
         _showLocalOverlay();
-      } else if (_history.isEmpty) {
+      } else if (_history.isEmpty && _sharedHistory.isEmpty) {
         _notifyLocalPreviewClosed();
         if (_overlayMode == _HistoryOverlayMode.local) _hideOverlay();
         _refreshOverlayForCurrentState();
@@ -397,6 +429,7 @@ class _CallsignHistoryFieldState extends State<CallsignHistoryField>
   void _invalidateLocalHistory({bool notifyClosed = false}) {
     _historyRequestGeneration += 1;
     _history = const [];
+    _sharedHistory = const [];
     if (notifyClosed) _notifyLocalPreviewClosed();
     if (_overlayMode == _HistoryOverlayMode.local) _hideOverlay();
   }
@@ -522,17 +555,25 @@ class _CallsignHistoryFieldState extends State<CallsignHistoryField>
     }
     if (_overlayMode == _HistoryOverlayMode.remote) _hideOverlay();
     final callsign = widget.callsignController.text.trim().toUpperCase();
-    if (_canUseLocalHistory &&
-        _effFocus.hasFocus &&
-        _history.isNotEmpty &&
-        _history.first.callsign.trim().toUpperCase() == callsign) {
+    if (_canUseLocalHistory && _effFocus.hasFocus && _reuseMatches(callsign)) {
       _showLocalOverlay();
     }
   }
 
+  bool _reuseMatches(String callsign) {
+    if (_history.isNotEmpty) {
+      return _history.first.callsign.trim().toUpperCase() == callsign;
+    }
+    return _sharedHistory.isNotEmpty;
+  }
+
   void _showLocalOverlay() {
-    final items =
-        _history.map(_HistoryOverlayItem.fromLocal).toList(growable: false);
+    final items = [
+      ..._history.map(_HistoryOverlayItem.fromLocal),
+      ..._sharedHistory.map(
+        (row) => _HistoryOverlayItem.fromShared(row, widget.sharedHistoryLabel),
+      ),
+    ];
     if (items.isEmpty) return;
     _showOverlay(
       mode: _HistoryOverlayMode.local,
@@ -784,7 +825,10 @@ class _CallsignHistoryFieldState extends State<CallsignHistoryField>
                                                 CrossAxisAlignment.start,
                                             children: [
                                               Text(
-                                                _formatTime(item.sourceTime),
+                                                item.sourceLabel.isNotEmpty
+                                                    ? item.sourceLabel
+                                                    : _formatTime(
+                                                        item.sourceTime),
                                                 style: TextStyle(
                                                   fontSize: 12,
                                                   fontWeight: FontWeight.w500,
@@ -911,6 +955,7 @@ final class _HistoryOverlayItem {
     required this.antenna,
     required this.height,
     this.localRecord,
+    this.sourceLabel = '',
   });
 
   factory _HistoryOverlayItem.fromLocal(bridge.LogEntry record) {
@@ -922,6 +967,35 @@ final class _HistoryOverlayItem {
       antenna: record.antenna ?? '',
       height: record.height ?? '',
       localRecord: record,
+    );
+  }
+
+  factory _HistoryOverlayItem.fromShared(
+    SharedCallsignReuse row,
+    String sourceLabel,
+  ) {
+    return _HistoryOverlayItem(
+      sourceTime: '',
+      qth: row.qth,
+      device: row.device,
+      power: row.power,
+      antenna: row.antenna,
+      height: row.height,
+      sourceLabel: sourceLabel,
+      localRecord: bridge.LogEntry(
+        syncId: row.candidateId,
+        sessionId: '',
+        time: '',
+        controller: '',
+        callsign: row.callsign,
+        qth: row.qth,
+        device: row.device,
+        power: row.power,
+        antenna: row.antenna,
+        height: row.height,
+        createdAt: '',
+        updatedAt: '',
+      ),
     );
   }
 
@@ -945,4 +1019,5 @@ final class _HistoryOverlayItem {
   final String antenna;
   final String height;
   final bridge.LogEntry? localRecord;
+  final String sourceLabel;
 }

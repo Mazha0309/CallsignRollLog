@@ -21,7 +21,8 @@ final class SharedSessionDto {
         ? json
         : json is Map
             ? Map<String, Object?>.from(json)
-            : throw const FormatException('sharedSession must be a JSON object');
+            : throw const FormatException(
+                'sharedSession must be a JSON object');
     return SharedSessionDto(
       source: object['source'] as String? ?? 'collaboration',
       sessionId: object['sessionId'] as String? ?? '',
@@ -67,6 +68,7 @@ final class AccountShareGrantDto {
     this.selectedSessions = const [],
     this.canEditLogs = false,
     this.canDeleteLogs = false,
+    this.shareDictionary = false,
   });
 
   factory AccountShareGrantDto.fromJson(Object? json) {
@@ -89,6 +91,7 @@ final class AccountShareGrantDto {
       ],
       canEditLogs: object['canEditLogs'] == true,
       canDeleteLogs: object['canDeleteLogs'] == true,
+      shareDictionary: object['shareDictionary'] == true,
     );
   }
 
@@ -98,7 +101,7 @@ final class AccountShareGrantDto {
   final String status;
   final String grantorUsername, granteeUsername, scopeMode;
   final List<ShareSessionRef> selectedSessions;
-  final bool canEditLogs, canDeleteLogs;
+  final bool canEditLogs, canDeleteLogs, shareDictionary;
 }
 
 final class ShareSessionRef {

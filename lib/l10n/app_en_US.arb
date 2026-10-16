@@ -1,4 +1,9 @@
 {
+  "shareDictionary": "Share dictionary",
+  "shareDictionaryHint": "The other person can use your dictionary suggestions only in these shared sessions, and can reuse device, antenna, QTH, power and height from those sessions. They cannot edit your dictionary, and nothing is copied into their dictionary or database.",
+  "shareDictionaryBadge": "Dictionary",
+  "sharedDictionarySource": "From {username}",
+  "@sharedDictionarySource": {"placeholders":{"username":{"type":"String"}}},
   "collaborationTechnicalDetails": "Connection & diagnostics",
   "collaborationOverviewOnline": "Connected. Record updates are being shared with participants.",
   "collaborationOverviewOffline": "The connection is unavailable. Existing records are still on this device.",

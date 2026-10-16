@@ -44,6 +44,12 @@ class SharingFixture extends AccountShareProvider {
   String? get accountScope => scope;
   @override
   bool get supportsBatchSharing => true;
+  bool dictionarySharing = false;
+  @override
+  bool get supportsDictionarySharing => dictionarySharing;
+  List<AccountShareGrantDto> outgoingGrants = const [];
+  @override
+  List<AccountShareGrantDto> get outgoing => outgoingGrants;
   @override
   bool get supportsLegacySharing => true;
   @override
@@ -52,8 +58,6 @@ class SharingFixture extends AccountShareProvider {
   SocialSnapshot get social => SocialSnapshot(friends: [
         SocialPerson.fromJson({'userId': 'bob-id', 'username': 'bob'})
       ]);
-  @override
-  List<AccountShareGrantDto> get outgoing => [];
   @override
   Future<void> refresh() async {}
   @override
@@ -84,6 +88,7 @@ class SharingFixture extends AccountShareProvider {
       required List<ShareSessionRef> sessions,
       required bool canEditLogs,
       required bool canDeleteLogs,
+      required bool shareDictionary,
       required String? expectedScope,
       String? grantId}) async {
     saved = {
@@ -92,6 +97,7 @@ class SharingFixture extends AccountShareProvider {
       'sessions': sessions.map((s) => s.identity).toList(),
       'edit': canEditLogs,
       'delete': canDeleteLogs,
+      'dictionary': shareDictionary,
       'scope': expectedScope
     };
   }
@@ -371,6 +377,7 @@ void main() {
       'sessions': ['collaboration:c1', 'collaboration:c2'],
       'edit': true,
       'delete': false,
+      'dictionary': false,
       'scope': 'one'
     });
   });
@@ -429,6 +436,26 @@ void main() {
     expect(find.text('好友的记录'), findsNothing);
     await tester.pumpWidget(const SizedBox());
     sharing.dispose();
+  });
+  testWidgets('new dictionary share starts on and can be turned off',
+      (tester) async {
+    final sharing = SharingFixture()..dictionarySharing = true;
+    await pump(tester, sharing, const SessionSharingDialog());
+    final dictionary = find.byKey(const Key('share-dictionary'));
+    await tester.ensureVisible(dictionary);
+    expect(tester.widget<SwitchListTile>(dictionary).value, isTrue);
+    await tester.tap(dictionary);
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const Key('share-recipient')), 'bob');
+    final session = find.byKey(const Key('share-select-collaboration:c1'));
+    await tester.ensureVisible(session);
+    await tester.tap(session);
+    await tester.pumpAndSettle();
+    final save = find.byKey(const Key('share-save'));
+    await tester.ensureVisible(save);
+    await tester.tap(save);
+    await tester.pumpAndSettle();
+    expect(sharing.saved?['dictionary'], isFalse);
   });
   testWidgets('sharing form remains usable at narrow phone width',
       (tester) async {

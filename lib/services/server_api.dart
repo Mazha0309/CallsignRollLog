@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:openlogtool/models/account_dto.dart';
 import 'package:openlogtool/models/account_share_dto.dart';
+import 'package:openlogtool/models/shared_dictionary.dart';
 import 'package:openlogtool/models/social_dto.dart';
 import 'package:openlogtool/models/collaboration_dto.dart';
 import 'package:openlogtool/models/live_draft.dart';
@@ -377,6 +378,37 @@ final class ServerApi {
       final object = _jsonObject(json, 'sessionShares');
       final values = _jsonArray(object['items'], 'items');
       return List.unmodifiable(values.map(AccountShareGrantDto.fromJson));
+    });
+  }
+
+  Future<SharedDictionarySnapshot> readSharedDictionary(String grantId) async {
+    final response = await _authorizedRequest(
+      'GET',
+      '/account/session-shares/${_segment(grantId)}/dictionary',
+    );
+    return _parseResponse(
+      response,
+      (json) => SharedDictionarySnapshot.fromJson(
+        _jsonObject(json, 'sharedDictionary'),
+      ),
+    );
+  }
+
+  Future<List<SharedCallsignReuse>> listSharedCallsignHistory(
+    String grantId,
+    String callsign,
+  ) async {
+    final response = await _authorizedRequest(
+      'GET',
+      '/account/session-shares/${_segment(grantId)}/callsign-history',
+      queryParameters: {'callsign': callsign},
+    );
+    return _parseResponse(response, (json) {
+      final object = _jsonObject(json, 'sharedCallsignHistory');
+      return [
+        for (final value in _jsonArray(object['items'], 'items'))
+          SharedCallsignReuse.fromJson(_jsonObject(value, 'item')),
+      ];
     });
   }
 

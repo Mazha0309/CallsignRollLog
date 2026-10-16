@@ -15,6 +15,7 @@ class DictionaryItem {
   final String? deletedAt;
   final String? sourceDeviceId;
   final String origin;
+  final String sourceLabel;
 
   factory DictionaryItem({
     int? id,
@@ -28,6 +29,7 @@ class DictionaryItem {
     String? deletedAt,
     String? sourceDeviceId,
     String origin = 'user',
+    String sourceLabel = '',
   }) {
     final normalizedCreatedAt = _normalizeTimestamp(createdAt);
     return DictionaryItem._internal(
@@ -43,6 +45,7 @@ class DictionaryItem {
       deletedAt: deletedAt,
       sourceDeviceId: sourceDeviceId,
       origin: origin,
+      sourceLabel: sourceLabel,
     );
   }
 
@@ -59,6 +62,7 @@ class DictionaryItem {
     required this.deletedAt,
     required this.sourceDeviceId,
     required this.origin,
+    required this.sourceLabel,
   });
 
   static bool _hasText(String? value) =>
@@ -200,6 +204,7 @@ class DictionaryItem {
     Object? deletedAt = _dictionaryCopyWithSentinel,
     Object? sourceDeviceId = _dictionaryCopyWithSentinel,
     String? origin,
+    String? sourceLabel,
   }) {
     return DictionaryItem(
       id: id ?? this.id,
@@ -217,16 +222,18 @@ class DictionaryItem {
           ? this.sourceDeviceId
           : sourceDeviceId as String?,
       origin: origin ?? this.origin,
+      sourceLabel: sourceLabel ?? this.sourceLabel,
     );
   }
 
   bool matches(String query) {
     return matchDictionaryText(
-      query: query,
-      raw: raw,
-      pinyin: pinyin,
-      abbreviation: abbreviation,
-    ) != null;
+          query: query,
+          raw: raw,
+          pinyin: pinyin,
+          abbreviation: abbreviation,
+        ) !=
+        null;
   }
 
   @override
