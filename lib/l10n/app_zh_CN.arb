@@ -609,6 +609,8 @@
   "aiPresetSiliconFlowAudioHint": "便于横向对比开源音频模型",
   "aiPresetCustom": "自定义",
   "aiPresetCustomHint": "手工填写端点与模型",
+  "aiPreset": "服务商",
+  "aiPresetApplied": "已按预设填好，只需填 API 密钥",
   "aiSupportedProtocols": "支持的接口格式",
   "aiActiveProfile": "当前配置",
   "aiNoProfileConfigured": "尚未添加配置",

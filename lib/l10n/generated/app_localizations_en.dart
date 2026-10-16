@@ -3552,6 +3552,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aiPresetCustomHint => 'Enter the endpoint and model yourself';
 
   @override
+  String get aiPreset => 'Provider';
+
+  @override
+  String get aiPresetApplied =>
+      'Filled in from the preset; you only need the API key';
+
+  @override
   String get aiSupportedProtocols => 'Supported endpoint formats';
 
   @override
@@ -5542,6 +5549,13 @@ class AppLocalizationsEnUs extends AppLocalizationsEn {
 
   @override
   String get aiPresetCustomHint => 'Enter the endpoint and model yourself';
+
+  @override
+  String get aiPreset => 'Provider';
+
+  @override
+  String get aiPresetApplied =>
+      'Filled in from the preset; you only need the API key';
 
   @override
   String get aiSupportedProtocols => 'Supported endpoint formats';

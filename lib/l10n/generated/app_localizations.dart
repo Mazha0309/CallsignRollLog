@@ -6095,6 +6095,18 @@ abstract class AppLocalizations {
   /// **'手工填写端点与模型'**
   String get aiPresetCustomHint;
 
+  /// No description provided for @aiPreset.
+  ///
+  /// In zh, this message translates to:
+  /// **'服务商'**
+  String get aiPreset;
+
+  /// No description provided for @aiPresetApplied.
+  ///
+  /// In zh, this message translates to:
+  /// **'已按预设填好，只需填 API 密钥'**
+  String get aiPresetApplied;
+
   /// No description provided for @aiSupportedProtocols.
   ///
   /// In zh, this message translates to:

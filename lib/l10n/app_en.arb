@@ -1485,6 +1485,8 @@
   "aiPresetSiliconFlowAudioHint": "Convenient for comparing open audio models",
   "aiPresetCustom": "Custom",
   "aiPresetCustomHint": "Enter the endpoint and model yourself",
+  "aiPreset": "Provider",
+  "aiPresetApplied": "Filled in from the preset; you only need the API key",
   "aiSupportedProtocols": "Supported endpoint formats",
   "aiActiveProfile": "Active profile",
   "aiNoProfileConfigured": "No profiles have been added",

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:openlogtool/l10n/l10n.dart';
 import 'package:openlogtool/providers/ai_recognition_settings_provider.dart';
 import 'package:openlogtool/services/ai_recognition/models.dart';
+import 'package:openlogtool/services/ai_recognition/presets.dart';
 import 'package:openlogtool/services/ai_recognition/providers.dart';
 import 'package:openlogtool/services/text_assistant.dart';
 import 'package:openlogtool/theme/app_theme.dart';
@@ -374,6 +375,7 @@ class _AiRecognitionSettingsState extends State<AiRecognitionSettings> {
                     : () => _editProfile(
                           settings: settings,
                           kind: kind,
+                          initialPreset: _firstPresetFor(kind),
                         ),
                 icon: const Icon(Icons.add),
                 label: Text(context.l10n.aiAddProfile),
@@ -410,12 +412,14 @@ class _AiRecognitionSettingsState extends State<AiRecognitionSettings> {
     required AiRecognitionSettingsProvider settings,
     required AiProviderKind kind,
     AiProviderProfile? existing,
+    AiProviderPreset? initialPreset,
   }) async {
     final draft = await showDialog<_AiProfileDraft>(
       context: context,
       builder: (dialogContext) => _AiProfileEditorDialog(
         kind: kind,
         existing: existing,
+        initialPreset: initialPreset,
       ),
     );
     if (draft == null || !mounted) return;
@@ -754,10 +758,15 @@ class _AiProfileDraft {
 }
 
 class _AiProfileEditorDialog extends StatefulWidget {
-  const _AiProfileEditorDialog({required this.kind, this.existing});
+  const _AiProfileEditorDialog({
+    required this.kind,
+    this.existing,
+    this.initialPreset,
+  });
 
   final AiProviderKind kind;
   final AiProviderProfile? existing;
+  final AiProviderPreset? initialPreset;
 
   @override
   State<_AiProfileEditorDialog> createState() => _AiProfileEditorDialogState();
@@ -774,13 +783,17 @@ class _AiProfileEditorDialogState extends State<_AiProfileEditorDialog> {
   late final TextEditingController _requestOptionsController;
   late AiProtocol _protocol;
   late AiCredentialLocation _credentialLocation;
+  String? _selectedPresetId;
   bool _saving = false;
 
   @override
   void initState() {
     super.initState();
     final existing = widget.existing;
+    final preset = existing == null ? widget.initialPreset : null;
+    _selectedPresetId = preset?.id;
     _protocol = existing?.protocol ??
+        preset?.protocol ??
         switch (widget.kind) {
           AiProviderKind.speechRecognition =>
             AiProtocol.openAiAudioTranscriptions,
@@ -792,9 +805,11 @@ class _AiProfileEditorDialogState extends State<_AiProfileEditorDialog> {
         AiCredentialLocation.bearerHeader;
     _nameController = TextEditingController(text: existing?.name ?? '');
     _baseUrlController = TextEditingController(
-      text: existing?.baseUrl.toString() ?? '',
+      text: existing?.baseUrl.toString() ?? preset?.baseUrl ?? '',
     );
-    _modelController = TextEditingController(text: existing?.model ?? '');
+    _modelController = TextEditingController(
+      text: existing?.model ?? preset?.defaultModel ?? '',
+    );
     _credentialNameController = TextEditingController(
       text: existing?.credentialTransport.name ?? '',
     );
@@ -804,10 +819,44 @@ class _AiProfileEditorDialogState extends State<_AiProfileEditorDialog> {
     _secretController = TextEditingController();
     _requestOptionsController = TextEditingController(
       text: const JsonEncoder.withIndent('  ').convert(
-        existing?.requestOptions ??
-            _defaultRequestOptions(_protocol, widget.kind),
+        existing?.requestOptions ?? _requestOptionsFor(preset, _protocol),
       ),
     );
+  }
+
+  List<AiProviderPreset> get _presets => [
+        for (final preset in aiProviderPresets)
+          if (preset.kind == widget.kind) preset,
+      ];
+
+  AiProviderPreset? get _selectedPreset {
+    final id = _selectedPresetId;
+    if (id == null) return null;
+    for (final preset in _presets) {
+      if (preset.id == id) return preset;
+    }
+    return null;
+  }
+
+  Map<String, Object?> _requestOptionsFor(
+    AiProviderPreset? preset,
+    AiProtocol protocol,
+  ) {
+    if (preset == null || preset.requestOptions.isEmpty) {
+      return _defaultRequestOptions(protocol, widget.kind);
+    }
+    return preset.requestOptions;
+  }
+
+  void _applyPreset(AiProviderPreset preset) {
+    setState(() {
+      _selectedPresetId = preset.id;
+      _protocol = preset.protocol;
+      _baseUrlController.text = preset.baseUrl;
+      _modelController.text = preset.defaultModel;
+      _requestOptionsController.text = const JsonEncoder.withIndent('  ')
+          .convert(_requestOptionsFor(preset, preset.protocol));
+    });
   }
 
   @override
@@ -842,6 +891,39 @@ class _AiProfileEditorDialogState extends State<_AiProfileEditorDialog> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              if (_presets.isNotEmpty) ...[
+                DropdownButtonFormField<String>(
+                  key: const Key('ai-profile-preset'),
+                  initialValue: _selectedPresetId,
+                  isExpanded: true,
+                  decoration: InputDecoration(
+                    labelText: context.l10n.aiPreset,
+                    helperText: _selectedPreset == null
+                        ? null
+                        : _presetMessage(context, _selectedPreset!.hintKey),
+                  ),
+                  items: [
+                    for (final preset in _presets)
+                      DropdownMenuItem(
+                        value: preset.id,
+                        child: Text(
+                          _presetMessage(context, preset.labelKey),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                  ],
+                  onChanged: (value) {
+                    if (value == null) return;
+                    _applyPreset(
+                      _presets.firstWhere((preset) => preset.id == value),
+                    );
+                  },
+                ),
+                const SizedBox(height: AppSpace.xs),
+                Text(context.l10n.aiPresetApplied),
+                const SizedBox(height: AppSpace.sm),
+              ],
               TextFormField(
                 key: const Key('ai-profile-name'),
                 controller: _nameController,
@@ -1115,6 +1197,26 @@ class _AiProfileEditorDialogState extends State<_AiProfileEditorDialog> {
       }
     });
   }
+}
+
+AiProviderPreset? _firstPresetFor(AiProviderKind kind) {
+  for (final preset in aiProviderPresets) {
+    if (preset.kind == kind) return preset;
+  }
+  return null;
+}
+
+String _presetMessage(BuildContext context, String key) {
+  final l10n = context.l10n;
+  return switch (key) {
+    'aiPresetBailianAudio' => l10n.aiPresetBailianAudio,
+    'aiPresetBailianAudioHint' => l10n.aiPresetBailianAudioHint,
+    'aiPresetSiliconFlowAudio' => l10n.aiPresetSiliconFlowAudio,
+    'aiPresetSiliconFlowAudioHint' => l10n.aiPresetSiliconFlowAudioHint,
+    'aiPresetCustom' => l10n.aiPresetCustom,
+    'aiPresetCustomHint' => l10n.aiPresetCustomHint,
+    _ => throw StateError('Unknown AI preset message: $key'),
+  };
 }
 
 Map<String, Object?> _defaultRequestOptions(

@@ -424,6 +424,101 @@ void main() {
       findsOneWidget,
     );
   });
+
+  testWidgets('prefills the editor from a preset', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    _usePlatformLocale(tester, const Locale('en', 'US'));
+    await _setSurface(tester, const Size(1200, 900));
+    final providers = _SettingsProviders();
+    addTearDown(providers.dispose);
+
+    await tester.pumpWidget(_SettingsPanelHarness(providers: providers));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('settings-category-ai')));
+    await tester.pumpAndSettle();
+
+    final addAudio = find.byKey(
+      const Key('ai-add-profile-audioFieldExtraction'),
+    );
+    final scrollable = find
+        .descendant(
+          of: find.byKey(const Key('settings-panel-scroll')),
+          matching: find.byType(Scrollable),
+        )
+        .first;
+    await tester.scrollUntilVisible(
+      addAudio,
+      240,
+      scrollable: scrollable,
+    );
+    await tester.tap(addAudio);
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('ai-profile-preset')), findsOneWidget);
+    expect(find.text('Alibaba Cloud Bailian'), findsWidgets);
+    expect(
+      find.text('Recommended. Pay as you go; audio is very cheap'),
+      findsOneWidget,
+    );
+    expect(
+      find.text('Filled in from the preset; you only need the API key'),
+      findsOneWidget,
+    );
+    final baseUrl = tester.widget<TextField>(
+      find.descendant(
+        of: find.byKey(const Key('ai-profile-base-url')),
+        matching: find.byType(TextField),
+      ),
+    );
+    expect(baseUrl.controller!.text, contains('dashscope'));
+
+    await tester.enterText(find.byKey(const Key('ai-profile-name')), 'My net');
+    await tester.enterText(
+      find.byKey(const Key('ai-profile-secret')),
+      'secret-value',
+    );
+    await tester.tap(find.byKey(const Key('ai-profile-preset')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Custom').last);
+    await tester.pumpAndSettle();
+
+    expect(
+      tester
+          .widget<TextField>(
+            find.descendant(
+              of: find.byKey(const Key('ai-profile-name')),
+              matching: find.byType(TextField),
+            ),
+          )
+          .controller!
+          .text,
+      'My net',
+    );
+    expect(
+      tester
+          .widget<TextField>(
+            find.descendant(
+              of: find.byKey(const Key('ai-profile-secret')),
+              matching: find.byType(TextField),
+            ),
+          )
+          .controller!
+          .text,
+      'secret-value',
+    );
+    expect(
+      tester
+          .widget<TextField>(
+            find.descendant(
+              of: find.byKey(const Key('ai-profile-base-url')),
+              matching: find.byType(TextField),
+            ),
+          )
+          .controller!
+          .text,
+      contains('example.com'),
+    );
+  });
 }
 
 Future<void> _setSurface(WidgetTester tester, Size size) async {

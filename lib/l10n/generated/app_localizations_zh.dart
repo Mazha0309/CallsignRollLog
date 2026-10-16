@@ -3353,6 +3353,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get aiPresetCustomHint => '手工填写端点与模型';
 
   @override
+  String get aiPreset => '服务商';
+
+  @override
+  String get aiPresetApplied => '已按预设填好，只需填 API 密钥';
+
+  @override
   String get aiSupportedProtocols => '支持的接口格式';
 
   @override
@@ -5249,6 +5255,12 @@ class AppLocalizationsZhCn extends AppLocalizationsZh {
 
   @override
   String get aiPresetCustomHint => '手工填写端点与模型';
+
+  @override
+  String get aiPreset => '服务商';
+
+  @override
+  String get aiPresetApplied => '已按预设填好，只需填 API 密钥';
 
   @override
   String get aiSupportedProtocols => '支持的接口格式';
