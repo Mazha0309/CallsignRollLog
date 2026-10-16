@@ -1,9 +1,17 @@
 import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:openlogtool/l10n/l10n.dart';
+import 'package:openlogtool/providers/server_provider.dart';
+import 'package:openlogtool/utils/qr_image_decode.dart';
+import 'package:openlogtool/utils/server_qr_image_pick.dart';
+import 'package:openlogtool/utils/server_scan_rules.dart';
 import 'package:openlogtool/utils/server_url.dart';
+import 'package:openlogtool/widgets/server_qr_scan_controls.dart';
+import 'package:openlogtool/widgets/server_scan_confirm_dialog.dart';
+import 'package:provider/provider.dart';
 
 bool get serverCameraScanSupported =>
     kIsWeb ||
@@ -19,88 +27,177 @@ MobileScannerController Function() createServerQrCameraController =
 MobileScannerController _defaultServerQrCameraController() =>
     MobileScannerController(
       formats: const [BarcodeFormat.qrCode],
-      detectionSpeed: DetectionSpeed.noDuplicates,
+      detectionSpeed: DetectionSpeed.normal,
     );
 
 class ServerQrScanner extends StatefulWidget {
   const ServerQrScanner({super.key});
+
   @override
   State<ServerQrScanner> createState() => _ServerQrScannerState();
 }
 
 class _ServerQrScannerState extends State<ServerQrScanner> {
   late final MobileScannerController _controller;
-  bool _accepted = false, _invalid = false;
+  bool _offering = false;
+  bool _invalid = false;
+  bool _torchFailed = false;
+  bool _switchFailed = false;
+
   @override
   void initState() {
     super.initState();
     if (kIsWeb) {
-      // Bundle the decoder: scanning must not load code from a third-party CDN.
       MobileScannerPlatform.instance
           .setWebBarcodeReader(WebBarcodeReader.zxingJs);
       MobileScannerPlatform.instance.setBarcodeLibraryScriptUrl(
-          Uri.base.resolve('vendor/zxing-0.23.0.min.js').toString());
+        Uri.base.resolve('vendor/zxing-0.23.0.min.js').toString(),
+      );
     }
-    _controller = MobileScannerController(
-        formats: [BarcodeFormat.qrCode],
-        detectionSpeed: DetectionSpeed.noDuplicates);
+    _controller = createServerQrCameraController();
+    _controller.addListener(_onController);
+  }
+
+  void _onController() {
+    if (mounted) setState(() {});
   }
 
   @override
   void dispose() {
+    _controller.removeListener(_onController);
     unawaited(_controller.dispose());
     super.dispose();
   }
 
   Future<void> _detected(BarcodeCapture capture) async {
-    if (!mounted || _accepted) return;
+    if (!mounted || _offering) return;
+    String? candidate;
+    var sawInvalid = false;
     for (final code in capture.barcodes) {
-      final candidate = validatedServerConnectionInput(code.rawValue ?? '');
-      if (candidate == null) {
-        setState(() => _invalid = true);
+      final parsed = validatedServerConnectionInput(code.rawValue ?? '');
+      if (parsed == null) {
+        sawInvalid = true;
         continue;
       }
-      _accepted = true;
-      await _controller.stop();
-      if (mounted) Navigator.pop(context, candidate);
+      candidate = parsed;
+      break;
+    }
+    if (candidate == null) {
+      if (sawInvalid && mounted) setState(() => _invalid = true);
       return;
+    }
+    await _offer(candidate);
+  }
+
+  Future<void> _pickImage() async {
+    if (_offering) return;
+    final bytes = await pickServerQrImageBytes();
+    if (!mounted || bytes == null) return;
+    final candidate = validatedServerConnectionInput(decodeQrText(bytes) ?? '');
+    if (candidate == null) {
+      setState(() => _invalid = true);
+      return;
+    }
+    await _offer(candidate);
+  }
+
+  Future<void> _offer(String candidate) async {
+    if (!mounted || _offering) return;
+    setState(() {
+      _offering = true;
+      _invalid = false;
+    });
+    try {
+      await _controller.stop();
+    } catch (_) {}
+    if (!mounted) return;
+    final server = context.read<ServerProvider>();
+    final confirmed = await confirmScannedServerAddress(
+      context,
+      loggedIn: server.isLoggedIn,
+      currentServerUrl: server.serverUrl,
+      candidateUrl: candidate,
+    );
+    if (!mounted) return;
+    if (!confirmed) {
+      setState(() => _offering = false);
+      try {
+        await _controller.start();
+      } catch (_) {}
+      return;
+    }
+    Navigator.pop(context, candidate);
+  }
+
+  Future<void> _torch() async {
+    try {
+      await _controller.toggleTorch();
+    } catch (_) {
+      if (mounted) setState(() => _torchFailed = true);
+    }
+  }
+
+  Future<void> _switchCamera() async {
+    try {
+      await _controller.switchCamera();
+    } catch (_) {
+      if (mounted) setState(() => _switchFailed = true);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final zh = Localizations.localeOf(context).languageCode == 'zh';
+    final l10n = context.l10n;
+    final state = _controller.value;
     return Scaffold(
-      appBar: AppBar(title: Text(zh ? '扫描服务器二维码' : 'Scan server QR code')),
-      body: Column(children: [
-        Padding(
-            padding: const EdgeInsets.all(16),
-            child: Text(zh
-                ? '扫描后只填入地址，由你确认连接。相机画面不会上传。'
-                : 'Scanning only fills the address. You confirm the connection; camera frames are not uploaded.')),
-        Expanded(
-            child: MobileScanner(
-                controller: _controller,
-                onDetect: _detected,
-                errorBuilder: (context, error) => Center(
-                    child: Padding(
-                        padding: const EdgeInsets.all(24),
-                        child:
-                            Column(mainAxisSize: MainAxisSize.min, children: [
-                          Text(zh
-                              ? '无法使用相机。请检查相机权限；网页版需使用 HTTPS。你也可以返回粘贴连接地址。'
-                              : 'Camera unavailable. Check camera permission and use HTTPS on the web, or go back and paste a connection address.'),
-                          TextButton(
-                              onPressed: () => Navigator.pop(context),
-                              child: Text(context.l10n.close)),
-                        ]))))),
-        if (_invalid)
+      appBar: AppBar(title: Text(l10n.serverScanTitle)),
+      body: Column(
+        children: [
           Padding(
-              padding: const EdgeInsets.all(16),
-              child: Text(zh
-                  ? '这不是有效的服务器连接地址，请扫描服务器“连接这台服务器”页面的二维码。'
-                  : 'Not a valid server address. Scan the QR code on the server connection page.')),
-      ]),
+            padding: const EdgeInsets.all(16),
+            child: Text(l10n.serverScanHint),
+          ),
+          Expanded(
+            child: MobileScanner(
+              controller: _controller,
+              onDetect: _detected,
+              errorBuilder: (context, error) => Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(l10n.serverScanCameraUnavailable),
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: Text(l10n.close),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+          if (_invalid)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+              child: Text(l10n.serverScanInvalid),
+            ),
+          ServerQrScanControls(
+            torchVisible: serverScanTorchVisible(
+              failed: _torchFailed,
+              torchAvailable: state.torchState != TorchState.unavailable,
+            ),
+            switchVisible: serverScanSwitchVisible(
+              failed: _switchFailed,
+              cameras: state.availableCameras,
+            ),
+            onTorch: () => unawaited(_torch()),
+            onSwitchCamera: () => unawaited(_switchCamera()),
+            onPickImage: () => unawaited(_pickImage()),
+          ),
+        ],
+      ),
     );
   }
 }
