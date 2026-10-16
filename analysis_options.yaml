@@ -17,6 +17,8 @@ analyzer:
   exclude:
     - lib/src/bridge/frb_generated.web.dart
     - "**/*.g.dart"
+    # Vendored excel 4.0.6. Its own lints are not this app's.
+    - third_party/**
 
 linter:
   # The lint rules applied to this project can be customized in the
