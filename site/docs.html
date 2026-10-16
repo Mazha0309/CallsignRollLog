@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>使用手册 · CRL Callsign Roll Log</title>
+<meta name="description" content="Callsign Roll Log 使用手册：本地记点名、词库、导入导出，以及可选的云同步、好友协作、账号共享和公开页面。">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Callsign Roll Log">
+<meta property="og:title" content="使用手册 · CRL Callsign Roll Log">
+<meta property="og:description" content="本地记点名不需要服务器。云同步、好友协作、账号共享和公开页面各自独立。">
+<meta property="og:url" content="https://crl.mazha0309.com/docs.html">
+<meta property="og:image" content="https://crl.mazha0309.com/icon.png">
+<meta name="twitter:card" content="summary">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="icon.png" type="image/png">
+<style>
+@font-face{font-family:"IBM Plex Sans";font-style:normal;font-weight:400;src:url(fonts/plex-sans-400.woff2) format("woff2");font-display:swap}
+@font-face{font-family:"IBM Plex Sans";font-style:normal;font-weight:500;src:url(fonts/plex-sans-500.woff2) format("woff2");font-display:swap}
+@font-face{font-family:"IBM Plex Sans";font-style:normal;font-weight:600;src:url(fonts/plex-sans-600.woff2) format("woff2");font-display:swap}
+@font-face{font-family:"IBM Plex Sans";font-style:normal;font-weight:700;src:url(fonts/plex-sans-700.woff2) format("woff2");font-display:swap}
+@font-face{font-family:"IBM Plex Mono";font-style:normal;font-weight:400;src:url(fonts/plex-mono-400.woff2) format("woff2");font-display:swap}
+@font-face{font-family:"IBM Plex Mono";font-style:normal;font-weight:500;src:url(fonts/plex-mono-500.woff2) format("woff2");font-display:swap}
+@font-face{font-family:"Sarasa Gothic SC";font-style:normal;font-weight:400;src:url(fonts/sarasa-gothic-sc-400.woff2) format("woff2");font-display:swap}
+@font-face{font-family:"Sarasa Gothic SC";font-style:normal;font-weight:500;src:url(fonts/sarasa-gothic-sc-400.woff2) format("woff2");font-display:swap}
+@font-face{font-family:"Sarasa Gothic SC";font-style:normal;font-weight:600;src:url(fonts/sarasa-gothic-sc-700.woff2) format("woff2");font-display:swap}
+@font-face{font-family:"Sarasa Gothic SC";font-style:normal;font-weight:700;src:url(fonts/sarasa-gothic-sc-700.woff2) format("woff2");font-display:swap}
+:root{
+  --paper:#fbfbfc; --surface:#fff; --sunken:#f2f4f7; --ink:#141a22; --ink-2:#586172; --ink-3:#8a93a3;
+  --rule:#e4e7ec; --rule-2:#cbd1da; --brand:#12599f; --brand-2:#1e78d2; --ok:#0f7a45;
+  --sans:"IBM Plex Sans","Sarasa Gothic SC",-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Noto Sans SC",sans-serif;
+  --mono:"IBM Plex Mono","Sarasa Gothic SC",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+html[data-theme=dark]{
+  color-scheme:dark;
+  --paper:#0c1118; --surface:#131c27; --sunken:#0f1822; --ink:#e7edf6; --ink-2:#9ca8ba; --ink-3:#687587;
+  --rule:#1f2a38; --rule-2:#2d3a4b; --brand:#9fcaff; --brand-2:#5aa6f0; --ok:#4fd08a;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:74px;color-scheme:light}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:15.5px;line-height:1.78;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+button{font:inherit;color:inherit;background:none;border:0;padding:0}
+.wrap{max-width:1080px;margin:0 auto;padding:0 26px}
+:focus-visible{outline:2px solid var(--brand-2);outline-offset:2px;border-radius:3px}
+code{font-family:var(--mono);font-size:.88em;background:var(--sunken);border:1px solid var(--rule);border-radius:3px;padding:0 4px;white-space:nowrap}
+header{position:sticky;top:0;z-index:40;background:color-mix(in srgb,var(--paper) 92%,transparent);backdrop-filter:blur(6px);border-bottom:1px solid var(--rule)}
+.hd{display:flex;align-items:center;gap:18px;height:52px}
+.brand{display:flex;align-items:center;gap:9px;min-width:0}
+.brand img{width:26px;height:26px;border-radius:6px;display:block}
+.brand .t{font-weight:600;font-size:15px;letter-spacing:.01em;white-space:nowrap}
+.brand .t span{font-family:var(--mono);font-size:11px;color:var(--ink-3);font-weight:400;letter-spacing:.04em}
+nav{display:flex;gap:2px;margin-left:auto}
+nav a{padding:5px 9px;border-radius:6px;font-size:13.5px;color:var(--ink-2)}
+nav a:hover,nav a[aria-current=page]{color:var(--ink);background:var(--sunken)}
+.hd .ic{width:30px;height:30px;display:grid;place-items:center;border:1px solid var(--rule);border-radius:7px;background:var(--surface);color:var(--ink);cursor:pointer;flex:none}
+.hd .ic:hover{border-color:var(--rule-2)}
+.hd .ic svg{width:15px;height:15px}
+#hamb{display:none}
+.intro{padding-top:64px;padding-bottom:18px}
+.intro .eyebrow{margin:0 0 14px;font-family:var(--mono);font-size:12px;letter-spacing:.14em;color:var(--ink-3)}
+.intro h1{font-size:clamp(31px,4.3vw,46px);font-weight:650;letter-spacing:-.024em;margin:0 0 16px;line-height:1.16;max-width:18ch;text-wrap:balance}
+.intro h1 .b{color:var(--brand)}
+.intro > p{margin:0;color:var(--ink-2);max-width:66ch;font-size:17px;line-height:1.72}
+.toc{display:flex;flex-wrap:wrap;gap:8px;margin:22px 0 8px}
+.toc a{font-family:var(--mono);font-size:12px;color:var(--ink-2);padding:4px 9px;border:1px solid var(--rule);border-radius:999px;background:var(--surface)}
+.toc a:hover{border-color:var(--rule-2);color:var(--ink)}
+main > section{border-top:1px solid var(--rule)}
+.sec{padding-block:54px}
+.sec .side{margin-bottom:22px}
+.sec .side .no{font-family:var(--mono);font-size:12px;color:var(--ink-3);letter-spacing:.08em;margin-right:12px}
+.sec .side h2{display:inline;font-size:25px;font-weight:650;letter-spacing:-.016em;line-height:1.25}
+.sec .side p{margin:9px 0 0;font-size:15px;color:var(--ink-2);max-width:70ch;line-height:1.7}
+dl.feat{margin:0;border-top:1px solid var(--rule)}
+dl.feat div{display:grid;grid-template-columns:170px 1fr;gap:32px;padding:22px 0;border-bottom:1px solid var(--rule)}
+dl.feat dt{font-weight:600;font-size:16px;letter-spacing:-.005em}
+dl.feat dd{margin:0;font-size:15px;line-height:1.78;color:var(--ink-2)}
+dl.feat dd strong{color:var(--ink);font-weight:600}
+dl.feat a,table.sheet a,.note a{color:var(--brand);text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--rule-2)}
+.note{margin:16px 0 0;font-size:14.5px;color:var(--ink-2);max-width:74ch}
+table{width:100%;border-collapse:collapse}
+table.sheet{white-space:normal;border-top:1px solid var(--rule)}
+table.sheet th,table.sheet td{text-align:left;vertical-align:top;padding:14px 12px;border-bottom:1px solid var(--rule);font-size:14px;line-height:1.65}
+table.sheet th{font-family:var(--mono);font-size:11px;font-weight:500;color:var(--ink-3);background:var(--sunken)}
+table.sheet td{color:var(--ink-2)}
+table.sheet td:first-child,table.sheet th:first-child{color:var(--ink);font-weight:600}
+.scroll{overflow-x:auto}
+footer{padding:26px 0 44px;border-top:1px solid var(--rule)}
+.foot{display:flex;flex-wrap:wrap;gap:10px 22px;align-items:baseline;justify-content:space-between;font-size:13px;color:var(--ink-3)}
+.foot nav{gap:0;margin-left:0}
+.foot nav a{font-size:13px;padding:3px 7px}
+@media (max-width:860px){
+  dl.feat div{grid-template-columns:1fr;gap:3px;padding:20px 0}
+}
+@media (max-width:720px){
+  body{overflow-x:clip}
+  .wrap{padding-left:16px;padding-right:16px}
+  .hd{gap:8px}
+  .brand{min-width:0;flex:1}
+  .brand .t{overflow:hidden;text-overflow:ellipsis}
+  .hd .ic{width:36px;height:36px}
+  header nav{display:none}
+  #hamb{display:grid;margin-left:auto}
+  header nav.open{display:flex;position:absolute;top:52px;left:0;right:0;z-index:30;flex-direction:column;background:var(--surface);border-bottom:1px solid var(--rule);padding:6px 12px 10px}
+  header nav.open a{font-size:15px;color:var(--ink);padding:10px 8px}
+  .foot nav{display:flex}
+  .intro{padding-top:38px}
+  .intro h1{font-size:clamp(27px,7.6vw,34px);max-width:none}
+  .intro > p{font-size:16px}
+  .sec{padding-block:38px}
+  .sec .side h2{font-size:22px}
+  footer{padding:16px 0 32px}
+  .foot{flex-direction:column;align-items:flex-start;gap:6px}
+}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap hd">
+    <a class="brand" href="index.html">
+      <img src="icon.png" alt="">
+      <span class="t">CRL <span>Callsign Roll Log</span></span>
+    </a>
+    <nav id="nav">
+      <a href="index.html#features">功能</a>
+      <a href="index.html#collab">协作</a>
+      <a href="docs.html" aria-current="page">文档</a>
+      <a href="index.html#download">下载</a>
+      <a href="index.html#open">开源</a>
+    </nav>
+    <button class="ic" id="hamb" aria-label="菜单"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+    <button class="ic" id="theme" aria-label="深浅色"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path id="tg" d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+  </div>
+</header>
+
+<main id="top">
+  <div class="wrap intro">
+    <p class="eyebrow">呼号点名日志 · 使用手册</p>
+    <h1>不登录也能<span class="b">把点名记完</span></h1>
+    <p>Callsign Roll Log 用来记业余无线电点名，不是个人通联日志的替代品。新建会话之后就可以记录、查词库、导入导出。服务器只在需要换设备、和别人一起记、或者发公开页时才用。</p>
+    <nav class="toc" aria-label="手册目录">
+      <a href="#split">先分清</a>
+      <a href="#ui">界面</a>
+      <a href="#log">记一条</a>
+      <a href="#session">会话</a>
+      <a href="#data">数据与词库</a>
+      <a href="#settings">设置</a>
+      <a href="#cloud">云同步与协作</a>
+      <a href="#share">账号共享</a>
+      <a href="#public">公开页面</a>
+      <a href="#files">数据与安装</a>
+      <a href="#server">自建服务器</a>
+      <a href="#dev">开发</a>
+    </nav>
+  </div>
+
+  <section id="split">
+    <div class="wrap sec">
+      <div class="side"><div class="no">01</div><h2>先分清</h2><p>这些能力互不相通。打开一个，不会自动打开另一个。</p></div>
+      <div class="scroll">
+        <table class="sheet">
+          <thead><tr><th>想做的事</th><th>用哪个</th><th>谁能看到</th></tr></thead>
+          <tbody>
+            <tr><td>自己记、自己导出</td><td>不登录，直接新建会话</td><td>只有这台设备</td></tr>
+            <tr><td>换一台设备接着用</td><td>个人云同步</td><td>只有你自己的账号</td></tr>
+            <tr><td>几个人同时记同一场</td><td>好友与协作</td><td>这场的成员，按邀请时的权限</td></tr>
+            <tr><td>把已经记过的会话给另一个账号</td><td>账号会话共享</td><td>你指定的那一个账号</td></tr>
+            <tr><td>让别人看进行中的公开页</td><td>公开 Live Share</td><td>拿到链接的人，只读</td></tr>
+            <tr><td>发布已经结束的记录</td><td>公开归档</td><td>打开归档地址的人，不是实时的</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="note">结束本地记录不会自动公开。加好友不会交出个人云和历史。删除好友也不会把已经在场的协作成员踢出去。</p>
+    </div>
+  </section>
+
+  <section id="ui">
+    <div class="wrap sec">
+      <div class="side"><div class="no">02</div><h2>界面</h2><p>四个入口。没有会话时，点名台会让你先去新建或加入协作。</p></div>
+      <dl class="feat">
+        <div><dt>点名台</dt><dd>填当前这一条，并看已经记下的记录。</dd></div>
+        <div><dt>会话</dt><dd>新建、继续、结束。登录之后，好友与协作也在这里。</dd></div>
+        <div><dt>数据</dt><dd>导入导出、查询词库、本机数据库。登录并出现冲突时，还有同步冲突。</dd></div>
+        <div><dt>设置</dt><dd>外观、工作台、主控屏、AI 辅助、服务器与账户、应用。</dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <section id="log">
+    <div class="wrap sec">
+      <div class="side"><div class="no">03</div><h2>记一条</h2><p>主控在点名时逐条录入。呼号会自动变成大写，主控呼号会留下来。</p></div>
+      <dl class="feat">
+        <div><dt>字段</dt><dd>主控呼号、点名呼号、设备、天线、功率、QTH、高度、时间、信号报告、备注。</dd></div>
+        <div><dt>词库联想</dt><dd>设备、天线、呼号、QTH 会从词库里补全。输入新内容时词库会收下，下次还能搜到。功率和高度不进这四类词库。</dd></div>
+        <div><dt>提交</dt><dd>Ctrl＋Enter 提交当前条。上一条可以撤销；表里已有的记录可以再编辑或删除。</dd></div>
+        <div><dt>一键复用</dt><dd>工作台设置里的「呼号历史一键复用」打开后，呼号栏可以根据本机以往记录填设备、天线、QTH、功率和高度。它不会多出一份词库下拉。</dd></div>
+        <div><dt>统计</dt><dd>点名台上能看到总记录数、今日记录和最近 7 天记录。</dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <section id="session">
+    <div class="wrap sec">
+      <div class="side"><div class="no">04</div><h2>会话</h2><p>一场点名是一个会话。本地会话的开始和结束都不需要服务器。</p></div>
+      <dl class="feat">
+        <div><dt>新建会话</dt><dd>立即开始。记录留在本机。</dd></div>
+        <div><dt>继续记录</dt><dd>回到还在进行的会话。</dd></div>
+        <div><dt>结束记录</dt><dd>只用于本地会话。记录还在，之后可以恢复。恢复一个会话不会结束其他会话。</dd></div>
+        <div><dt>历史筛选</dt><dd>全部、我的记录、共同记录、已结束。没有协作副本时不出现「共同记录」。退出登录后，已经下载过的协作副本仍能找到。「已结束」只是本机分类，不会因此变成公开归档。</dd></div>
+        <div><dt>不要混</dt><dd>换页面、换会话、暂时断网，都不是离开协作。共同记录不能当成普通本地会话去点「结束记录」。</dd></div>
+        <div><dt>结束共同记录</dt><dd>发起人到「协作与成员」里结束。同步确认后成员都不能再改；记录和成员关系还在。</dd></div>
+        <div><dt>离开协作</dt><dd>参与者只退出自己。本机已有记录变成只读，其他人不停。以后要重新邀请或申请。</dd></div>
+        <div><dt>另存独立会话</dt><dd>在更多操作里。只复制已经保存的表格记录，并切到一个新的本地会话。原来的协作、待同步队列和草稿都还在，不会自动退出。</dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <section id="data">
+    <div class="wrap sec">
+      <div class="side"><div class="no">05</div><h2>数据与词库</h2><p>导入导出、词库和整库备份都在「数据」。</p></div>
+      <dl class="feat">
+        <div><dt>记录与导出</dt><dd>当前会话可以导出 JSON、Excel 或 ADIF，也可以从 JSON、Excel 导入。导出路径留空时用系统下载目录。账户若同步了 Excel 样式，导出会跟着那套抬头和文件名。</dd></div>
+        <div><dt>查询词库</dt><dd>管理设备、天线、呼号、QTH。可以搜索，也可以导入、导出词库 JSON。</dd></div>
+        <div><dt>内置词条</dt><dd>软件自带的词条和你自己加的不是一回事。云同步只上传你添加的词条，以及你删掉内置词条的记录，不会把整份内置词库再传一遍。</dd></div>
+        <div><dt>本地数据库</dt><dd>导出或导入整库备份，也可以清空本机库。导入前会先给出备份里的会话数、记录数和词条数。这是本机文件，不是服务器备份。</dd></div>
+        <div><dt>同步冲突</dt><dd>只有登录并开启个人云、而且两边改了同一处时才出现。没有冲突就不必进。</dd></div>
+        <div><dt>文字助手</dt><dd>可选。它可以从本机历史里提出词库缺了什么、要不要改名或合并。确认之前不改词库，也不改已经记过的记录。</dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <section id="settings">
+    <div class="wrap sec">
+      <div class="side"><div class="no">06</div><h2>设置</h2><p>平时只用到其中几项。AI 默认关闭。</p></div>
+      <dl class="feat">
+        <div><dt>外观</dt><dd>主题色、亮色或暗色。界面缩放（80%–150%）只存在这台设备上。</dd></div>
+        <div><dt>工作台</dt><dd>和当前记录界面有关的布局，包括呼号历史一键复用。</dd></div>
+        <div><dt>主控屏</dt><dd>给场内主控看的显示。桌面端可以开独立窗口，显示窗口出错不会把记录窗口一起关掉。</dd></div>
+        <div><dt>AI 辅助</dt><dd>语音识别和文字助手各自配置。音频直接发给你填的服务，不经过协作服务器。结果只是候选，不会自动保存，也不会自动填时间和主控呼号。密钥放在系统安全存储里，不写进普通设置或导出文件。</dd></div>
+        <div><dt>服务器与账户</dt><dd>只有要用云同步、好友或共享时才打开。可以把服务器的 <code>/connect</code>、<code>/client/</code> 或门户链接直接粘进去，客户端会取出服务器地址。链接里没有密码。</dd></div>
+        <div><dt>应用</dt><dd>关于、许可和诊断信息。</dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <section id="cloud">
+    <div class="wrap sec">
+      <div class="side"><div class="no">07</div><h2>云同步与协作</h2><p>登录在「设置 → 服务器与账户」。没装服务器时，前面的本地功能照常。公网和真实账号用 HTTPS。</p></div>
+      <dl class="feat">
+        <div><dt>个人云</dt><dd>服务器支持时，登录后双向同步你自己的会话、点名记录和词库改动。这些记录不会写进协作会话，也不会出现在服务器的协作会话列表里。</dd></div>
+        <div><dt>合并</dt><dd>两台设备改了不同的地方，可以自动合并。同一字段两边都改了，才要你选。从云端换下来的记录不会改本机设置，也不会动协作会话。</dd></div>
+        <div><dt>整库之后</dt><dd>导入或清空整库后，会先停住自动覆盖，等你确认新的同步基线。共享之前如果云端还没配对好，客户端会要求先处理同步，不会偷偷覆盖云端。</dd></div>
+        <div><dt>好友与协作</dt><dd>会话页的「好友与协作」里有好友、消息、会话。按用户名加好友，对方接受后才成立。成为好友不会开放个人记录。</dd></div>
+        <div><dt>邀请</dt><dd>所有者邀请好友时选「可编辑」或「仅查看」。对方接受后下载并打开这场。会话默认私有；打开好友发现后，好友只能看到标题并申请加入，获批后才能看记录。</dd></div>
+        <div><dt>消息</dt><dd>可以接受、拒绝或取消。好友可以删除、拉黑或解除拉黑。已经在场内的权限，仍到这场的成员管理里改。支持通知的服务器会即时推送；旧服务器大约每 30 秒刷新一次，也可以手动刷新。未登录不会建立这条连接。</dd></div>
+        <div><dt>断线</dt><dd>增删改会排队。断线或重启之后用原来的操作补上，不会无故记成两条。只读成员、已被移出的人，以及服务器上已经关闭的会话，都不能再改。</dd></div>
+        <div><dt>冲突</dt><dd>真正冲突的那一条，在你选择用远端还是保留本地再试之前，不能继续编辑。</dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <section id="share">
+    <div class="wrap sec">
+      <div class="side"><div class="no">08</div><h2>账号会话共享</h2><p>把你账号里已经有的会话授权给同一个服务器上的另一个用户。这不是邀请对方加入实时协作，也不会把对方变成好友。</p></div>
+      <dl class="feat">
+        <div><dt>范围</dt><dd><strong>持续共享全部</strong>包含现在和以后新建的本人会话。新的本地会话要先完成云同步，对方才看得到。<strong>多选会话</strong>只共享勾上的那些，以后新建的不会自动算进去。</dd></div>
+        <div><dt>权限</dt><dd>仅查看，或允许新增、修改记录。删除记录要另外打开，而且必须同时允许修改。删除整个会话、结束会话、再转授给别人，始终只有所有者能做。已结束的会话只能查看。</dd></div>
+        <div><dt>对方在哪看</dt><dd>「历史会话 → 共享」。接受邀请不会把你当前正在记的会话切走。</dd></div>
+        <div><dt>共享词库</dt><dd>这项授权上的开关。新开授权时客户端默认打开。以前发出、当时还没有这个开关的授权保持关闭，需要再自己打开。服务器太旧、没有这项能力时，客户端不显示、也不发送这个开关。</dd></div>
+        <div><dt>打开之后</dt><dd>对方只能在这些共享会话里用你的设备、天线、QTH 做联想，你自己的同名词条优先。呼号栏不会因此多出一份词库下拉。被允许修改记录时，可以按呼号用「一键复用数据库信息」填入设备、天线、QTH、功率和高度。只读共享不能借这个按钮改记录。</dd></div>
+        <div><dt>不会发生的事</dt><dd>对方改不了你的词库，内容也不会写进对方的词库或数据库。关掉开关或撤销授权后就不能再用。撤销共享不影响对方已经单独加入的协作。</dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <section id="public">
+    <div class="wrap sec">
+      <div class="side"><div class="no">09</div><h2>公开页面</h2><p>都要所有者主动发布。结束本地记录不会顺便公开。</p></div>
+      <dl class="feat">
+        <div><dt>Live Share</dt><dd>进行中或已结束会话的只读公开页。默认 24 小时有效，最长 30 天，最短 1 小时。密钥在链接 <code>#</code> 后面，不要改成普通查询参数再发出去。它不是成员登录。</dd></div>
+        <div><dt>公开归档</dt><dd>已关闭会话的静态页面，不跟着现场改，也不使用实时连接。</dd></div>
+        <div><dt>主控屏</dt><dd>给场内看的，由当前账号在客户端打开。和发给不在场观众的 Live Share 不是同一个东西。</dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <section id="files">
+    <div class="wrap sec">
+      <div class="side"><div class="no">10</div><h2>数据在哪</h2><p>要换机器或留档，用软件里的备份，不要在程序开着时直接改数据库文件。</p></div>
+      <dl class="feat">
+        <div><dt>本机数据库</dt><dd>桌面和手机在系统的应用支持目录里，文件名是 <code>openlogtool_rust.db</code>。备份和恢复走「数据 → 本地数据库」。</dd></div>
+        <div><dt>网页版</dt><dd>数据按网站来源（协议、域名、端口）分开。清除这个网站的数据，本地记录会一起没。除本机外需要 HTTPS。</dd></div>
+        <div><dt>日志</dt><dd>应用支持目录里的 <code>app.log</code>。崩溃报告的位置写在仓库 README 的「崩溃诊断」，正常记点名用不到。</dd></div>
+        <div><dt>Windows</dt><dd>便携包要整包解压再运行，不能只拷一个 exe。安装版会带上同一套运行库。</dd></div>
+        <div><dt>macOS</dt><dd>第一次打开未签名的应用时，系统会提示开发者未验证。已发布的 3.0.3-R 在部分 Mac 上还会一启动就被系统杀掉，要等带修复的新安装包。设置里没有开关可以绕过。</dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <section id="server">
+    <div class="wrap sec">
+      <div class="side"><div class="no">11</div><h2>自建服务器</h2><p>服务器是另一套程序。安装、密钥和反向代理在服务端仓库的 README。这里只写打开之后怎么用。</p></div>
+      <div class="scroll">
+        <table class="sheet">
+          <thead><tr><th>地址</th><th>谁用</th><th>做什么</th></tr></thead>
+          <tbody>
+            <tr><td>/bootstrap</td><td>第一次、库还是空的</td><td>创建唯一的第一个管理员，只能成功一次</td></tr>
+            <tr><td>/login</td><td>成员</td><td>登录。能否自己注册由管理后台决定</td></tr>
+            <tr><td>/connect</td><td>任何人</td><td>连接地址和二维码。二维码里没有账号和密码</td></tr>
+            <tr><td>/client/</td><td>成员</td><td>可选的网页记录端。装了客户端产物才有</td></tr>
+            <tr><td>/app</td><td>已登录成员</td><td>会话、好友、个人云、公开归档、账户和设备</td></tr>
+            <tr><td>/admin</td><td>管理员</td><td>用户、治理、运行维护、备份。普通成员进不去</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <dl class="feat">
+        <div><dt>成员门户</dt><dd>好友在 <code>/app/friends</code>。个人云记录和协作会话是分开的列表。账户页可以改密码，并撤销自己的登录设备。Excel AI 校对只在服务器配了模型、且你能编辑那场协作时出现；模型不能直接写数据库，每一条都要人确认。</dd></div>
+        <div><dt>管理员</dt><dd>可以搜索用户、改角色、要求改密、禁用或撤销登录。不能把最后一名管理员的身份卸掉。在线备份是整份数据库，含密码哈希，<strong>不包含</strong> <code>.env</code> 和任何人电脑上的客户端数据。确认恢复后要重启才换库，所有人需要重新登录。</dd></div>
+        <div><dt>不要做</dt><dd>四个密钥不要设成同一个，升级时也不要重新生成已经在用的密钥。不要同时跑两个进程打开同一个数据库。反向代理要转发 <code>/api</code>、<code>/ws</code>、<code>/live</code>，用了网页客户端时再加上 <code>/client</code> 和 <code>/connect</code>。只通了网页、不通 WebSocket 时，Live Share 会一直显示正在重连。</dd></div>
+      </dl>
+      <p class="note">生产环境放在 HTTPS 后面。除了浏览器承认的本机地址，不要用明文 HTTP 登录门户或后台。</p>
+    </div>
+  </section>
+
+  <section id="dev">
+    <div class="wrap sec">
+      <div class="side"><div class="no">12</div><h2>开发</h2><p>改代码时以仓库里的指南为准。本页不复制构建命令和接口字段。</p></div>
+      <dl class="feat">
+        <div><dt>客户端</dt><dd><a href="https://github.com/Mazha0309/CallsignRollLog" target="_blank" rel="noopener">Mazha0309/CallsignRollLog</a>。使用说明的仓库副本是 <code>docs/user-guide.md</code>，代码地图、测试和生成命令在 <code>docs/development.md</code>。界面是 Flutter，本机数据库在 Rust。</dd></div>
+        <div><dt>服务端</dt><dd><a href="https://github.com/Mazha0309/CallsignRollLogServer" target="_blank" rel="noopener">Mazha0309/CallsignRollLogServer</a>。给人看的是 <code>docs/user-guide.md</code>，目录、迁移和测试在 <code>docs/development.md</code>。每个接口的字段在 <code>docs/*-api-v1.md</code>。</dd></div>
+        <div><dt>设计稿</dt><dd>两边仓库的 <code>docs/superpowers/</code> 是某次功能的设计和施工记录，不是现行说明书。和代码不一致时，以代码和 API 文档为准。</dd></div>
+        <div><dt>许可</dt><dd>GNU AGPL-3.0。若修改后通过网络对外提供服务，需要向用户提供修改后的源码。</dd></div>
+      </dl>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <span>CRL · Callsign Roll Log · © 2026 Mazha0309 · BG5CRL · AGPL-3.0</span>
+    <nav>
+      <a href="index.html">首页</a>
+      <a href="index.html#download">下载</a>
+      <a href="https://github.com/Mazha0309/CallsignRollLog" target="_blank" rel="noopener">客户端仓库</a>
+      <a href="https://github.com/Mazha0309/CallsignRollLogServer" target="_blank" rel="noopener">服务端仓库</a>
+      <a href="https://github.com/Mazha0309/CallsignRollLog/issues" target="_blank" rel="noopener">反馈</a>
+    </nav>
+  </div>
+</footer>
+<script>
+(function(){
+  var root=document.documentElement,KEY='crl-theme',saved=null;
+  try{saved=localStorage.getItem(KEY);}catch(e){}
+  root.setAttribute('data-theme',saved||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'));
+  function tg(){document.getElementById('tg').setAttribute('d',root.getAttribute('data-theme')==='dark'
+    ?'M12 3v2m0 14v2M5.6 5.6l1.4 1.4m10 10 1.4 1.4M3 12h2m14 0h2M5.6 18.4l1.4-1.4m10-10 1.4-1.4M16 12a4 4 0 1 1-8 0 4 4 0 0 1 8 0z'
+    :'M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z');}
+  tg();
+  document.getElementById('theme').addEventListener('click',function(){
+    var n=root.getAttribute('data-theme')==='dark'?'light':'dark';
+    root.setAttribute('data-theme',n);tg();try{localStorage.setItem(KEY,n);}catch(e){}
+  });
+  var nav=document.getElementById('nav');
+  document.getElementById('hamb').addEventListener('click',function(){nav.classList.toggle('open');});
+  nav.addEventListener('click',function(e){if(e.target.tagName==='A')nav.classList.remove('open');});
+})();
+</script>
+</body>
+</html>

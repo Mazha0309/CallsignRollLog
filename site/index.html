@@ -581,6 +581,7 @@ html[data-theme=dark] .lmh{border-bottom-color:var(--ls-line)}
     <nav id="nav">
       <a href="#features">功能</a>
       <a href="#collab">协作</a>
+      <a href="docs.html">文档</a>
       <a href="#download">下载</a>
       <a href="#build">构建</a>
       <a href="#open">开源</a>
@@ -605,6 +606,7 @@ html[data-theme=dark] .lmh{border-bottom-color:var(--ls-line)}
     <div class="acts">
       <a class="btn pri" href="#download"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11m0 0 4.5-4.5M12 15l-4.5-4.5M5 20h14"/></svg>下载</a>
       <div class="subacts">
+        <a class="btn alt" href="docs.html">使用手册</a>
         <a class="btn alt" href="https://github.com/Mazha0309/CallsignRollLog" target="_blank" rel="noopener">源码仓库</a>
         <a class="btn alt" href="https://github.com/Mazha0309/CallsignRollLog/blob/main/README.md" target="_blank" rel="noopener">README</a>
       </div>
@@ -683,7 +685,7 @@ html[data-theme=dark] .lmh{border-bottom-color:var(--ls-line)}
         <div><dt>冲突</dt><dd>无重叠修改自动三方 rebase；同字段冲突进入冲突中心，由使用者决定取舍。</dd></div>
         <div><dt>云同步</dt><dd>个人会话与词库多设备自动合并；个人记录不写入协作会话。</dd></div>
         <div><dt>主控屏</dt><dd>独立窗口显示当前点名进度，桌面端以独立进程运行，显示窗口出错不会带崩主控台。</dd></div>
-        <div><dt>Live Share</dt><dd>为主控、远程书记员或观众生成只读公开网页，无需登录即可查看当前点名进度；链接可设 1 小时至 7 天自动失效，密钥仅在创建时显示一次。</dd></div>
+        <div><dt>Live Share</dt><dd>为主控、远程书记员或观众生成只读公开网页，无需登录即可查看当前点名进度；默认 24 小时有效，可设 1 小时至 30 天，密钥放在链接的片段里。</dd></div>
         </dl>
         <table class="roles">
         <thead><tr><th>角色</th><th>权限</th></tr></thead>
@@ -943,6 +945,7 @@ bash tool/build_web.sh
   <div class="wrap foot">
     <span>CRL · Callsign Roll Log · © 2026 Mazha0309 · BG5CRL · AGPL-3.0</span>
     <nav>
+      <a href="docs.html">文档</a>
       <a href="https://github.com/Mazha0309/CallsignRollLog" target="_blank" rel="noopener">客户端仓库</a>
       <a href="https://github.com/Mazha0309/CallsignRollLogServer" target="_blank" rel="noopener">服务端仓库</a>
       <a href="https://github.com/Mazha0309/CallsignRollLog/releases" target="_blank" rel="noopener">发布</a>

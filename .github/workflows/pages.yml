@@ -34,7 +34,7 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p _site
-          cp site/index.html site/icon.png site/wechat-zjra.svg _site/
+          cp site/index.html site/docs.html site/icon.png site/wechat-zjra.svg _site/
           cp -R site/fonts _site/fonts
 
       - name: Configure Pages
