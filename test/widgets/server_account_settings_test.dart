@@ -7,14 +7,18 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
+import 'package:image/image.dart' as img;
 import 'package:openlogtool/l10n/l10n.dart';
 import 'package:openlogtool/models/collaboration_dto.dart';
 import 'package:openlogtool/providers/server_provider.dart';
 import 'package:openlogtool/services/secure_token_store.dart';
 import 'package:openlogtool/services/server_api.dart';
+import 'package:openlogtool/utils/server_qr_image_pick.dart';
+import 'package:openlogtool/widgets/server_qr_scanner.dart';
 import 'package:openlogtool/widgets/settings/server_account_settings.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:zxing2/qrcode.dart';
 
 void main() {
   for (final width in [320.0, 1100.0]) {
@@ -662,6 +666,198 @@ void main() {
     expect(loginRequested, isTrue);
     expect(provider.isLoggedIn, isTrue);
   });
+
+  testWidgets('linux and windows scan an image and do not create a camera',
+      (tester) async {
+    final originalCamera = createServerQrCameraController;
+    addTearDown(() => createServerQrCameraController = originalCamera);
+    addTearDown(() => debugDefaultTargetPlatformOverride = null);
+    try {
+      for (final platform in [TargetPlatform.linux, TargetPlatform.windows]) {
+        debugDefaultTargetPlatformOverride = platform;
+        var cameras = 0;
+        createServerQrCameraController = () {
+          cameras++;
+          return originalCamera();
+        };
+        final previousPick = pickServerQrImageBytes;
+        pickServerQrImageBytes = () async => null;
+        final server = _ScanSettingsServer(
+          'https://current.example',
+          loggedIn: true,
+        );
+        addTearDown(server.dispose);
+        await tester.pumpWidget(_ScanSettingsApp(provider: server));
+        await tester.pumpAndSettle();
+        expect(find.byKey(const Key('server-scan-button')), findsNothing);
+        expect(
+            find.byKey(const Key('server-image-scan-button')), findsOneWidget);
+        await tester.tap(find.byKey(const Key('server-image-scan-button')));
+        await tester.pumpAndSettle();
+        expect(cameras, 0);
+        expect(find.byType(AlertDialog), findsNothing);
+        expect(server.checked, isEmpty);
+        pickServerQrImageBytes = previousPick;
+        await tester.pumpWidget(const SizedBox.shrink());
+      }
+    } finally {
+      debugDefaultTargetPlatformOverride = null;
+    }
+  });
+
+  testWidgets('canceling an image scan leaves the signed-in server untouched',
+      (tester) async {
+    try {
+      final server = await _pumpImageScan(
+        tester,
+        server: _ScanSettingsServer('https://current.example', loggedIn: true),
+        bytes: _qrPng('https://other.example/connect'),
+      );
+      expect(find.textContaining('当前账号会退出'), findsOneWidget);
+      expect(find.text('切换服务器？'), findsNothing);
+      await tester.tap(find.widgetWithText(TextButton, '取消'));
+      await tester.pumpAndSettle();
+      expect(server.checked, isEmpty);
+      expect(_serverFieldText(tester), 'https://current.example');
+      expect(find.byType(AlertDialog), findsNothing);
+    } finally {
+      debugDefaultTargetPlatformOverride = null;
+    }
+  });
+
+  testWidgets('confirming a different server checks it without a second dialog',
+      (tester) async {
+    try {
+      final server = await _pumpImageScan(
+        tester,
+        server: _ScanSettingsServer('https://current.example', loggedIn: true),
+        bytes: _qrPng('https://other.example/app/friends?x=1#tab'),
+      );
+      expect(find.textContaining('https://other.example'), findsOneWidget);
+      expect(find.textContaining('x=1'), findsNothing);
+      expect(find.text('切换服务器？'), findsNothing);
+      await tester.tap(find.byKey(const Key('server-scan-confirm-button')));
+      await tester.pumpAndSettle();
+      expect(find.text('切换服务器？'), findsNothing);
+      expect(find.byType(AlertDialog), findsNothing);
+      expect(server.checked, ['https://other.example']);
+      expect(_serverFieldText(tester), 'https://other.example');
+    } finally {
+      debugDefaultTargetPlatformOverride = null;
+    }
+  });
+
+  testWidgets('the same server and a signed-out server use the check copy',
+      (tester) async {
+    try {
+      final same = await _pumpImageScan(
+        tester,
+        server: _ScanSettingsServer('https://server.example', loggedIn: true),
+        bytes: _qrPng('https://server.example/connect'),
+      );
+      expect(find.textContaining('不会登录'), findsOneWidget);
+      expect(find.textContaining('当前账号会退出'), findsNothing);
+      await tester.tap(find.byKey(const Key('server-scan-confirm-button')));
+      await tester.pumpAndSettle();
+      expect(same.checked, ['https://server.example']);
+
+      final signedOut = await _pumpImageScan(
+        tester,
+        server: _ScanSettingsServer('', loggedIn: false),
+        bytes: _qrPng('https://server.example/client/'),
+      );
+      expect(find.textContaining('不会登录'), findsOneWidget);
+      expect(find.textContaining('当前账号会退出'), findsNothing);
+      await tester.tap(find.widgetWithText(TextButton, '取消'));
+      await tester.pumpAndSettle();
+      expect(signedOut.checked, isEmpty);
+      expect(_serverFieldText(tester), isEmpty);
+    } finally {
+      debugDefaultTargetPlatformOverride = null;
+    }
+  });
+
+  testWidgets('an invalid picture or a dismissed picker does not connect',
+      (tester) async {
+    try {
+      final server = await _pumpImageScan(
+        tester,
+        server: _ScanSettingsServer('https://current.example', loggedIn: true),
+        bytes: Uint8List.fromList(const [1, 2, 3, 4]),
+      );
+      expect(find.text('图片里没有有效的服务器连接地址。'), findsOneWidget);
+      expect(find.byType(AlertDialog), findsNothing);
+      expect(server.checked, isEmpty);
+      expect(_serverFieldText(tester), 'https://current.example');
+
+      pickServerQrImageBytes = () async => null;
+      await tester.tap(find.byKey(const Key('server-image-scan-button')));
+      await tester.pumpAndSettle();
+      expect(find.byType(AlertDialog), findsNothing);
+      expect(server.checked, isEmpty);
+    } finally {
+      debugDefaultTargetPlatformOverride = null;
+    }
+  });
+
+  testWidgets('a credential QR is rejected without connecting', (tester) async {
+    try {
+      final server = await _pumpImageScan(
+        tester,
+        server: _ScanSettingsServer('https://current.example', loggedIn: true),
+        bytes: _qrPng('https://user:pass@server.example/connect'),
+      );
+      expect(find.text('图片里没有有效的服务器连接地址。'), findsOneWidget);
+      expect(find.textContaining('user:pass'), findsNothing);
+      expect(server.checked, isEmpty);
+    } finally {
+      debugDefaultTargetPlatformOverride = null;
+    }
+  });
+
+  testWidgets('paste still only fills the field', (tester) async {
+    final server =
+        _ScanSettingsServer('https://current.example', loggedIn: true);
+    addTearDown(server.dispose);
+    await tester.pumpWidget(_ScanSettingsApp(provider: server));
+    await tester.pumpAndSettle();
+    final messenger = tester.binding.defaultBinaryMessenger;
+    messenger.setMockMethodCallHandler(SystemChannels.platform, (call) async {
+      if (call.method == 'Clipboard.getData') {
+        return {'text': 'https://pasted.example/connect'};
+      }
+      return null;
+    });
+    addTearDown(() => messenger.setMockMethodCallHandler(
+          SystemChannels.platform,
+          null,
+        ));
+    await tester.tap(find.byKey(const Key('server-paste-button')));
+    await tester.pumpAndSettle();
+    expect(find.byType(AlertDialog), findsNothing);
+    expect(_serverFieldText(tester), 'https://pasted.example');
+    expect(server.checked, isEmpty);
+  });
+
+  testWidgets('typing a new address still asks with the old switch dialog',
+      (tester) async {
+    final server =
+        _ScanSettingsServer('https://current.example', loggedIn: true);
+    addTearDown(server.dispose);
+    await tester.pumpWidget(_ScanSettingsApp(provider: server));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const Key('server-url-field')),
+      'https://typed.example',
+    );
+    await tester.tap(find.byKey(const Key('server-check-button')));
+    await tester.pumpAndSettle();
+    expect(find.text('切换服务器？'), findsOneWidget);
+    expect(find.text('连接到这台服务器？'), findsNothing);
+    await tester.tap(find.widgetWithText(TextButton, '取消'));
+    await tester.pumpAndSettle();
+    expect(server.checked, isEmpty);
+  });
 }
 
 class _AuthTestServer extends ServerProvider {
@@ -779,4 +975,106 @@ final class _StatusTokenStore implements TokenStore, TokenStorageStatusSource {
   Future<void> clear() async {
     session = null;
   }
+}
+
+class _ScanSettingsServer extends _AuthTestServer {
+  _ScanSettingsServer(this.url, {required this.loggedIn});
+  String url;
+  final bool loggedIn;
+  final checked = <String>[];
+
+  @override
+  String get serverUrl => url;
+
+  @override
+  bool get isLoggedIn => loggedIn;
+
+  @override
+  Future<ServerInfoDto> saveAndCheckServerUrl(String candidate) async {
+    checked.add(candidate);
+    url = candidate;
+    notifyListeners();
+    return ServerInfoDto(
+      serverInstanceId: 'instance',
+      protocolMin: 1,
+      protocolMax: 1,
+      features: const [],
+      serverTime: DateTime.utc(2026, 10, 16),
+      environment: 'test',
+    );
+  }
+}
+
+class _ScanSettingsApp extends StatelessWidget {
+  const _ScanSettingsApp({required this.provider});
+  final ServerProvider provider;
+
+  @override
+  Widget build(BuildContext context) =>
+      ChangeNotifierProvider<ServerProvider>.value(
+        value: provider,
+        child: const MaterialApp(
+          locale: Locale('zh', 'CN'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: SingleChildScrollView(
+              child: ServerAccountSettings(cardPadding: 16),
+            ),
+          ),
+        ),
+      );
+}
+
+Future<_ScanSettingsServer> _pumpImageScan(
+  WidgetTester tester, {
+  required _ScanSettingsServer server,
+  required Uint8List bytes,
+}) async {
+  debugDefaultTargetPlatformOverride = TargetPlatform.linux;
+  addTearDown(() => debugDefaultTargetPlatformOverride = null);
+  final previousPick = pickServerQrImageBytes;
+  pickServerQrImageBytes = () async => bytes;
+  addTearDown(() => pickServerQrImageBytes = previousPick);
+  addTearDown(server.dispose);
+  await tester.pumpWidget(_ScanSettingsApp(provider: server));
+  await tester.pumpAndSettle();
+  await tester.ensureVisible(find.byKey(const Key('server-image-scan-button')));
+  await tester.tap(find.byKey(const Key('server-image-scan-button')));
+  await tester.pumpAndSettle();
+  return server;
+}
+
+String _serverFieldText(WidgetTester tester) => tester
+    .widget<TextField>(find.byKey(const Key('server-url-field')))
+    .controller!
+    .text;
+
+Uint8List _qrPng(String text) {
+  final matrix = Encoder.encode(text, ErrorCorrectionLevel.m).matrix!;
+  const scale = 8;
+  const quiet = 4;
+  final modules = matrix.width + quiet * 2;
+  final image = img.Image(
+    width: modules * scale,
+    height: modules * scale,
+    numChannels: 4,
+  );
+  img.fill(image, color: img.ColorRgba8(255, 255, 255, 255));
+  for (var y = 0; y < matrix.height; y++) {
+    for (var x = 0; x < matrix.width; x++) {
+      if (matrix.get(x, y) != 1) continue;
+      final left = (x + quiet) * scale;
+      final top = (y + quiet) * scale;
+      img.fillRect(
+        image,
+        x1: left,
+        y1: top,
+        x2: left + scale,
+        y2: top + scale,
+        color: img.ColorRgba8(0, 0, 0, 255),
+      );
+    }
+  }
+  return img.encodePng(image);
 }

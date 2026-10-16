@@ -8,8 +8,11 @@ import 'package:openlogtool/providers/server_provider.dart';
 import 'package:openlogtool/services/secure_token_store.dart';
 import 'package:openlogtool/services/server_api.dart';
 import 'package:openlogtool/utils/app_snack_bar.dart';
+import 'package:openlogtool/utils/qr_image_decode.dart';
 import 'package:openlogtool/utils/server_connection_error.dart';
+import 'package:openlogtool/utils/server_qr_image_pick.dart';
 import 'package:openlogtool/utils/server_url.dart';
+import 'package:openlogtool/widgets/server_scan_confirm_dialog.dart';
 import 'package:openlogtool/widgets/settings/settings_ui.dart';
 import 'package:openlogtool/widgets/server_qr_scanner.dart';
 import 'package:provider/provider.dart';
@@ -105,23 +108,37 @@ class _ServerAccountSettingsState extends State<ServerAccountSettings> {
               Wrap(spacing: 8, runSpacing: 8, children: [
                 if (serverCameraScanSupported)
                   OutlinedButton.icon(
-                      key: const Key('server-scan-button'),
-                      icon: const Icon(Icons.qr_code_scanner),
-                      label: Text(zh ? '扫一扫' : 'Scan QR'),
-                      onPressed: server.isBusy
-                          ? null
-                          : () async {
-                              final result = await Navigator.push<String>(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (_) => const ServerQrScanner()));
-                              if (mounted && result != null) {
-                                setState(() {
-                                  _serverUrlController.text = result;
-                                  _urlEdited = true;
-                                });
-                              }
-                            }),
+                    key: const Key('server-scan-button'),
+                    icon: const Icon(Icons.qr_code_scanner),
+                    label: Text(l10n.serverScanButton),
+                    onPressed: server.isBusy
+                        ? null
+                        : () async {
+                            final result = await Navigator.push<String>(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const ServerQrScanner(),
+                              ),
+                            );
+                            if (!mounted || result == null) return;
+                            setState(() {
+                              _serverUrlController.text = result;
+                              _urlEdited = true;
+                            });
+                            await _saveAndCheck(
+                              server,
+                              skipSwitchConfirm: true,
+                            );
+                          },
+                  )
+                else
+                  OutlinedButton.icon(
+                    key: const Key('server-image-scan-button'),
+                    icon: const Icon(Icons.image_search_outlined),
+                    label: Text(l10n.serverScanImageButton),
+                    onPressed:
+                        server.isBusy ? null : () => _scanServerImage(server),
+                  ),
                 TextButton.icon(
                     key: const Key('server-paste-button'),
                     icon: const Icon(Icons.content_paste),
@@ -348,7 +365,34 @@ class _ServerAccountSettingsState extends State<ServerAccountSettings> {
     );
   }
 
-  Future<void> _saveAndCheck(ServerProvider server) async {
+  Future<void> _scanServerImage(ServerProvider server) async {
+    final bytes = await pickServerQrImageBytes();
+    if (!mounted || bytes == null) return;
+    final candidate = validatedServerConnectionInput(decodeQrText(bytes) ?? '');
+    if (candidate == null) {
+      context.showLoggedSnackBar(
+        SnackBar(content: Text(context.l10n.serverScanImageInvalid)),
+      );
+      return;
+    }
+    final confirmed = await confirmScannedServerAddress(
+      context,
+      loggedIn: server.isLoggedIn,
+      currentServerUrl: server.serverUrl,
+      candidateUrl: candidate,
+    );
+    if (!confirmed || !mounted) return;
+    setState(() {
+      _serverUrlController.text = candidate;
+      _urlEdited = true;
+    });
+    await _saveAndCheck(server, skipSwitchConfirm: true);
+  }
+
+  Future<void> _saveAndCheck(
+    ServerProvider server, {
+    bool skipSwitchConfirm = false,
+  }) async {
     final candidateUrl =
         validatedServerConnectionInput(_serverUrlController.text);
     if (candidateUrl == null) {
@@ -358,7 +402,8 @@ class _ServerAccountSettingsState extends State<ServerAccountSettings> {
               : 'Enter a full HTTP(S) server address without credentials.')));
       return;
     }
-    if (server.isLoggedIn &&
+    if (!skipSwitchConfirm &&
+        server.isLoggedIn &&
         normalizeServerUrl(candidateUrl) !=
             normalizeServerUrl(server.serverUrl)) {
       final revision = server.contextRevision;

@@ -13,6 +13,15 @@ bool get serverCameraScanSupported =>
       TargetPlatform.macOS,
     }.contains(defaultTargetPlatform);
 
+MobileScannerController Function() createServerQrCameraController =
+    _defaultServerQrCameraController;
+
+MobileScannerController _defaultServerQrCameraController() =>
+    MobileScannerController(
+      formats: const [BarcodeFormat.qrCode],
+      detectionSpeed: DetectionSpeed.noDuplicates,
+    );
+
 class ServerQrScanner extends StatefulWidget {
   const ServerQrScanner({super.key});
   @override
