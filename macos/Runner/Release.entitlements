@@ -4,8 +4,12 @@
 <dict>
 	<key>com.apple.security.device.camera</key>
 	<true/>
-	<key>keychain-access-groups</key>
-	<array/>
+	<!--
+	  Do not add keychain-access-groups. Release builds are ad-hoc signed, and
+	  that restricted entitlement makes AMFI kill the process at launch
+	  (error -424). An empty array grants no keychain group. The Darwin secure
+	  storage plugin only sets an access group on iOS. See GitHub issue 61.
+	-->
 	<key>com.apple.security.app-sandbox</key>
 	<true/>
 	<key>com.apple.security.network.client</key>

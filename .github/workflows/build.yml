@@ -983,6 +983,13 @@ jobs:
           xcrun otool -l "$executable" | grep -A3 LC_RPATH |
             grep -F '@executable_path/../Frameworks'
           codesign --verify --deep --strict --verbose=2 "$app"
+          # codesign --verify does not catch this. AMFI rejects the app on the
+          # user's machine (error -424) if this restricted entitlement is present
+          # in an ad-hoc signature. See GitHub issue 61.
+          if codesign -d --entitlements - "$app" 2>&1 | grep -q 'keychain-access-groups'; then
+            echo "adhoc macOS build must not contain keychain-access-groups (AMFI -424, issue 61)" >&2
+            exit 1
+          fi
           test -n "$(find build/symbols/macos -type f -name '*.symbols' -print -quit)"
 
       - name: Package and verify macOS artifacts
