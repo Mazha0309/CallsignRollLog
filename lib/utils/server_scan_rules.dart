@@ -6,10 +6,10 @@ bool serverScanSwitchesAccount({
   required String candidateUrl,
 }) {
   if (!loggedIn) return false;
-  // normalizeServerUrl keeps /connect. Connection pages have to be stripped
-  // first, or the same server looks like a switch.
+  // Only the scanned page is a portal URL. The stored identity keeps paths
+  // such as /app; stripping it would hide a real sign-out.
   return serverUrlFromConnectionInput(candidateUrl) !=
-      serverUrlFromConnectionInput(currentServerUrl);
+      normalizeServerUrl(currentServerUrl);
 }
 
 bool serverScanTorchVisible({

@@ -27,6 +27,14 @@ void main() {
       ),
       isTrue,
     );
+    expect(
+      serverScanSwitchesAccount(
+        loggedIn: true,
+        currentServerUrl: 'https://example.com/app',
+        candidateUrl: 'https://example.com/connect',
+      ),
+      isTrue,
+    );
   });
 
   test('torch and camera switch stay hidden unless the controller reports them',
