@@ -131,7 +131,9 @@ final class AiRecognitionSettingsProvider with ChangeNotifier {
       json['activeAudioFieldExtractionProfileId'],
       AiProviderKind.audioFieldExtraction,
     );
-    _enabled = json['enabled'] == true && _activeAsrProfileId != null;
+    _enabled = json['enabled'] == true &&
+        (_activeAsrProfileId != null ||
+            _activeAudioFieldExtractionProfileId != null);
     _useLocalReferenceContext = json['useLocalReferenceContext'] != false;
     final textAssistant = json['textAssistant'];
     if (textAssistant != null) {
@@ -148,7 +150,9 @@ final class AiRecognitionSettingsProvider with ChangeNotifier {
 
   Future<void> setEnabled(bool value) => _mutate(() async {
         await initialized;
-        if (value && activeAsrProfile == null) {
+        if (value &&
+            activeAsrProfile == null &&
+            activeAudioFieldExtractionProfile == null) {
           throw StateError('AI_ASR_PROFILE_REQUIRED');
         }
         if (_enabled == value) return;

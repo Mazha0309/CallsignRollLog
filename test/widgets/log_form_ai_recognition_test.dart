@@ -320,6 +320,48 @@ void main() {
     await tester.pumpAndSettle();
     expect(_fieldController(tester, 'Radio').text, 'FT-991A');
   });
+
+  testWidgets('uses the single-call path when a multimodal profile is set',
+      (tester) async {
+    final aiSettings = AiRecognitionSettingsProvider();
+    addTearDown(aiSettings.dispose);
+    await aiSettings.initialized;
+    await _enableMultimodal(aiSettings);
+    var singleCalls = 0;
+    var twoHopCalls = 0;
+
+    await tester.pumpWidget(
+      _TestApp(
+        aiSettings: aiSettings,
+        recorder: _FakeAiAudioRecorder(),
+        recognizer: (audio, settings, cancellationToken) async {
+          singleCalls++;
+          return AiRecognitionResult(
+            transcription: Transcription(text: 'BG5DBL'),
+            candidates: [
+              RecognitionCandidate(fields: const {'callsign': 'BG5DBL'}),
+            ],
+          );
+        },
+        transcriptionExecutor: (audio, settings, token) async {
+          twoHopCalls++;
+          return Transcription(text: 'should not run');
+        },
+      ),
+    );
+    await tester.pump();
+
+    await tester.ensureVisible(find.byKey(const Key('ai-start-recording')));
+    await tester.tap(find.byKey(const Key('ai-start-recording')));
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('ai-stop-recording')));
+    await tester.pumpAndSettle();
+
+    expect(singleCalls, 1);
+    expect(twoHopCalls, 0);
+    expect(find.byKey(const Key('ai-review-panel')), findsOneWidget);
+    expect(find.textContaining('Callsign: BG5DBL'), findsOneWidget);
+  });
 }
 
 Future<void> _enableAi(AiRecognitionSettingsProvider settings) async {
@@ -334,6 +376,24 @@ Future<void> _enableAi(AiRecognitionSettingsProvider settings) async {
   );
   await settings.upsertProfile(profile);
   await settings.setActiveAsrProfile(profile.id);
+  await settings.setEnabled(true);
+}
+
+Future<void> _enableMultimodal(AiRecognitionSettingsProvider settings) async {
+  final profile = AiProviderProfile(
+    id: 'multimodal-test',
+    name: 'Test multimodal',
+    kind: AiProviderKind.audioFieldExtraction,
+    protocol: AiProtocol.openAiChatCompletionsAudio,
+    baseUrl: Uri.parse('https://audio.example.test/v1'),
+    model: 'audio-model',
+    credentialTransport: const AiCredentialTransport.none(),
+    capabilities: const AiProviderCapabilities(
+      supportsAudioFieldExtraction: true,
+    ),
+  );
+  await settings.upsertProfile(profile);
+  await settings.setActiveAudioFieldExtractionProfile(profile.id);
   await settings.setEnabled(true);
 }
 
@@ -364,6 +424,7 @@ class _TestApp extends StatelessWidget {
     required this.aiSettings,
     required this.recorder,
     this.executor,
+    this.recognizer,
     this.transcriptionExecutor,
     this.fieldExtractionExecutor,
     this.inlineTextSuggestionExecutor,
@@ -373,6 +434,7 @@ class _TestApp extends StatelessWidget {
   final AiRecognitionSettingsProvider aiSettings;
   final AiAudioRecorder recorder;
   final AiRecognitionExecutor? executor;
+  final AiRecognitionExecutor? recognizer;
   final AiTranscriptionExecutor? transcriptionExecutor;
   final AiFieldExtractionExecutor? fieldExtractionExecutor;
   final InlineTextSuggestionExecutor? inlineTextSuggestionExecutor;
@@ -412,6 +474,7 @@ class _TestApp extends StatelessWidget {
               child: LogForm(
                 aiAudioRecorder: recorder,
                 aiRecognitionExecutor: executor,
+                aiRecognizer: recognizer,
                 aiTranscriptionExecutor: transcriptionExecutor,
                 aiFieldExtractionExecutor: fieldExtractionExecutor,
                 inlineTextSuggestionExecutor: inlineTextSuggestionExecutor,

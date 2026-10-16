@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:openlogtool/l10n/l10n.dart';
 import 'package:openlogtool/providers/app_info_provider.dart';
 import 'package:openlogtool/providers/ai_recognition_settings_provider.dart';
+import 'package:openlogtool/services/ai_recognition/models.dart';
 import 'package:openlogtool/providers/server_provider.dart';
 import 'package:openlogtool/providers/settings_provider.dart';
 import 'package:openlogtool/screens/home_screen.dart';
@@ -518,6 +519,55 @@ void main() {
           .text,
       contains('example.com'),
     );
+  });
+
+  testWidgets('enables the AI switch with only a multimodal profile',
+      (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    _usePlatformLocale(tester, const Locale('en', 'US'));
+    await _setSurface(tester, const Size(1200, 900));
+    final providers = _SettingsProviders();
+    addTearDown(providers.dispose);
+    await providers.aiRecognition.initialized;
+    await providers.aiRecognition.upsertProfile(
+      AiProviderProfile(
+        id: 'multimodal',
+        name: 'Multimodal',
+        kind: AiProviderKind.audioFieldExtraction,
+        protocol: AiProtocol.openAiChatCompletionsAudio,
+        baseUrl: Uri.parse('https://audio.example/v1'),
+        model: 'audio-model',
+        credentialTransport: const AiCredentialTransport.none(),
+        capabilities: const AiProviderCapabilities(
+          supportsAudioFieldExtraction: true,
+        ),
+      ),
+    );
+    await providers.aiRecognition
+        .setActiveAudioFieldExtractionProfile('multimodal');
+
+    await tester.pumpWidget(_SettingsPanelHarness(providers: providers));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('settings-category-ai')));
+    await tester.pumpAndSettle();
+
+    final enabledSwitch = tester.widget<Switch>(
+      find.descendant(
+        of: find.byKey(const Key('ai-recognition-enabled')),
+        matching: find.byType(Switch),
+      ),
+    );
+    expect(enabledSwitch.onChanged, isNotNull);
+
+    await tester.tap(
+      find.descendant(
+        of: find.byKey(const Key('ai-recognition-enabled')),
+        matching: find.byType(Switch),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(providers.aiRecognition.enabled, isTrue);
+    expect(tester.takeException(), isNull);
   });
 }
 

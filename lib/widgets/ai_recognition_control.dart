@@ -37,6 +37,7 @@ class AiRecognitionControl extends StatefulWidget {
     this.busy = false,
     this.audioRecorder,
     this.executor,
+    this.recognizer = AiRecognitionRuntime.recognizeRecord,
     this.transcriptionExecutor = AiRecognitionRuntime.transcribe,
     this.fieldExtractionExecutor = AiRecognitionRuntime.extractFields,
     this.referenceContextBuilder,
@@ -49,6 +50,7 @@ class AiRecognitionControl extends StatefulWidget {
   final bool busy;
   final AiAudioRecorder? audioRecorder;
   final AiRecognitionExecutor? executor;
+  final AiRecognitionExecutor recognizer;
   final AiTranscriptionExecutor transcriptionExecutor;
   final AiFieldExtractionExecutor fieldExtractionExecutor;
   final AiReferenceContextBuilder? referenceContextBuilder;
@@ -68,6 +70,7 @@ class _AiRecognitionControlState extends State<AiRecognitionControl> {
   Timer? _liveChunkTimer;
   Future<void>? _liveTranscriptionInFlight;
   final Map<int, Transcription> _liveTranscriptions = {};
+  final Map<int, AiRecognitionResult> _singleCallResults = {};
   final List<({int sequence, AudioSegment audio})> _retryChunks = [];
   String? _liveTranscriptionError;
   AiRecognitionResult? _liveStructuredPreview;
@@ -101,7 +104,11 @@ class _AiRecognitionControlState extends State<AiRecognitionControl> {
       return;
     }
     final settings = context.read<AiRecognitionSettingsProvider>();
-    if (!settings.enabled || settings.activeAsrProfile == null) return;
+    if (!settings.enabled ||
+        (settings.activeAsrProfile == null &&
+            settings.activeAudioFieldExtractionProfile == null)) {
+      return;
+    }
 
     try {
       final permitted = await _audioRecorder.requestPermission();
@@ -123,6 +130,7 @@ class _AiRecognitionControlState extends State<AiRecognitionControl> {
       _cancellationToken = cancellationToken;
       _elapsedSeconds = 0;
       _liveTranscriptions.clear();
+      _singleCallResults.clear();
       _retryChunks.clear();
       _nextChunkSequence = 0;
       _liveTranscriptionError = null;
@@ -169,6 +177,7 @@ class _AiRecognitionControlState extends State<AiRecognitionControl> {
     AudioSegment? chunk;
     late final int sequence;
     late final Transcription transcription;
+    AiRecognitionResult? direct;
     try {
       chunk = await _audioRecorder.takeLiveChunk();
       if (chunk == null ||
@@ -180,13 +189,17 @@ class _AiRecognitionControlState extends State<AiRecognitionControl> {
       sequence = _nextChunkSequence++;
       final token = _cancellationToken;
       if (token == null) return;
-      transcription = await widget.transcriptionExecutor(
-        chunk,
-        context.read<AiRecognitionSettingsProvider>(),
-        token,
-      );
+      final settings = context.read<AiRecognitionSettingsProvider>();
+      direct = await _directRecognition(chunk, settings, token);
+      transcription = direct?.transcription ??
+          await widget.transcriptionExecutor(
+            chunk,
+            settings,
+            token,
+          );
       if (!mounted || generation != _captureGeneration) return;
       _liveTranscriptions[sequence] = transcription;
+      if (direct != null) _singleCallResults[sequence] = direct;
     } on AiRecognitionException catch (error) {
       if (error.kind == AiRecognitionErrorKind.cancelled) return;
       if (chunk != null) {
@@ -203,6 +216,16 @@ class _AiRecognitionControlState extends State<AiRecognitionControl> {
       if (mounted && generation == _captureGeneration) {
         setState(() => _liveTranscriptionError = error.toString());
       }
+      return;
+    }
+
+    if (direct != null) {
+      if (!mounted || generation != _captureGeneration) return;
+      setState(() {
+        _liveTranscriptionError = null;
+        _liveStructuredPreview = _combinedSingleCallResult();
+        _liveFormatting = false;
+      });
       return;
     }
 
@@ -266,9 +289,10 @@ class _AiRecognitionControlState extends State<AiRecognitionControl> {
       late final AiRecognitionResult result;
       if (!usedLiveChunks) {
         if (audio == null) throw StateError('AI_AUDIO_EMPTY');
-        final injectedExecutor = widget.executor;
-        if (injectedExecutor != null) {
-          result = await injectedExecutor(audio, settings, cancellationToken);
+        final direct =
+            await _directRecognition(audio, settings, cancellationToken);
+        if (direct != null) {
+          result = direct;
         } else {
           final transcription = await widget.transcriptionExecutor(
             audio,
@@ -290,23 +314,40 @@ class _AiRecognitionControlState extends State<AiRecognitionControl> {
         ];
         remaining.sort((a, b) => a.sequence.compareTo(b.sequence));
         _retryChunks.clear();
+        final directPath = widget.executor != null ||
+            settings.activeAudioFieldExtractionProfile != null;
         for (final chunk in remaining) {
-          final transcription = await widget.transcriptionExecutor(
-            chunk.audio,
-            settings,
-            cancellationToken,
-          );
-          _liveTranscriptions[chunk.sequence] = transcription;
+          if (directPath) {
+            final recognized = await _directRecognition(
+              chunk.audio,
+              settings,
+              cancellationToken,
+            );
+            if (recognized == null) throw StateError('AI_AUDIO_EMPTY');
+            _liveTranscriptions[chunk.sequence] = recognized.transcription;
+            _singleCallResults[chunk.sequence] = recognized;
+          } else {
+            final transcription = await widget.transcriptionExecutor(
+              chunk.audio,
+              settings,
+              cancellationToken,
+            );
+            _liveTranscriptions[chunk.sequence] = transcription;
+          }
           if (mounted && generation == _captureGeneration) setState(() {});
         }
-        final text = _joinedTranscript;
-        if (text.isEmpty) throw StateError('AI_AUDIO_EMPTY');
-        result = await widget.fieldExtractionExecutor(
-          Transcription(text: text),
-          settings,
-          cancellationToken,
-          referenceContext: widget.referenceContextBuilder?.call(text),
-        );
+        if (directPath) {
+          result = _combinedSingleCallResult();
+        } else {
+          final text = _joinedTranscript;
+          if (text.isEmpty) throw StateError('AI_AUDIO_EMPTY');
+          result = await widget.fieldExtractionExecutor(
+            Transcription(text: text),
+            settings,
+            cancellationToken,
+            referenceContext: widget.referenceContextBuilder?.call(text),
+          );
+        }
       }
       if (!mounted || generation != _captureGeneration) return;
       setState(() => _stage = _AiControlStage.idle);
@@ -347,6 +388,7 @@ class _AiRecognitionControlState extends State<AiRecognitionControl> {
         _elapsedSeconds = 0;
         _baseline = null;
         _liveTranscriptions.clear();
+        _singleCallResults.clear();
         _retryChunks.clear();
         _liveTranscriptionError = null;
         _liveStructuredPreview = null;
@@ -415,6 +457,48 @@ class _AiRecognitionControlState extends State<AiRecognitionControl> {
         _showMessage(context.l10n.aiApplyFailed(error.toString()));
       }
     }
+  }
+
+  /// An injected executor wins. Otherwise a selected multimodal profile takes
+  /// the single call. Returning null keeps the speech-then-extraction path.
+  Future<AiRecognitionResult?> _directRecognition(
+    AudioSegment audio,
+    AiRecognitionSettingsProvider settings,
+    AiCancellationToken cancellationToken,
+  ) {
+    final injected = widget.executor;
+    if (injected != null) {
+      return injected(audio, settings, cancellationToken);
+    }
+    if (settings.activeAudioFieldExtractionProfile == null) {
+      return Future<AiRecognitionResult?>.value();
+    }
+    return widget.recognizer(audio, settings, cancellationToken);
+  }
+
+  AiRecognitionResult _combinedSingleCallResult() {
+    final ordered = (_singleCallResults.entries.toList()
+          ..sort((a, b) => a.key.compareTo(b.key)))
+        .map((entry) => entry.value)
+        .toList(growable: false);
+    if (ordered.isEmpty) throw StateError('AI_AUDIO_EMPTY');
+    if (ordered.length == 1) return ordered.single;
+    final text = ordered
+        .map((result) => result.transcription.text.trim())
+        .where((value) => value.isNotEmpty)
+        .join(' ');
+    if (text.isEmpty) throw StateError('AI_AUDIO_EMPTY');
+    final fields = <String, Object?>{};
+    for (final result in ordered) {
+      if (result.candidates.isEmpty) continue;
+      fields.addAll(result.candidates.first.fields);
+    }
+    return AiRecognitionResult(
+      transcription: Transcription(text: text),
+      candidates: [
+        if (fields.isNotEmpty) RecognitionCandidate(fields: fields),
+      ],
+    );
   }
 
   String get _joinedTranscript => (_liveTranscriptions.entries.toList()

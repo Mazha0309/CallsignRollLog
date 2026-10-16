@@ -29,6 +29,22 @@ void main() {
     expect(provider.enabled, true);
   });
 
+  test('a multimodal profile is enough to keep recognition enabled', () async {
+    final values = _MemorySecureValues();
+    final provider = _provider(values);
+    await provider.initialized;
+    await provider.upsertProfile(_audioExtractionProfile());
+    await provider.setActiveAudioFieldExtractionProfile('multimodal');
+
+    await provider.setEnabled(true);
+    expect(provider.enabled, true);
+
+    final restarted = _provider(values);
+    await restarted.initialized;
+    expect(restarted.enabled, true);
+    expect(restarted.activeAudioFieldExtractionProfileId, 'multimodal');
+  });
+
   test('persists the local reference context preference', () async {
     final provider = _provider();
     await provider.initialized;

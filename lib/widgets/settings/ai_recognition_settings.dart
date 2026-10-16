@@ -31,6 +31,7 @@ class _AiRecognitionSettingsState extends State<AiRecognitionSettings> {
   Widget build(BuildContext context) {
     final settings = context.watch<AiRecognitionSettingsProvider>();
     final activeAsr = settings.activeAsrProfile;
+    final activeAudio = settings.activeAudioFieldExtractionProfile;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -55,12 +56,12 @@ class _AiRecognitionSettingsState extends State<AiRecognitionSettings> {
                 key: const Key('ai-recognition-enabled'),
                 icon: Icons.mic_none_outlined,
                 title: context.l10n.aiRecognitionEnabled,
-                subtitle: activeAsr == null
-                    ? context.l10n.aiRecognitionNeedsAsr
-                    : context.l10n.aiRecognitionEnabledHint,
+                subtitle: activeAsr != null || activeAudio != null
+                    ? context.l10n.aiRecognitionEnabledHint
+                    : context.l10n.aiRecognitionNeedsAnyProfile,
                 trailing: Switch(
                   value: settings.enabled,
-                  onChanged: _busy || activeAsr == null
+                  onChanged: _busy || (activeAsr == null && activeAudio == null)
                       ? null
                       : (value) => _run(() => settings.setEnabled(value)),
                 ),

@@ -6023,6 +6023,12 @@ abstract class AppLocalizations {
   /// **'请先添加并选择语音识别配置。'**
   String get aiRecognitionNeedsAsr;
 
+  /// No description provided for @aiRecognitionNeedsAnyProfile.
+  ///
+  /// In zh, this message translates to:
+  /// **'请先添加并选择语音识别或多模态配置。'**
+  String get aiRecognitionNeedsAnyProfile;
+
   /// No description provided for @aiAsrStageTitle.
   ///
   /// In zh, this message translates to:

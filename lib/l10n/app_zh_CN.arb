@@ -597,6 +597,7 @@
   "aiLocalReferenceContext": "结合本地词库与近期记录",
   "aiLocalReferenceContextHint": "默认开启。仅把与当前转写相近的少量词条和命中呼号的近期字段发送给文字模型，用于纠正呼号、设备、天线和 QTH；不会上传完整数据库。",
   "aiRecognitionNeedsAsr": "请先添加并选择语音识别配置。",
+  "aiRecognitionNeedsAnyProfile": "请先添加并选择语音识别或多模态配置。",
   "aiAsrStageTitle": "语音识别（ASR）",
   "aiAsrStageDescription": "把音频转换为原始文本，三类接口格式可同时保存并随时切换。",
   "aiExtractionStageTitle": "字段提取（可选）",

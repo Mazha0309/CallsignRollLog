@@ -45,6 +45,7 @@ class LogForm extends StatefulWidget {
     this.sessionId,
     this.aiAudioRecorder,
     this.aiRecognitionExecutor,
+    this.aiRecognizer,
     this.aiTranscriptionExecutor,
     this.aiFieldExtractionExecutor,
     this.inlineTextSuggestionExecutor,
@@ -55,6 +56,7 @@ class LogForm extends StatefulWidget {
   final String? sessionId;
   final AiAudioRecorder? aiAudioRecorder;
   final AiRecognitionExecutor? aiRecognitionExecutor;
+  final AiRecognitionExecutor? aiRecognizer;
   final AiTranscriptionExecutor? aiTranscriptionExecutor;
   final AiFieldExtractionExecutor? aiFieldExtractionExecutor;
   final InlineTextSuggestionExecutor? inlineTextSuggestionExecutor;
@@ -1949,7 +1951,9 @@ class _LogFormState extends State<LogForm> with AutomaticKeepAliveClientMixin {
                 const SizedBox(height: 12),
 
                 if (aiSettings?.enabled == true &&
-                    aiSettings?.activeAsrProfile != null) ...[
+                    (aiSettings?.activeAsrProfile != null ||
+                        aiSettings?.activeAudioFieldExtractionProfile !=
+                            null)) ...[
                   Focus(
                     canRequestFocus: false,
                     skipTraversal: true,
@@ -1973,6 +1977,8 @@ class _LogFormState extends State<LogForm> with AutomaticKeepAliveClientMixin {
                           _submissionInProgress,
                       audioRecorder: widget.aiAudioRecorder,
                       executor: widget.aiRecognitionExecutor,
+                      recognizer: widget.aiRecognizer ??
+                          AiRecognitionRuntime.recognizeRecord,
                       transcriptionExecutor: widget.aiTranscriptionExecutor ??
                           AiRecognitionRuntime.transcribe,
                       fieldExtractionExecutor:
