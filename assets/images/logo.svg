@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <title>呼号点名日志</title>
+  <g fill="#5BA2E0">
+    <path d="M 218 448 L 294 448 L 265.5 284.2 A 26 26 0 1 0 246.5 284.2 Z"/>
+    <g fill="none" stroke="#5BA2E0" stroke-width="28" stroke-linecap="round">
+      <path d="M 307.32 303.07 A 67 67 0 0 0 299.07 208.68 A 67 67 0 0 0 204.68 216.93"/>
+      <path d="M 350.22 339.06 A 123 123 0 0 0 335.06 165.78 A 123 123 0 0 0 161.78 180.94"/>
+      <path d="M 393.12 375.06 A 179 179 0 0 0 371.06 122.88 A 179 179 0 0 0 118.88 144.94"/>
+    </g>
+  </g>
+</svg>
