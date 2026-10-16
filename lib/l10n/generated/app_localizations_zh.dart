@@ -3730,6 +3730,50 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get logTableHorizontalScrollHint => 'Shift + 滚轮横向滚动';
+
+  @override
+  String get serverScanButton => '扫一扫';
+
+  @override
+  String get serverScanImageButton => '识别二维码图片';
+
+  @override
+  String get serverScanTitle => '扫描服务器二维码';
+
+  @override
+  String get serverScanHint => '识别到有效地址后会请你确认。确认后才连接，不会登录，也不会上传相机画面或图片。';
+
+  @override
+  String get serverScanCameraUnavailable =>
+      '无法使用相机。请检查相机权限；网页版需使用 HTTPS。你也可以返回粘贴连接地址。';
+
+  @override
+  String get serverScanInvalid => '这不是有效的服务器连接地址。请扫描服务器“连接这台服务器”页面的二维码。';
+
+  @override
+  String get serverScanImageInvalid => '图片里没有有效的服务器连接地址。';
+
+  @override
+  String get serverScanPickImage => '从图片识别';
+
+  @override
+  String get serverScanTorch => '手电筒';
+
+  @override
+  String get serverScanSwitchCamera => '切换摄像头';
+
+  @override
+  String get serverScanConfirmTitle => '连接到这台服务器？';
+
+  @override
+  String serverScanConfirmCheck(String address) {
+    return '将检查 $address。不会登录，也不会上传相机画面或图片。';
+  }
+
+  @override
+  String serverScanConfirmSwitch(String address) {
+    return '将连接到 $address。当前账号会退出，原登录凭据不会发到新地址；本机记录保留。';
+  }
 }
 
 /// The translations for Chinese, as used in China (`zh_CN`).
@@ -5578,4 +5622,48 @@ class AppLocalizationsZhCn extends AppLocalizationsZh {
 
   @override
   String get aiDictionaryApplySelected => '应用所选建议';
+
+  @override
+  String get serverScanButton => '扫一扫';
+
+  @override
+  String get serverScanImageButton => '识别二维码图片';
+
+  @override
+  String get serverScanTitle => '扫描服务器二维码';
+
+  @override
+  String get serverScanHint => '识别到有效地址后会请你确认。确认后才连接，不会登录，也不会上传相机画面或图片。';
+
+  @override
+  String get serverScanCameraUnavailable =>
+      '无法使用相机。请检查相机权限；网页版需使用 HTTPS。你也可以返回粘贴连接地址。';
+
+  @override
+  String get serverScanInvalid => '这不是有效的服务器连接地址。请扫描服务器“连接这台服务器”页面的二维码。';
+
+  @override
+  String get serverScanImageInvalid => '图片里没有有效的服务器连接地址。';
+
+  @override
+  String get serverScanPickImage => '从图片识别';
+
+  @override
+  String get serverScanTorch => '手电筒';
+
+  @override
+  String get serverScanSwitchCamera => '切换摄像头';
+
+  @override
+  String get serverScanConfirmTitle => '连接到这台服务器？';
+
+  @override
+  String serverScanConfirmCheck(String address) {
+    return '将检查 $address。不会登录，也不会上传相机画面或图片。';
+  }
+
+  @override
+  String serverScanConfirmSwitch(String address) {
+    return '将连接到 $address。当前账号会退出，原登录凭据不会发到新地址；本机记录保留。';
+  }
 }

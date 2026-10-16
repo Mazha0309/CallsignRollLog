@@ -3950,6 +3950,53 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get logTableHorizontalScrollHint =>
       'Shift + wheel to scroll horizontally';
+
+  @override
+  String get serverScanButton => 'Scan QR';
+
+  @override
+  String get serverScanImageButton => 'Scan a QR image';
+
+  @override
+  String get serverScanTitle => 'Scan server QR code';
+
+  @override
+  String get serverScanHint =>
+      'A valid address asks for confirmation before connecting. This does not sign in, and it does not upload the camera or the picture.';
+
+  @override
+  String get serverScanCameraUnavailable =>
+      'Camera unavailable. Check camera permission and use HTTPS on the web, or go back and paste a connection address.';
+
+  @override
+  String get serverScanInvalid =>
+      'This is not a valid server address. Scan the QR code on the server connection page.';
+
+  @override
+  String get serverScanImageInvalid =>
+      'This picture does not contain a valid server address.';
+
+  @override
+  String get serverScanPickImage => 'Scan an image';
+
+  @override
+  String get serverScanTorch => 'Torch';
+
+  @override
+  String get serverScanSwitchCamera => 'Switch camera';
+
+  @override
+  String get serverScanConfirmTitle => 'Connect to this server?';
+
+  @override
+  String serverScanConfirmCheck(String address) {
+    return 'This will check $address. It will not sign in, and it will not upload the camera or the picture.';
+  }
+
+  @override
+  String serverScanConfirmSwitch(String address) {
+    return 'Connect to $address. The current account will be signed out. Its credentials will not be sent to the new server; local records are kept.';
+  }
 }
 
 /// The translations for English, as used in the United States (`en_US`).
@@ -5888,4 +5935,51 @@ class AppLocalizationsEnUs extends AppLocalizationsEn {
 
   @override
   String get aiDictionaryApplySelected => 'Apply selected suggestions';
+
+  @override
+  String get serverScanButton => 'Scan QR';
+
+  @override
+  String get serverScanImageButton => 'Scan a QR image';
+
+  @override
+  String get serverScanTitle => 'Scan server QR code';
+
+  @override
+  String get serverScanHint =>
+      'A valid address asks for confirmation before connecting. This does not sign in, and it does not upload the camera or the picture.';
+
+  @override
+  String get serverScanCameraUnavailable =>
+      'Camera unavailable. Check camera permission and use HTTPS on the web, or go back and paste a connection address.';
+
+  @override
+  String get serverScanInvalid =>
+      'This is not a valid server address. Scan the QR code on the server connection page.';
+
+  @override
+  String get serverScanImageInvalid =>
+      'This picture does not contain a valid server address.';
+
+  @override
+  String get serverScanPickImage => 'Scan an image';
+
+  @override
+  String get serverScanTorch => 'Torch';
+
+  @override
+  String get serverScanSwitchCamera => 'Switch camera';
+
+  @override
+  String get serverScanConfirmTitle => 'Connect to this server?';
+
+  @override
+  String serverScanConfirmCheck(String address) {
+    return 'This will check $address. It will not sign in, and it will not upload the camera or the picture.';
+  }
+
+  @override
+  String serverScanConfirmSwitch(String address) {
+    return 'Connect to $address. The current account will be signed out. Its credentials will not be sent to the new server; local records are kept.';
+  }
 }

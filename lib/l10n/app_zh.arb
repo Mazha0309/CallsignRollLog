@@ -2406,5 +2406,32 @@
   "aiDictionaryMergeWarning": "合并会从词库隐藏源词条，默认不勾选；不会改写历史记录。",
   "aiDictionaryApplySelected": "应用所选建议",
   "fieldFormatSuggestionLabel": "格式候选",
-  "logTableHorizontalScrollHint": "Shift + 滚轮横向滚动"
+  "logTableHorizontalScrollHint": "Shift + 滚轮横向滚动",
+  "serverScanButton": "扫一扫",
+  "serverScanImageButton": "识别二维码图片",
+  "serverScanTitle": "扫描服务器二维码",
+  "serverScanHint": "识别到有效地址后会请你确认。确认后才连接，不会登录，也不会上传相机画面或图片。",
+  "serverScanCameraUnavailable": "无法使用相机。请检查相机权限；网页版需使用 HTTPS。你也可以返回粘贴连接地址。",
+  "serverScanInvalid": "这不是有效的服务器连接地址。请扫描服务器“连接这台服务器”页面的二维码。",
+  "serverScanImageInvalid": "图片里没有有效的服务器连接地址。",
+  "serverScanPickImage": "从图片识别",
+  "serverScanTorch": "手电筒",
+  "serverScanSwitchCamera": "切换摄像头",
+  "serverScanConfirmTitle": "连接到这台服务器？",
+  "serverScanConfirmCheck": "将检查 {address}。不会登录，也不会上传相机画面或图片。",
+  "@serverScanConfirmCheck": {
+    "placeholders": {
+      "address": {
+        "type": "String"
+      }
+    }
+  },
+  "serverScanConfirmSwitch": "将连接到 {address}。当前账号会退出，原登录凭据不会发到新地址；本机记录保留。",
+  "@serverScanConfirmSwitch": {
+    "placeholders": {
+      "address": {
+        "type": "String"
+      }
+    }
+  }
 }

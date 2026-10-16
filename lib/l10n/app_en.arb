@@ -1707,5 +1707,18 @@
   "aiDictionaryMergeWarning": "Merging hides the source term and is not selected by default. Historical records are unchanged.",
   "aiDictionaryApplySelected": "Apply selected suggestions",
   "fieldFormatSuggestionLabel": "Format option",
-  "logTableHorizontalScrollHint": "Shift + wheel to scroll horizontally"
+  "logTableHorizontalScrollHint": "Shift + wheel to scroll horizontally",
+  "serverScanButton": "Scan QR",
+  "serverScanImageButton": "Scan a QR image",
+  "serverScanTitle": "Scan server QR code",
+  "serverScanHint": "A valid address asks for confirmation before connecting. This does not sign in, and it does not upload the camera or the picture.",
+  "serverScanCameraUnavailable": "Camera unavailable. Check camera permission and use HTTPS on the web, or go back and paste a connection address.",
+  "serverScanInvalid": "This is not a valid server address. Scan the QR code on the server connection page.",
+  "serverScanImageInvalid": "This picture does not contain a valid server address.",
+  "serverScanPickImage": "Scan an image",
+  "serverScanTorch": "Torch",
+  "serverScanSwitchCamera": "Switch camera",
+  "serverScanConfirmTitle": "Connect to this server?",
+  "serverScanConfirmCheck": "This will check {address}. It will not sign in, and it will not upload the camera or the picture.",
+  "serverScanConfirmSwitch": "Connect to {address}. The current account will be signed out. Its credentials will not be sent to the new server; local records are kept."
 }

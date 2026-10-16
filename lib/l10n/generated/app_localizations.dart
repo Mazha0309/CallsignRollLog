@@ -6784,6 +6784,84 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'Shift + 滚轮横向滚动'**
   String get logTableHorizontalScrollHint;
+
+  /// No description provided for @serverScanButton.
+  ///
+  /// In zh, this message translates to:
+  /// **'扫一扫'**
+  String get serverScanButton;
+
+  /// No description provided for @serverScanImageButton.
+  ///
+  /// In zh, this message translates to:
+  /// **'识别二维码图片'**
+  String get serverScanImageButton;
+
+  /// No description provided for @serverScanTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'扫描服务器二维码'**
+  String get serverScanTitle;
+
+  /// No description provided for @serverScanHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'识别到有效地址后会请你确认。确认后才连接，不会登录，也不会上传相机画面或图片。'**
+  String get serverScanHint;
+
+  /// No description provided for @serverScanCameraUnavailable.
+  ///
+  /// In zh, this message translates to:
+  /// **'无法使用相机。请检查相机权限；网页版需使用 HTTPS。你也可以返回粘贴连接地址。'**
+  String get serverScanCameraUnavailable;
+
+  /// No description provided for @serverScanInvalid.
+  ///
+  /// In zh, this message translates to:
+  /// **'这不是有效的服务器连接地址。请扫描服务器“连接这台服务器”页面的二维码。'**
+  String get serverScanInvalid;
+
+  /// No description provided for @serverScanImageInvalid.
+  ///
+  /// In zh, this message translates to:
+  /// **'图片里没有有效的服务器连接地址。'**
+  String get serverScanImageInvalid;
+
+  /// No description provided for @serverScanPickImage.
+  ///
+  /// In zh, this message translates to:
+  /// **'从图片识别'**
+  String get serverScanPickImage;
+
+  /// No description provided for @serverScanTorch.
+  ///
+  /// In zh, this message translates to:
+  /// **'手电筒'**
+  String get serverScanTorch;
+
+  /// No description provided for @serverScanSwitchCamera.
+  ///
+  /// In zh, this message translates to:
+  /// **'切换摄像头'**
+  String get serverScanSwitchCamera;
+
+  /// No description provided for @serverScanConfirmTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'连接到这台服务器？'**
+  String get serverScanConfirmTitle;
+
+  /// No description provided for @serverScanConfirmCheck.
+  ///
+  /// In zh, this message translates to:
+  /// **'将检查 {address}。不会登录，也不会上传相机画面或图片。'**
+  String serverScanConfirmCheck(String address);
+
+  /// No description provided for @serverScanConfirmSwitch.
+  ///
+  /// In zh, this message translates to:
+  /// **'将连接到 {address}。当前账号会退出，原登录凭据不会发到新地址；本机记录保留。'**
+  String serverScanConfirmSwitch(String address);
 }
 
 class _AppLocalizationsDelegate
