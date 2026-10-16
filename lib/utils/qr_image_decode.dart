@@ -6,9 +6,9 @@ import 'package:zxing2/qrcode.dart';
 /// The text inside a QR picture, or null when the bytes are not a readable QR.
 String? decodeQrText(Uint8List bytes) {
   if (bytes.isEmpty) return null;
-  final decoded = img.decodeImage(bytes);
-  if (decoded == null) return null;
   try {
+    final decoded = img.decodeImage(bytes);
+    if (decoded == null) return null;
     final rgba = decoded.convert(numChannels: 4);
     final raw = Uint8List.fromList(
       rgba.getBytes(order: img.ChannelOrder.abgr),

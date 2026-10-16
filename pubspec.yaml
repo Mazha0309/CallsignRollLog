@@ -22,11 +22,10 @@ dependencies:
   shared_preferences: ^2.2.2
   flutter_secure_storage: ^10.3.1
   file_picker: ^8.0.0+1
-  image: ^4.5.4
+  image: '>=4.3.0 <4.4.0'
   zxing2: ^0.2.4
   path_provider: ^2.1.3
-  excel:
-    path: third_party/excel
+  excel: ^4.0.6
   provider: ^6.1.1
   intl: ^0.20.2
   path: ^1.9.0
@@ -42,7 +41,7 @@ dependencies:
   mobile_scanner: ^7.4.2
   idb_shim: ^2.9.6+2
   logging: ^1.3.0
-  archive: ^4.5.0
+  archive: ^3.6.1
 
 dev_dependencies:
   flutter_test:

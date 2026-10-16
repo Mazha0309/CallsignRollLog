@@ -276,7 +276,7 @@ class ExportService {
       final encoded = utf8.encode(contents);
       archive.addFile(ArchiveFile(name, encoded.length, encoded));
     });
-    return Uint8List.fromList(ZipEncoder().encode(archive));
+    return Uint8List.fromList(ZipEncoder().encode(archive) ?? const <int>[]);
   }
 
   static String generateAdif(
