@@ -138,11 +138,18 @@ class _ServerQrScannerState extends State<ServerQrScanner> {
   }
 
   Future<void> _switchCamera() async {
+    final previous = _controller.value.cameraDirection;
     try {
       await _controller.switchCamera();
     } catch (_) {
       if (mounted) setState(() => _switchFailed = true);
     }
+    if (!mounted || _controller.value.error == null) return;
+    setState(() => _switchFailed = true);
+    if (previous == CameraFacing.unknown || previous == CameraFacing.external) {
+      return;
+    }
+    await _controller.start(cameraDirection: previous);
   }
 
   @override
