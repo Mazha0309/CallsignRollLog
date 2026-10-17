@@ -3303,8 +3303,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get aiExperimentalTitle => '实验性功能';
 
   @override
-  String get aiExperimentalNotice =>
-      '这项功能仍在试验。呼号、设备、天线和信号报告都可能识别错。候选不会自动写入记录；点进表单后请再核对，确认无误再保存。';
+  String get aiExperimentalNotice => '还没做完。现在可以试用，界面和行为以后还会改。';
 
   @override
   String get aiRecognitionEnabled => '启用 AI 辅助识别';
@@ -5232,8 +5231,7 @@ class AppLocalizationsZhCn extends AppLocalizationsZh {
   String get aiExperimentalTitle => '实验性功能';
 
   @override
-  String get aiExperimentalNotice =>
-      '这项功能仍在试验。呼号、设备、天线和信号报告都可能识别错。候选不会自动写入记录；点进表单后请再核对，确认无误再保存。';
+  String get aiExperimentalNotice => '还没做完。现在可以试用，界面和行为以后还会改。';
 
   @override
   String get aiRecognitionEnabled => '启用 AI 辅助识别';

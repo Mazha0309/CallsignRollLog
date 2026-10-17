@@ -6002,7 +6002,7 @@ abstract class AppLocalizations {
   /// No description provided for @aiExperimentalNotice.
   ///
   /// In zh, this message translates to:
-  /// **'这项功能仍在试验。呼号、设备、天线和信号报告都可能识别错。候选不会自动写入记录；点进表单后请再核对，确认无误再保存。'**
+  /// **'还没做完。现在可以试用，界面和行为以后还会改。'**
   String get aiExperimentalNotice;
 
   /// No description provided for @aiRecognitionEnabled.

@@ -3496,7 +3496,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get aiExperimentalNotice =>
-      'This feature is still experimental. Callsigns, radios, antennas, and signal reports can be wrong. Suggestions are not written into the record automatically; check them after you tap one in, then save.';
+      'Not finished yet. You can try it, but the interface and behavior will still change.';
 
   @override
   String get aiRecognitionEnabled => 'Enable AI-assisted recognition';
@@ -5523,7 +5523,7 @@ class AppLocalizationsEnUs extends AppLocalizationsEn {
 
   @override
   String get aiExperimentalNotice =>
-      'This feature is still experimental. Callsigns, radios, antennas, and signal reports can be wrong. Suggestions are not written into the record automatically; check them after you tap one in, then save.';
+      'Not finished yet. You can try it, but the interface and behavior will still change.';
 
   @override
   String get aiRecognitionEnabled => 'Enable AI-assisted recognition';
