@@ -31,7 +31,6 @@ class _AiRecognitionSettingsState extends State<AiRecognitionSettings> {
   Widget build(BuildContext context) {
     final settings = context.watch<AiRecognitionSettingsProvider>();
     final activeAsr = settings.activeAsrProfile;
-    final activeAudio = settings.activeAudioFieldExtractionProfile;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -46,6 +45,14 @@ class _AiRecognitionSettingsState extends State<AiRecognitionSettings> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               AppNotice(
+                key: const Key('ai-experimental-notice'),
+                title: context.l10n.aiExperimentalTitle,
+                message: context.l10n.aiExperimentalNotice,
+                icon: Icons.science_outlined,
+                tone: AppTone.tertiary,
+              ),
+              const SizedBox(height: AppSpace.sm),
+              AppNotice(
                 title: context.l10n.aiSettingsOptionalTitle,
                 message: context.l10n.aiSettingsOptionalMessage,
                 icon: Icons.privacy_tip_outlined,
@@ -56,15 +63,52 @@ class _AiRecognitionSettingsState extends State<AiRecognitionSettings> {
                 key: const Key('ai-recognition-enabled'),
                 icon: Icons.mic_none_outlined,
                 title: context.l10n.aiRecognitionEnabled,
-                subtitle: activeAsr != null || activeAudio != null
-                    ? context.l10n.aiRecognitionEnabledHint
-                    : context.l10n.aiRecognitionNeedsAnyProfile,
+                subtitle: settings.activeRecognitionProfile != null
+                    ? (settings.recognitionMode == AiRecognitionMode.audio
+                        ? context.l10n.aiRecognitionEnabledAudioHint
+                        : context.l10n.aiRecognitionEnabledHint)
+                    : settings.recognitionMode == AiRecognitionMode.audio
+                        ? context.l10n.aiRecognitionNeedsAudioProfile
+                        : context.l10n.aiRecognitionNeedsAsr,
                 trailing: Switch(
                   value: settings.enabled,
-                  onChanged: _busy || (activeAsr == null && activeAudio == null)
+                  onChanged: _busy || settings.activeRecognitionProfile == null
                       ? null
                       : (value) => _run(() => settings.setEnabled(value)),
                 ),
+              ),
+              const SizedBox(height: AppSpace.sm),
+              Wrap(
+                spacing: AppSpace.sm,
+                runSpacing: AppSpace.sm,
+                children: [
+                  ChoiceChip(
+                    key: const Key('ai-recognition-mode-speech'),
+                    label: Text(context.l10n.aiRecognitionModeSpeech),
+                    selected:
+                        settings.recognitionMode == AiRecognitionMode.speech,
+                    onSelected: _busy
+                        ? null
+                        : (_) => _run(
+                              () => settings.setRecognitionMode(
+                                AiRecognitionMode.speech,
+                              ),
+                            ),
+                  ),
+                  ChoiceChip(
+                    key: const Key('ai-recognition-mode-audio'),
+                    label: Text(context.l10n.aiRecognitionModeAudio),
+                    selected:
+                        settings.recognitionMode == AiRecognitionMode.audio,
+                    onSelected: _busy
+                        ? null
+                        : (_) => _run(
+                              () => settings.setRecognitionMode(
+                                AiRecognitionMode.audio,
+                              ),
+                            ),
+                  ),
+                ],
               ),
               SettingsActionTile(
                 key: const Key('ai-local-reference-context'),

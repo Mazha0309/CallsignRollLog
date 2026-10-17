@@ -3492,6 +3492,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Audio is sent directly to the service you configure, not through the Callsign Roll Log collaboration server. Results are suggestions and never overwrite a scribe\'s active edits automatically.';
 
   @override
+  String get aiExperimentalTitle => 'Experimental';
+
+  @override
+  String get aiExperimentalNotice =>
+      'This feature is still experimental. Callsigns, radios, antennas, and signal reports can be wrong. Suggestions are not written into the record automatically; check them after you tap one in, then save.';
+
+  @override
   String get aiRecognitionEnabled => 'Enable AI-assisted recognition';
 
   @override
@@ -3513,6 +3520,20 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get aiRecognitionNeedsAnyProfile =>
       'Add and select a speech or multimodal profile first.';
+
+  @override
+  String get aiRecognitionModeSpeech => 'Speech recognition';
+
+  @override
+  String get aiRecognitionModeAudio => 'Multimodal';
+
+  @override
+  String get aiRecognitionEnabledAudioHint =>
+      'When enabled, the net workbench recognizes a recording in one call.';
+
+  @override
+  String get aiRecognitionNeedsAudioProfile =>
+      'Add and select a multimodal profile first.';
 
   @override
   String get aiUnknownFailure => 'Something went wrong. Try again.';
@@ -5498,6 +5519,13 @@ class AppLocalizationsEnUs extends AppLocalizationsEn {
       'Audio is sent directly to the service you configure, not through the Callsign Roll Log collaboration server. Results are suggestions and never overwrite a scribe\'s active edits automatically.';
 
   @override
+  String get aiExperimentalTitle => 'Experimental';
+
+  @override
+  String get aiExperimentalNotice =>
+      'This feature is still experimental. Callsigns, radios, antennas, and signal reports can be wrong. Suggestions are not written into the record automatically; check them after you tap one in, then save.';
+
+  @override
   String get aiRecognitionEnabled => 'Enable AI-assisted recognition';
 
   @override
@@ -5519,6 +5547,20 @@ class AppLocalizationsEnUs extends AppLocalizationsEn {
   @override
   String get aiRecognitionNeedsAnyProfile =>
       'Add and select a speech or multimodal profile first.';
+
+  @override
+  String get aiRecognitionModeSpeech => 'Speech recognition';
+
+  @override
+  String get aiRecognitionModeAudio => 'Multimodal';
+
+  @override
+  String get aiRecognitionEnabledAudioHint =>
+      'When enabled, the net workbench recognizes a recording in one call.';
+
+  @override
+  String get aiRecognitionNeedsAudioProfile =>
+      'Add and select a multimodal profile first.';
 
   @override
   String get aiUnknownFailure => 'Something went wrong. Try again.';

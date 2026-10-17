@@ -7,6 +7,7 @@ enum AiRecognitionErrorKind {
   network,
   httpStatus,
   invalidResponse,
+  nothingRecognized,
   cancelled,
   closed,
 }
@@ -54,6 +55,7 @@ String aiUserFacingErrorMessage(AiRecognitionException error) =>
       AiRecognitionErrorKind.invalidConfiguration => '配置与服务商不匹配，建议换回官方预设',
       AiRecognitionErrorKind.unsupportedProtocol => '该服务商不支持这种调用方式，建议换回官方预设',
       AiRecognitionErrorKind.invalidResponse => '服务商返回的内容无法解析，稍后重试或换个模型',
+      AiRecognitionErrorKind.nothingRecognized => '没有听清内容，请再说一次',
       AiRecognitionErrorKind.cancelled => '已取消',
       AiRecognitionErrorKind.closed => '识别已结束',
     };

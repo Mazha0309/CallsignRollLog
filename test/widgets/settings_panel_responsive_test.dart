@@ -569,6 +569,67 @@ void main() {
     expect(providers.aiRecognition.enabled, isTrue);
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('switches recognition mode without dropping the other profile',
+      (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    _usePlatformLocale(tester, const Locale('en', 'US'));
+    await _setSurface(tester, const Size(1200, 900));
+    final providers = _SettingsProviders();
+    addTearDown(providers.dispose);
+    await providers.aiRecognition.initialized;
+    await providers.aiRecognition.upsertProfile(
+      AiProviderProfile(
+        id: 'asr',
+        name: 'Speech',
+        kind: AiProviderKind.speechRecognition,
+        protocol: AiProtocol.openAiAudioTranscriptions,
+        baseUrl: Uri.parse('https://speech.example/v1'),
+        model: 'speech-model',
+        credentialTransport: const AiCredentialTransport.none(),
+      ),
+    );
+    await providers.aiRecognition.upsertProfile(
+      AiProviderProfile(
+        id: 'multimodal',
+        name: 'Multimodal',
+        kind: AiProviderKind.audioFieldExtraction,
+        protocol: AiProtocol.openAiChatCompletionsAudio,
+        baseUrl: Uri.parse('https://audio.example/v1'),
+        model: 'audio-model',
+        credentialTransport: const AiCredentialTransport.none(),
+        capabilities: const AiProviderCapabilities(
+          supportsAudioFieldExtraction: true,
+        ),
+      ),
+    );
+    await providers.aiRecognition.setActiveAsrProfile('asr');
+    await providers.aiRecognition
+        .setActiveAudioFieldExtractionProfile('multimodal');
+
+    await tester.pumpWidget(_SettingsPanelHarness(providers: providers));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('settings-category-ai')));
+    await tester.pumpAndSettle();
+
+    expect(
+      tester
+          .widget<ChoiceChip>(
+              find.byKey(const Key('ai-recognition-mode-audio')))
+          .selected,
+      isTrue,
+    );
+    await tester.tap(find.byKey(const Key('ai-recognition-mode-speech')));
+    await tester.pumpAndSettle();
+
+    expect(providers.aiRecognition.recognitionMode, AiRecognitionMode.speech);
+    expect(providers.aiRecognition.activeAsrProfileId, 'asr');
+    expect(
+      providers.aiRecognition.activeAudioFieldExtractionProfileId,
+      'multimodal',
+    );
+    expect(tester.takeException(), isNull);
+  });
 }
 
 Future<void> _setSurface(WidgetTester tester, Size size) async {

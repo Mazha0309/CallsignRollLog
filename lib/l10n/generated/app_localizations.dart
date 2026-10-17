@@ -5993,6 +5993,18 @@ abstract class AppLocalizations {
   /// **'音频将直接发送到你配置的服务，不经过 Callsign Roll Log 协作服务器。识别结果只作为候选，不会自动覆盖书记员正在编辑的内容。'**
   String get aiSettingsOptionalMessage;
 
+  /// No description provided for @aiExperimentalTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'实验性功能'**
+  String get aiExperimentalTitle;
+
+  /// No description provided for @aiExperimentalNotice.
+  ///
+  /// In zh, this message translates to:
+  /// **'这项功能仍在试验。呼号、设备、天线和信号报告都可能识别错。候选不会自动写入记录；点进表单后请再核对，确认无误再保存。'**
+  String get aiExperimentalNotice;
+
   /// No description provided for @aiRecognitionEnabled.
   ///
   /// In zh, this message translates to:
@@ -6028,6 +6040,30 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'请先添加并选择语音识别或多模态配置。'**
   String get aiRecognitionNeedsAnyProfile;
+
+  /// No description provided for @aiRecognitionModeSpeech.
+  ///
+  /// In zh, this message translates to:
+  /// **'语音识别'**
+  String get aiRecognitionModeSpeech;
+
+  /// No description provided for @aiRecognitionModeAudio.
+  ///
+  /// In zh, this message translates to:
+  /// **'多模态'**
+  String get aiRecognitionModeAudio;
+
+  /// No description provided for @aiRecognitionEnabledAudioHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'启用后可从点名工作台一次调用识别录音。'**
+  String get aiRecognitionEnabledAudioHint;
+
+  /// No description provided for @aiRecognitionNeedsAudioProfile.
+  ///
+  /// In zh, this message translates to:
+  /// **'请先添加并选择多模态配置。'**
+  String get aiRecognitionNeedsAudioProfile;
 
   /// No description provided for @aiUnknownFailure.
   ///

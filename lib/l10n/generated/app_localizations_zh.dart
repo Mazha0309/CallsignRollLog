@@ -3300,6 +3300,13 @@ class AppLocalizationsZh extends AppLocalizations {
       '音频将直接发送到你配置的服务，不经过 Callsign Roll Log 协作服务器。识别结果只作为候选，不会自动覆盖书记员正在编辑的内容。';
 
   @override
+  String get aiExperimentalTitle => '实验性功能';
+
+  @override
+  String get aiExperimentalNotice =>
+      '这项功能仍在试验。呼号、设备、天线和信号报告都可能识别错。候选不会自动写入记录；点进表单后请再核对，确认无误再保存。';
+
+  @override
   String get aiRecognitionEnabled => '启用 AI 辅助识别';
 
   @override
@@ -3317,6 +3324,18 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get aiRecognitionNeedsAnyProfile => '请先添加并选择语音识别或多模态配置。';
+
+  @override
+  String get aiRecognitionModeSpeech => '语音识别';
+
+  @override
+  String get aiRecognitionModeAudio => '多模态';
+
+  @override
+  String get aiRecognitionEnabledAudioHint => '启用后可从点名工作台一次调用识别录音。';
+
+  @override
+  String get aiRecognitionNeedsAudioProfile => '请先添加并选择多模态配置。';
 
   @override
   String get aiUnknownFailure => '操作失败，请稍后重试';
@@ -5210,6 +5229,13 @@ class AppLocalizationsZhCn extends AppLocalizationsZh {
       '音频将直接发送到你配置的服务，不经过 Callsign Roll Log 协作服务器。识别结果只作为候选，不会自动覆盖书记员正在编辑的内容。';
 
   @override
+  String get aiExperimentalTitle => '实验性功能';
+
+  @override
+  String get aiExperimentalNotice =>
+      '这项功能仍在试验。呼号、设备、天线和信号报告都可能识别错。候选不会自动写入记录；点进表单后请再核对，确认无误再保存。';
+
+  @override
   String get aiRecognitionEnabled => '启用 AI 辅助识别';
 
   @override
@@ -5227,6 +5253,18 @@ class AppLocalizationsZhCn extends AppLocalizationsZh {
 
   @override
   String get aiRecognitionNeedsAnyProfile => '请先添加并选择语音识别或多模态配置。';
+
+  @override
+  String get aiRecognitionModeSpeech => '语音识别';
+
+  @override
+  String get aiRecognitionModeAudio => '多模态';
+
+  @override
+  String get aiRecognitionEnabledAudioHint => '启用后可从点名工作台一次调用识别录音。';
+
+  @override
+  String get aiRecognitionNeedsAudioProfile => '请先添加并选择多模态配置。';
 
   @override
   String get aiUnknownFailure => '操作失败，请稍后重试';

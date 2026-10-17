@@ -45,6 +45,41 @@ void main() {
     expect(restarted.activeAudioFieldExtractionProfileId, 'multimodal');
   });
 
+  test('recognition mode keeps both profiles and uses only the selected one',
+      () async {
+    final provider = _provider();
+    await provider.initialized;
+    await provider.upsertProfile(_asrProfile());
+    await provider.upsertProfile(_audioExtractionProfile());
+    await provider.setActiveAsrProfile('asr');
+    await provider.setActiveAudioFieldExtractionProfile('multimodal');
+    await provider.setEnabled(true);
+
+    expect(provider.recognitionMode, AiRecognitionMode.audio);
+    expect(provider.activeRecognitionProfile?.id, 'multimodal');
+
+    await provider.setRecognitionMode(AiRecognitionMode.speech);
+    expect(provider.enabled, true);
+    expect(provider.activeRecognitionProfile?.id, 'asr');
+    expect(provider.activeAsrProfileId, 'asr');
+    expect(provider.activeAudioFieldExtractionProfileId, 'multimodal');
+
+    final restarted = _provider();
+    await restarted.initialized;
+    expect(restarted.recognitionMode, AiRecognitionMode.speech);
+    expect(restarted.activeAudioFieldExtractionProfileId, 'multimodal');
+    expect(restarted.activeAsrProfileId, 'asr');
+
+    await restarted.setRecognitionMode(AiRecognitionMode.audio);
+    await restarted.setActiveAudioFieldExtractionProfile(null);
+    expect(restarted.enabled, false);
+    expect(restarted.activeAsrProfileId, 'asr');
+    await expectLater(
+      restarted.setEnabled(true),
+      throwsA(isA<StateError>()),
+    );
+  });
+
   test('persists the local reference context preference', () async {
     final provider = _provider();
     await provider.initialized;

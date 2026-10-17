@@ -1180,7 +1180,12 @@ class _LogFormState extends State<LogForm> with AutomaticKeepAliveClientMixin {
         updates[field] = clearedValue;
       }
     }
-    if (updates.isEmpty) return;
+    if (updates.isEmpty) {
+      // Chips can still be showing after a recognition that was never tapped
+      // into the form. Clearing starts the next callsign either way.
+      setState(() => _aiRecordEpoch += 1);
+      return;
+    }
 
     for (final field in _clearableDraftFields) {
       _draftDebounce.remove(field)?.cancel();
@@ -1578,6 +1583,7 @@ class _LogFormState extends State<LogForm> with AutomaticKeepAliveClientMixin {
         expectedValues: expectedValues,
         expectedRevisions: expectedRevisions,
       );
+      _focusCallsignIfApplied(normalized);
       return;
     }
 
@@ -1595,6 +1601,12 @@ class _LogFormState extends State<LogForm> with AutomaticKeepAliveClientMixin {
       _applyingSharedDraft = false;
     }
     if (mounted) setState(() {});
+    _focusCallsignIfApplied(normalized);
+  }
+
+  void _focusCallsignIfApplied(Map<String, String> values) {
+    if (!values.containsKey('callsign') || !mounted) return;
+    FocusScope.of(context).requestFocus(_callsignFocusNode);
   }
 
   @override
@@ -1951,14 +1963,13 @@ class _LogFormState extends State<LogForm> with AutomaticKeepAliveClientMixin {
                 const SizedBox(height: 12),
 
                 if (aiSettings?.enabled == true &&
-                    (aiSettings?.activeAsrProfile != null ||
-                        aiSettings?.activeAudioFieldExtractionProfile !=
-                            null)) ...[
+                    aiSettings?.activeRecognitionProfile != null) ...[
                   Focus(
                     canRequestFocus: false,
                     skipTraversal: true,
                     descendantsAreTraversable: false,
                     child: AiRecognitionControl(
+                      recordEpoch: _aiRecordEpoch,
                       captureSnapshot: _captureAiDraft,
                       currentState: (generation) => _currentAiDraftState(
                         generation,

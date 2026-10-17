@@ -2,11 +2,13 @@ import 'dart:async';
 import 'package:openlogtool/utils/app_snack_bar.dart';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:openlogtool/l10n/l10n.dart';
 import 'package:openlogtool/providers/ai_recognition_settings_provider.dart';
 import 'package:openlogtool/services/ai_audio_recorder.dart';
+import 'package:openlogtool/services/app_logger.dart';
+import 'package:openlogtool/providers/dictionary_provider.dart';
 import 'package:openlogtool/services/ai_candidate_guard.dart';
+import 'package:openlogtool/services/ai_field_proofread.dart';
 import 'package:openlogtool/services/ai_recognition/ai_recognition.dart';
 import 'package:openlogtool/services/ai_recognition_runtime.dart';
 import 'package:provider/provider.dart';
@@ -30,6 +32,7 @@ enum _AiControlStage { idle, recording, recognizing }
 class AiRecognitionControl extends StatefulWidget {
   const AiRecognitionControl({
     super.key,
+    this.recordEpoch = 0,
     required this.captureSnapshot,
     required this.currentState,
     required this.applyFields,
@@ -43,6 +46,9 @@ class AiRecognitionControl extends StatefulWidget {
     this.referenceContextBuilder,
   });
 
+  /// Changes when the visible record is saved or cleared. Recording stays up;
+  /// only the previous recognition context is dropped.
+  final int recordEpoch;
   final AiDraftSnapshotBuilder captureSnapshot;
   final AiApplicationStateBuilder currentState;
   final AiCandidateFieldsApplier applyFields;
@@ -74,8 +80,6 @@ class _AiRecognitionControlState extends State<AiRecognitionControl> {
   final List<({int sequence, AudioSegment audio})> _retryChunks = [];
   String? _liveTranscriptionError;
   AiRecognitionResult? _liveStructuredPreview;
-  bool _liveFormatting = false;
-  _AiPendingReview? _pendingReview;
   int _elapsedSeconds = 0;
   int _captureGeneration = 0;
   int _nextChunkSequence = 0;
@@ -84,6 +88,19 @@ class _AiRecognitionControlState extends State<AiRecognitionControl> {
   void initState() {
     super.initState();
     _audioRecorder = widget.audioRecorder ?? DeviceAiAudioRecorder();
+  }
+
+  @override
+  void didUpdateWidget(covariant AiRecognitionControl oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.recordEpoch != oldWidget.recordEpoch) {
+      if (_stage == _AiControlStage.recording) {
+        _beginNextRecord();
+      } else {
+        _liveStructuredPreview = null;
+        _liveTranscriptionError = null;
+      }
+    }
   }
 
   @override
@@ -97,16 +114,11 @@ class _AiRecognitionControlState extends State<AiRecognitionControl> {
   }
 
   Future<void> _startRecording() async {
-    if (_stage != _AiControlStage.idle ||
-        widget.readOnly ||
-        widget.busy ||
-        _pendingReview != null) {
+    if (_stage != _AiControlStage.idle || widget.readOnly || widget.busy) {
       return;
     }
     final settings = context.read<AiRecognitionSettingsProvider>();
-    if (!settings.enabled ||
-        (settings.activeAsrProfile == null &&
-            settings.activeAudioFieldExtractionProfile == null)) {
+    if (!settings.enabled || settings.activeRecognitionProfile == null) {
       return;
     }
 
@@ -135,7 +147,6 @@ class _AiRecognitionControlState extends State<AiRecognitionControl> {
       _nextChunkSequence = 0;
       _liveTranscriptionError = null;
       _liveStructuredPreview = null;
-      _liveFormatting = false;
       setState(() => _stage = _AiControlStage.recording);
       _elapsedTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
         if (!mounted || _stage != _AiControlStage.recording) {
@@ -145,10 +156,10 @@ class _AiRecognitionControlState extends State<AiRecognitionControl> {
         setState(() => _elapsedSeconds += 1);
       });
       if (_audioRecorder.supportsLiveChunks) {
-        _liveChunkTimer = Timer.periodic(
-          _liveChunkInterval,
-          (_) => _scheduleLiveTranscription(generation),
-        );
+        _liveChunkTimer = Timer.periodic(_liveChunkInterval, (_) {
+          if (!mounted || _stage != _AiControlStage.recording) return;
+          _scheduleLiveTranscription(_captureGeneration);
+        });
       }
     } catch (error) {
       if (mounted) {
@@ -194,6 +205,7 @@ class _AiRecognitionControlState extends State<AiRecognitionControl> {
       if (token == null) return;
       final settings = context.read<AiRecognitionSettingsProvider>();
       direct = await _directRecognition(chunk, settings, token);
+      if (direct != null && !_hasRecognizedSpeech(direct)) return;
       transcription = direct?.transcription ??
           await widget.transcriptionExecutor(
             chunk,
@@ -204,7 +216,11 @@ class _AiRecognitionControlState extends State<AiRecognitionControl> {
       _liveTranscriptions[sequence] = transcription;
       if (direct != null) _singleCallResults[sequence] = direct;
     } on AiRecognitionException catch (error) {
-      if (error.kind == AiRecognitionErrorKind.cancelled) return;
+      if (error.kind == AiRecognitionErrorKind.cancelled ||
+          error.kind == AiRecognitionErrorKind.nothingRecognized) {
+        return;
+      }
+      _logProviderResponse(error);
       if (chunk != null) {
         _retryChunks.add((sequence: sequence, audio: chunk));
       }
@@ -224,20 +240,17 @@ class _AiRecognitionControlState extends State<AiRecognitionControl> {
 
     if (direct != null) {
       if (!mounted || generation != _captureGeneration) return;
+      final preview = _combinedSingleCallResult();
       setState(() {
         _liveTranscriptionError = null;
-        _liveStructuredPreview = _combinedSingleCallResult();
-        _liveFormatting = false;
+        _liveStructuredPreview = preview;
       });
       return;
     }
 
     final text = _joinedTranscript;
     if (text.isEmpty || !mounted || generation != _captureGeneration) return;
-    setState(() {
-      _liveTranscriptionError = null;
-      _liveFormatting = true;
-    });
+    setState(() => _liveTranscriptionError = null);
     try {
       final token = _cancellationToken;
       if (token == null) return;
@@ -248,25 +261,20 @@ class _AiRecognitionControlState extends State<AiRecognitionControl> {
         referenceContext: widget.referenceContextBuilder?.call(text),
       );
       if (!mounted || generation != _captureGeneration) return;
+      final proofread = _proofread(result, locked: _livePreviewFields);
       setState(() {
-        _liveStructuredPreview = result;
+        _liveStructuredPreview = proofread;
         _liveTranscriptionError = null;
-        _liveFormatting = false;
       });
     } on AiRecognitionException catch (error) {
       if (error.kind == AiRecognitionErrorKind.cancelled) return;
+      _logProviderResponse(error);
       if (mounted && generation == _captureGeneration) {
-        setState(() {
-          _liveTranscriptionError = _visibleFailure(error);
-          _liveFormatting = false;
-        });
+        setState(() => _liveTranscriptionError = _visibleFailure(error));
       }
     } catch (error) {
       if (mounted && generation == _captureGeneration) {
-        setState(() {
-          _liveTranscriptionError = _visibleFailure(error);
-          _liveFormatting = false;
-        });
+        setState(() => _liveTranscriptionError = _visibleFailure(error));
       }
     }
   }
@@ -317,16 +325,25 @@ class _AiRecognitionControlState extends State<AiRecognitionControl> {
         ];
         remaining.sort((a, b) => a.sequence.compareTo(b.sequence));
         _retryChunks.clear();
-        final directPath = widget.executor != null ||
-            settings.activeAudioFieldExtractionProfile != null;
+        final directPath = widget.executor != null || _usesSingleCall(settings);
         for (final chunk in remaining) {
           if (directPath) {
-            final recognized = await _directRecognition(
-              chunk.audio,
-              settings,
-              cancellationToken,
-            );
-            if (recognized == null) throw StateError('AI_AUDIO_EMPTY');
+            final AiRecognitionResult recognized;
+            try {
+              final direct = await _directRecognition(
+                chunk.audio,
+                settings,
+                cancellationToken,
+              );
+              if (direct == null) throw StateError('AI_AUDIO_EMPTY');
+              recognized = direct;
+            } on AiRecognitionException catch (error) {
+              if (error.kind == AiRecognitionErrorKind.nothingRecognized) {
+                continue;
+              }
+              rethrow;
+            }
+            if (!_hasRecognizedSpeech(recognized)) continue;
             _liveTranscriptions[chunk.sequence] = recognized.transcription;
             _singleCallResults[chunk.sequence] = recognized;
           } else {
@@ -340,6 +357,12 @@ class _AiRecognitionControlState extends State<AiRecognitionControl> {
           if (mounted && generation == _captureGeneration) setState(() {});
         }
         if (directPath) {
+          if (_singleCallResults.isEmpty) {
+            throw const AiRecognitionException(
+              kind: AiRecognitionErrorKind.nothingRecognized,
+              message: 'The provider returned an empty transcript',
+            );
+          }
           result = _combinedSingleCallResult();
         } else {
           final text = _joinedTranscript;
@@ -353,9 +376,15 @@ class _AiRecognitionControlState extends State<AiRecognitionControl> {
         }
       }
       if (!mounted || generation != _captureGeneration) return;
-      setState(() => _stage = _AiControlStage.idle);
-      await _reviewResult(result, baseline, generation);
+      final proofread = _proofread(result, locked: _livePreviewFields);
+      setState(() {
+        _stage = _AiControlStage.idle;
+        _liveStructuredPreview = proofread;
+      });
     } on AiRecognitionException catch (error) {
+      if (error.kind != AiRecognitionErrorKind.cancelled) {
+        _logProviderResponse(error);
+      }
       if (error.kind != AiRecognitionErrorKind.cancelled && mounted) {
         _showMessage(
           context.l10n.aiRecognitionFailed(aiUserFacingErrorMessage(error)),
@@ -397,78 +426,49 @@ class _AiRecognitionControlState extends State<AiRecognitionControl> {
         _retryChunks.clear();
         _liveTranscriptionError = null;
         _liveStructuredPreview = null;
-        _liveFormatting = false;
       });
     }
   }
 
-  Future<void> _reviewResult(
-    AiRecognitionResult result,
-    AiDraftSnapshot baseline,
-    int generation,
-  ) async {
-    final initialState = widget.currentState(generation);
-    final initialAssessments = [
-      for (final candidate in result.candidates)
-        AiCandidateGuard.assess(
-          candidate,
-          baseline: baseline,
-          current: initialState,
-        ).where(_showCandidateAssessment).toList(growable: false),
-    ];
-    setState(
-      () => _pendingReview = _AiPendingReview(
-        result: result,
-        baseline: baseline,
-        generation: generation,
-        assessments: initialAssessments,
-      ),
-    );
+  void _beginNextRecord() {
+    final generation = ++_captureGeneration;
+    _cancellationToken?.cancel();
+    _cancellationToken = AiCancellationToken();
+    _baseline = widget.captureSnapshot(generation);
+    _liveTranscriptions.clear();
+    _singleCallResults.clear();
+    _retryChunks.clear();
+    _nextChunkSequence = 0;
+    _liveTranscriptionError = null;
+    _liveStructuredPreview = null;
   }
 
-  Future<void> _applyPendingReview(_AiReviewSelection selection) async {
-    final pending = _pendingReview;
-    if (pending == null || pending.generation != _captureGeneration) {
-      return;
-    }
-
-    final candidate = pending.result.candidates[selection.candidateIndex];
-    final applicationState = widget.currentState(pending.generation);
-    final reassessed = AiCandidateGuard.assess(
-      candidate,
-      baseline: pending.baseline,
-      current: applicationState,
-    );
-    final byField = {for (final item in reassessed) item.field: item};
-    final values = <String, String>{};
-    for (final field in selection.fields) {
-      final assessment = byField[field];
-      if (assessment?.canOfferApply ?? false) {
-        values[field] = assessment!.value;
-      }
-    }
-    if (values.isEmpty) {
-      _showMessage(context.l10n.aiCandidatesStale);
+  Future<void> _applyLiveField(String field, String value) async {
+    if (!mounted || widget.readOnly || widget.busy) return;
+    final generation = _captureGeneration;
+    final state = widget.currentState(generation);
+    if (state.readOnly ||
+        state.busy ||
+        generation != _captureGeneration ||
+        state.composingFields.contains(field) ||
+        state.lockedFields.contains(field)) {
       return;
     }
     try {
-      await widget.applyFields(values, applicationState.snapshot);
-      if (mounted) {
-        setState(() => _pendingReview = null);
-        _showMessage(context.l10n.aiCandidatesApplied(values.length));
-      }
+      await widget.applyFields({field: value}, state.snapshot);
     } catch (error) {
-      if (mounted) {
-        _showMessage(_reportedFailure(
-          error,
-          ai: (message) => context.l10n.aiApplyFailed(message),
-        ));
+      if (mounted && generation == _captureGeneration) {
+        _showMessage(context.l10n.operationFailed('$error'));
       }
     }
   }
 
-  /// An injected executor wins. Otherwise a selected multimodal profile takes
-  /// the single call. Returning null keeps the speech-then-extraction path.
+  bool _usesSingleCall(AiRecognitionSettingsProvider settings) =>
+      settings.recognitionMode == AiRecognitionMode.audio &&
+      settings.activeAudioFieldExtractionProfile != null;
+
+  /// An injected executor wins. Otherwise the selected mode decides: multimodal
+  /// is one call, speech recognition stays speech-then-extraction.
   Future<AiRecognitionResult?> _directRecognition(
     AudioSegment audio,
     AiRecognitionSettingsProvider settings,
@@ -478,7 +478,7 @@ class _AiRecognitionControlState extends State<AiRecognitionControl> {
     if (injected != null) {
       return injected(audio, settings, cancellationToken);
     }
-    if (settings.activeAudioFieldExtractionProfile == null) {
+    if (!_usesSingleCall(settings)) {
       return Future<AiRecognitionResult?>.value();
     }
     return widget.recognizer(audio, settings, cancellationToken);
@@ -496,18 +496,47 @@ class _AiRecognitionControlState extends State<AiRecognitionControl> {
         .where((value) => value.isNotEmpty)
         .join(' ');
     if (text.isEmpty) throw StateError('AI_AUDIO_EMPTY');
-    final fields = <String, Object?>{};
+    final dictionary = _dictionaryTerms();
+    var fields = <String, String>{};
     for (final result in ordered) {
       if (result.candidates.isEmpty) continue;
-      fields.addAll(result.candidates.first.fields);
+      fields = proofreadAiFields(
+        result.candidates.first.fields,
+        locked: fields,
+        dictionary: dictionary,
+      );
     }
     return AiRecognitionResult(
       transcription: Transcription(text: text),
       candidates: [
-        if (fields.isNotEmpty) RecognitionCandidate(fields: fields),
+        if (fields.isNotEmpty)
+          RecognitionCandidate(fields: Map<String, Object?>.of(fields)),
       ],
     );
   }
+
+  bool _hasRecognizedSpeech(AiRecognitionResult result) =>
+      result.transcription.text.trim().isNotEmpty;
+
+  AiDictionaryTerms _dictionaryTerms() {
+    final dictionaries = context.read<DictionaryProvider>();
+    return AiDictionaryTerms(
+      callsigns: [for (final item in dictionaries.callsignDict) item.raw],
+      devices: [for (final item in dictionaries.deviceDict) item.raw],
+      antennas: [for (final item in dictionaries.antennaDict) item.raw],
+      qths: [for (final item in dictionaries.qthDict) item.raw],
+    );
+  }
+
+  AiRecognitionResult _proofread(
+    AiRecognitionResult result, {
+    Map<String, String> locked = const {},
+  }) =>
+      proofreadAiResult(
+        result,
+        locked: locked,
+        dictionary: _dictionaryTerms(),
+      );
 
   String get _joinedTranscript => (_liveTranscriptions.entries.toList()
         ..sort((a, b) => a.key.compareTo(b.key)))
@@ -531,6 +560,19 @@ class _AiRecognitionControlState extends State<AiRecognitionControl> {
     return fields;
   }
 
+  void _logProviderResponse(AiRecognitionException error) {
+    final body = error.responseBody?.trim();
+    AppLogger.instance.log(
+      AppLogLevel.error,
+      [
+        error.message,
+        if (error.statusCode != null) 'HTTP ${error.statusCode}',
+        if (body != null && body.isNotEmpty) body,
+      ].join('\n'),
+      source: 'AI',
+    );
+  }
+
   String _visibleFailure(Object error) => error is AiRecognitionException
       ? aiUserFacingErrorMessage(error)
       : context.l10n.aiUnknownFailure;
@@ -552,7 +594,7 @@ class _AiRecognitionControlState extends State<AiRecognitionControl> {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final disabled = widget.readOnly || widget.busy || _pendingReview != null;
+    final disabled = widget.readOnly || widget.busy;
     final isRecording = _stage == _AiControlStage.recording;
     final isRecognizing = _stage == _AiControlStage.recognizing;
     final status = isRecording
@@ -561,7 +603,6 @@ class _AiRecognitionControlState extends State<AiRecognitionControl> {
             ? context.l10n.aiRecognizingStatus
             : context.l10n.aiReadyStatus;
 
-    final livePreviewFields = _livePreviewFields;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -599,7 +640,7 @@ class _AiRecognitionControlState extends State<AiRecognitionControl> {
                           style: Theme.of(context).textTheme.labelLarge,
                         ),
                         Text(
-                          disabled && _pendingReview == null
+                          disabled
                               ? context.l10n.aiWorkbenchUnavailable
                               : status,
                           style:
@@ -637,48 +678,75 @@ class _AiRecognitionControlState extends State<AiRecognitionControl> {
                   ),
                 ],
               ),
-              if (_stage != _AiControlStage.idle) ...[
-                const Divider(height: 20),
+              const SizedBox(height: 8),
+              Text(
+                context.l10n.aiExperimentalNotice,
+                key: const Key('ai-experimental-notice'),
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+              ),
+              if (_liveTranscriptionError case final error?) ...[
+                const SizedBox(height: 8),
                 Text(
-                  context.l10n.aiLiveTranscriptTitle,
-                  style: Theme.of(context).textTheme.labelLarge,
+                  context.l10n.aiLiveTranscriptionRetrying(error),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: colorScheme.error,
+                      ),
                 ),
-                const SizedBox(height: 6),
-                if (livePreviewFields.isNotEmpty)
-                  _AiLiveStructuredPreview(fields: livePreviewFields)
-                else
-                  Text(
-                    _liveFormatting
-                        ? context.l10n.aiLiveStructuredUpdating
-                        : context.l10n.aiLiveStructuredWaiting,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: colorScheme.onSurfaceVariant,
-                        ),
-                  ),
-                if (_liveTranscriptionError case final error?) ...[
-                  const SizedBox(height: 6),
-                  Text(
-                    context.l10n.aiLiveTranscriptionRetrying(error),
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: colorScheme.error,
-                        ),
-                  ),
-                ],
               ],
             ],
           ),
         ),
-        if (_pendingReview case final pending?) ...[
-          const SizedBox(height: 10),
-          _AiRecognitionReviewPanel(
-            result: pending.result,
-            assessments: pending.assessments,
-            onCancel: () => setState(() => _pendingReview = null),
-            onApply: _applyPendingReview,
+        if (_livePreviewFields.isNotEmpty) ...[
+          const SizedBox(height: 8),
+          Wrap(
+            key: const Key('ai-live-fields'),
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final field in _chipFieldOrder)
+                if (_livePreviewFields[field] case final value?)
+                  ActionChip(
+                    key: Key('ai-live-field-$field'),
+                    label: Text(_chipLabel(context, field, value)),
+                    onPressed: disabled
+                        ? null
+                        : () => unawaited(_applyLiveField(field, value)),
+                  ),
+            ],
           ),
         ],
       ],
     );
+  }
+
+  static const _chipFieldOrder = [
+    'callsign',
+    'rstSent',
+    'rstRcvd',
+    'qth',
+    'device',
+    'power',
+    'antenna',
+    'height',
+    'remarks',
+  ];
+
+  String _chipLabel(BuildContext context, String field, String value) {
+    final name = switch (field) {
+      'callsign' => context.l10n.fieldCallsign,
+      'rstSent' => context.l10n.fieldRstSent,
+      'rstRcvd' => context.l10n.fieldRstRcvd,
+      'qth' => context.l10n.fieldQth,
+      'device' => context.l10n.fieldDevice,
+      'power' => context.l10n.fieldPower,
+      'antenna' => context.l10n.fieldAntenna,
+      'height' => context.l10n.fieldHeight,
+      'remarks' => context.l10n.fieldRemarks,
+      _ => field,
+    };
+    return '$name $value';
   }
 
   String _formatElapsed(int totalSeconds) {
@@ -687,346 +755,3 @@ class _AiRecognitionControlState extends State<AiRecognitionControl> {
     return '$minutes:${seconds.toString().padLeft(2, '0')}';
   }
 }
-
-class _AiLiveStructuredPreview extends StatelessWidget {
-  const _AiLiveStructuredPreview({required this.fields});
-
-  static const _fieldOrder = <String>[
-    'callsign',
-    'device',
-    'antenna',
-    'power',
-    'qth',
-    'height',
-    'rstSent',
-    'rstRcvd',
-    'remarks',
-  ];
-
-  final Map<String, String> fields;
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final entries = [
-      for (final field in _fieldOrder)
-        if (fields[field] case final value?) MapEntry(field, value),
-    ];
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        const spacing = 8.0;
-        final columns = constraints.maxWidth >= 720
-            ? 3
-            : constraints.maxWidth >= 420
-                ? 2
-                : 1;
-        final width =
-            (constraints.maxWidth - spacing * (columns - 1)) / columns;
-        return Wrap(
-          key: const Key('ai-live-structured'),
-          spacing: spacing,
-          runSpacing: spacing,
-          children: [
-            for (final entry in entries)
-              SizedBox(
-                width: width,
-                child: Container(
-                  key: Key('ai-live-field-${entry.key}'),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 8,
-                  ),
-                  decoration: BoxDecoration(
-                    color: colorScheme.surface.withValues(alpha: 0.62),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: colorScheme.outlineVariant),
-                  ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '${_fieldLabel(context, entry.key)}：',
-                        style:
-                            Theme.of(context).textTheme.labelMedium?.copyWith(
-                                  color: colorScheme.onSurfaceVariant,
-                                ),
-                      ),
-                      Expanded(
-                        child: SelectableText(
-                          entry.value,
-                          style:
-                              Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-          ],
-        );
-      },
-    );
-  }
-}
-
-final class _AiReviewSelection {
-  const _AiReviewSelection({
-    required this.candidateIndex,
-    required this.fields,
-  });
-
-  final int candidateIndex;
-  final Set<String> fields;
-}
-
-final class _AiPendingReview {
-  const _AiPendingReview({
-    required this.result,
-    required this.baseline,
-    required this.generation,
-    required this.assessments,
-  });
-
-  final AiRecognitionResult result;
-  final AiDraftSnapshot baseline;
-  final int generation;
-  final List<List<AiFieldCandidateAssessment>> assessments;
-}
-
-class _AiRecognitionReviewPanel extends StatefulWidget {
-  const _AiRecognitionReviewPanel({
-    required this.result,
-    required this.assessments,
-    required this.onCancel,
-    required this.onApply,
-  });
-
-  final AiRecognitionResult result;
-  final List<List<AiFieldCandidateAssessment>> assessments;
-  final VoidCallback onCancel;
-  final ValueChanged<_AiReviewSelection> onApply;
-
-  @override
-  State<_AiRecognitionReviewPanel> createState() =>
-      _AiRecognitionReviewPanelState();
-}
-
-class _AiRecognitionReviewPanelState extends State<_AiRecognitionReviewPanel> {
-  int _candidateIndex = 0;
-  Set<String> _selectedFields = const {};
-
-  @override
-  void initState() {
-    super.initState();
-    _resetSelection();
-  }
-
-  void _resetSelection() {
-    if (widget.assessments.isEmpty) {
-      _selectedFields = const {};
-      return;
-    }
-    _selectedFields = {
-      for (final item in widget.assessments[_candidateIndex])
-        if (item.decision == AiCandidateDecision.fillEmpty) item.field,
-    };
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final assessments = widget.assessments.isEmpty
-        ? const <AiFieldCandidateAssessment>[]
-        : widget.assessments[_candidateIndex];
-    final hasCandidates = assessments.isNotEmpty;
-    return Card(
-      key: const Key('ai-review-panel'),
-      margin: EdgeInsets.zero,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              context.l10n.aiReviewTitle,
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            const SizedBox(height: 12),
-            Text(
-              context.l10n.aiTranscriptTitle,
-              style: Theme.of(context).textTheme.titleSmall,
-            ),
-            const SizedBox(height: 6),
-            SelectableText(widget.result.transcription.text),
-            const SizedBox(height: 8),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: TextButton.icon(
-                onPressed: () async {
-                  await Clipboard.setData(
-                    ClipboardData(text: widget.result.transcription.text),
-                  );
-                  if (context.mounted) {
-                    ScaffoldMessenger.maybeOf(context)?.showLoggedSnackBar(
-                      SnackBar(content: Text(context.l10n.aiTranscriptCopied)),
-                    );
-                  }
-                },
-                icon: const Icon(Icons.copy_outlined),
-                label: Text(context.l10n.aiCopyTranscript),
-              ),
-            ),
-            const Divider(height: 24),
-            if (!hasCandidates)
-              Text(context.l10n.aiNoStructuredCandidates)
-            else ...[
-              if (widget.result.candidates.length > 1)
-                DropdownButtonFormField<int>(
-                  initialValue: _candidateIndex,
-                  decoration: InputDecoration(
-                    labelText: context.l10n.aiCandidateRecord,
-                  ),
-                  items: [
-                    for (var index = 0;
-                        index < widget.result.candidates.length;
-                        index += 1)
-                      DropdownMenuItem(
-                        value: index,
-                        child: Text(context.l10n.aiCandidateNumber(index + 1)),
-                      ),
-                  ],
-                  onChanged: (value) {
-                    if (value == null) return;
-                    setState(() {
-                      _candidateIndex = value;
-                      _resetSelection();
-                    });
-                  },
-                ),
-              if (widget.result.candidates.length > 1)
-                const SizedBox(height: 10),
-              Text(
-                context.l10n.aiCandidateHint,
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-              const SizedBox(height: 8),
-              for (final assessment in assessments)
-                _CandidateFieldTile(
-                  assessment: assessment,
-                  selected: _selectedFields.contains(assessment.field),
-                  onChanged: assessment.canOfferApply
-                      ? (selected) {
-                          setState(() {
-                            final next = Set<String>.of(_selectedFields);
-                            selected
-                                ? next.add(assessment.field)
-                                : next.remove(assessment.field);
-                            _selectedFields = next;
-                          });
-                        }
-                      : null,
-                ),
-            ],
-            const SizedBox(height: 12),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                TextButton(
-                  onPressed: widget.onCancel,
-                  child: Text(context.l10n.cancel),
-                ),
-                if (hasCandidates) ...[
-                  const SizedBox(width: 8),
-                  FilledButton(
-                    key: const Key('ai-apply-candidates'),
-                    onPressed: _selectedFields.isEmpty
-                        ? null
-                        : () => widget.onApply(
-                              _AiReviewSelection(
-                                candidateIndex: _candidateIndex,
-                                fields: Set.unmodifiable(_selectedFields),
-                              ),
-                            ),
-                    child: Text(context.l10n.aiApplySelected),
-                  ),
-                ],
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _CandidateFieldTile extends StatelessWidget {
-  const _CandidateFieldTile({
-    required this.assessment,
-    required this.selected,
-    required this.onChanged,
-  });
-
-  final AiFieldCandidateAssessment assessment;
-  final bool selected;
-  final ValueChanged<bool>? onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final replacement = assessment.requiresReplacementConfirmation;
-    return CheckboxListTile(
-      dense: true,
-      contentPadding: EdgeInsets.zero,
-      controlAffinity: ListTileControlAffinity.leading,
-      value: selected,
-      onChanged:
-          onChanged == null ? null : (value) => onChanged!(value == true),
-      title: Text(
-        '${_fieldLabel(context, assessment.field)}: ${assessment.value}',
-      ),
-      subtitle: Text(
-        replacement
-            ? context.l10n.aiWillReplaceValue(assessment.currentValue)
-            : _decisionLabel(context, assessment.decision),
-      ),
-    );
-  }
-}
-
-String _fieldLabel(BuildContext context, String field) => switch (field) {
-      'callsign' => context.l10n.fieldCallsign,
-      'device' => context.l10n.fieldDevice,
-      'antenna' => context.l10n.fieldAntenna,
-      'power' => context.l10n.fieldPower,
-      'qth' => context.l10n.fieldQth,
-      'height' => context.l10n.fieldHeight,
-      'rstSent' => context.l10n.fieldRstSent,
-      'rstRcvd' => context.l10n.fieldRstRcvd,
-      'remarks' => context.l10n.fieldRemarks,
-      'time' => context.l10n.fieldTime,
-      _ => field,
-    };
-
-bool _showCandidateAssessment(AiFieldCandidateAssessment assessment) =>
-    assessment.decision != AiCandidateDecision.invalidValue &&
-    (assessment.decision != AiCandidateDecision.unsupportedField ||
-        assessment.field == 'time');
-
-String _decisionLabel(BuildContext context, AiCandidateDecision decision) =>
-    switch (decision) {
-      AiCandidateDecision.fillEmpty => context.l10n.aiWillFillEmpty,
-      AiCandidateDecision.replaceWithConfirmation =>
-        context.l10n.aiReplacementNeedsConfirmation,
-      AiCandidateDecision.unchanged => context.l10n.aiCandidateUnchanged,
-      AiCandidateDecision.stale => context.l10n.aiCandidateStale,
-      AiCandidateDecision.focused ||
-      AiCandidateDecision.composing =>
-        context.l10n.aiCandidateBeingEdited,
-      AiCandidateDecision.locked => context.l10n.aiCandidateLocked,
-      AiCandidateDecision.readOnly => context.l10n.aiCandidateReadOnly,
-      AiCandidateDecision.busy => context.l10n.aiCandidateBusy,
-      AiCandidateDecision.unsupportedField ||
-      AiCandidateDecision.invalidValue =>
-        context.l10n.aiCandidateInvalid,
-    };

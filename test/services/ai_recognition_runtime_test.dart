@@ -13,6 +13,17 @@ import 'package:shared_preferences/shared_preferences.dart';
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
+  test('asks for Simplified Chinese equipment and QTH', () {
+    expect(
+      AiRecognitionRuntime.extractionInstructions,
+      contains('Simplified Chinese (zh-CN)'),
+    );
+    expect(
+      AiRecognitionRuntime.audioFieldExtractionInstructions,
+      contains('Simplified Chinese (zh-CN)'),
+    );
+  });
+
   test('rejects filler-only transcripts before field extraction', () {
     expect(AiRecognitionRuntime.isActionableTranscription('嗯。'), isFalse);
     expect(AiRecognitionRuntime.isActionableTranscription('嗯嗯……'), isFalse);

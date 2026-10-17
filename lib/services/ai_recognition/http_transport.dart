@@ -69,7 +69,7 @@ final class AiHttpTransport {
           message: 'The AI provider returned HTTP ${response.statusCode}',
           providerId: profile.id,
           statusCode: response.statusCode,
-          responseBody: _responseSnippet(response.bodyBytes),
+          responseBody: aiResponseSnippet(response.bodyBytes),
         );
       }
       return response;
@@ -329,7 +329,7 @@ final class _ActiveRequest {
   }
 }
 
-String _responseSnippet(List<int> bodyBytes) {
+String aiResponseSnippet(List<int> bodyBytes) {
   const limit = 4096;
   final bytes =
       bodyBytes.length <= limit ? bodyBytes : bodyBytes.sublist(0, limit);

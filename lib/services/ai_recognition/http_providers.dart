@@ -741,6 +741,25 @@ AiRecognitionResult _parseAudioFieldExtraction(
   http.Response response,
   AiProviderProfile profile,
 ) {
+  try {
+    return _readAudioFieldExtraction(response, profile);
+  } on AiRecognitionException catch (error) {
+    if (error.responseBody != null) rethrow;
+    throw AiRecognitionException(
+      kind: error.kind,
+      message: error.message,
+      providerId: error.providerId ?? profile.id,
+      statusCode: error.statusCode,
+      responseBody: aiResponseSnippet(response.bodyBytes),
+      cause: error,
+    );
+  }
+}
+
+AiRecognitionResult _readAudioFieldExtraction(
+  http.Response response,
+  AiProviderProfile profile,
+) {
   final decoded = _decodeResponse(response, profile);
   final defaultPath = profile.protocol == AiProtocol.openAiChatCompletionsAudio
       ? 'choices[0].message.content'
@@ -767,8 +786,14 @@ AiRecognitionResult _parseAudioFieldExtraction(
   }
 
   final transcript = resolved['transcript'];
-  if (transcript is! String || transcript.trim().isEmpty) {
+  if (transcript is! String) {
     throw _invalidResponse(profile, 'The provider returned no transcript');
+  }
+  if (transcript.trim().isEmpty) {
+    throw const AiRecognitionException(
+      kind: AiRecognitionErrorKind.nothingRecognized,
+      message: 'The provider returned an empty transcript',
+    );
   }
 
   final rawFields = resolved['fields'];

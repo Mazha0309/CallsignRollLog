@@ -43,6 +43,9 @@ as "BG5EUU". Extract the caller's final confirmed callsign, never a controller
 prompt, partial suffix, or uncertain readback. Check the entire transcript for
 explicit equipment and QTH statements before omitting those fields.
 Keep RST sent and received separate.
+Write device, antenna, qth, height, and remarks in Simplified Chinese (zh-CN).
+Do not translate Chinese place names, radio names, or antenna names into English.
+Callsigns stay uppercase Latin letters. RST stays digits. Power stays digits plus W.
 ''';
 
   /// 模式 A 的指令：一次调用同时要转写与字段。
@@ -58,6 +61,9 @@ values. Normalize explicitly spoken transmit power to digits plus W.
 Decode NATO phonetic spelling when it clearly forms a callsign, and return
 callsigns uppercase without spaces.
 List in "uncertain" any field you had to guess or that was hard to hear.
+Write device, antenna, qth, height, and remarks in Simplified Chinese (zh-CN).
+Do not translate Chinese place names, radio names, or antenna names into English.
+Callsigns stay uppercase Latin letters. RST stays digits. Power stays digits plus W.
 Return {"transcript":"…","fields":{}} when the audio has no check-in data.
 ''';
 

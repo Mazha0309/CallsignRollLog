@@ -244,6 +244,50 @@ void main() {
       provider.close();
     });
 
+    test('treats an empty transcript as nothing recognized', () async {
+      final provider = ProtocolAudioFieldExtractionProvider(
+        profile: profileWith(),
+        httpClient: MockClient(
+          (request) async => http.Response(
+            jsonEncode({
+              'choices': [
+                {
+                  'message': {
+                    'content': '{"transcript":"","fields":{},"uncertain":[]}',
+                  },
+                },
+              ],
+            }),
+            200,
+            headers: const {
+              'content-type': 'application/json; charset=utf-8',
+            },
+          ),
+        ),
+      );
+
+      await expectLater(
+        provider.extractFieldsFromAudio(segment()),
+        throwsA(
+          isA<AiRecognitionException>().having(
+            (error) => error.kind,
+            'kind',
+            AiRecognitionErrorKind.nothingRecognized,
+          ),
+        ),
+      );
+      expect(
+        aiUserFacingErrorMessage(
+          const AiRecognitionException(
+            kind: AiRecognitionErrorKind.nothingRecognized,
+            message: 'The provider returned an empty transcript',
+          ),
+        ),
+        contains('没有听清'),
+      );
+      provider.close();
+    });
+
     test('rejects a response that is not JSON', () async {
       final provider = ProtocolAudioFieldExtractionProvider(
         profile: profileWith(),
@@ -267,11 +311,17 @@ void main() {
       await expectLater(
         provider.extractFieldsFromAudio(segment()),
         throwsA(
-          isA<AiRecognitionException>().having(
-            (e) => e.kind,
-            'kind',
-            AiRecognitionErrorKind.invalidResponse,
-          ),
+          isA<AiRecognitionException>()
+              .having(
+                (e) => e.kind,
+                'kind',
+                AiRecognitionErrorKind.invalidResponse,
+              )
+              .having(
+                (e) => e.responseBody,
+                'responseBody',
+                contains('抱歉，我没听清'),
+              ),
         ),
       );
       provider.close();

@@ -8,6 +8,9 @@ import 'package:openlogtool/services/ai_recognition/providers.dart';
 import 'package:openlogtool/services/text_assistant.dart';
 import 'package:openlogtool/services/key_value_store.dart';
 
+/// Which recording path is in use. Profiles for the other path stay saved.
+enum AiRecognitionMode { speech, audio }
+
 /// On-device AI configuration. Provider profiles are ordinary exportable JSON;
 /// credentials are referenced by ID and live only in [AiCredentialStore].
 final class AiRecognitionSettingsProvider with ChangeNotifier {
@@ -32,6 +35,7 @@ final class AiRecognitionSettingsProvider with ChangeNotifier {
   String? _activeAsrProfileId;
   String? _activeFieldExtractionProfileId;
   String? _activeAudioFieldExtractionProfileId;
+  AiRecognitionMode? _recognitionMode;
   bool _enabled = false;
   bool _useLocalReferenceContext = true;
   TextAssistantConfig? _textAssistantConfig;
@@ -76,6 +80,22 @@ final class AiRecognitionSettingsProvider with ChangeNotifier {
         AiProviderKind.audioFieldExtraction,
       );
 
+  /// Explicit choice when the user has switched. Otherwise a saved multimodal
+  /// profile keeps the previous one-call behavior; speech is the fallback.
+  AiRecognitionMode get recognitionMode {
+    final selected = _recognitionMode;
+    if (selected != null) return selected;
+    if (_activeAudioFieldExtractionProfileId != null) {
+      return AiRecognitionMode.audio;
+    }
+    return AiRecognitionMode.speech;
+  }
+
+  AiProviderProfile? get activeRecognitionProfile => switch (recognitionMode) {
+        AiRecognitionMode.speech => activeAsrProfile,
+        AiRecognitionMode.audio => activeAudioFieldExtractionProfile,
+      };
+
   AiCredentialResolver get credentialResolver => resolveCredentials;
 
   Future<void> _load() async {
@@ -90,6 +110,7 @@ final class AiRecognitionSettingsProvider with ChangeNotifier {
       _activeAsrProfileId = null;
       _activeFieldExtractionProfileId = null;
       _activeAudioFieldExtractionProfileId = null;
+      _recognitionMode = null;
       _enabled = false;
       _useLocalReferenceContext = true;
       _textAssistantConfig = null;
@@ -131,9 +152,12 @@ final class AiRecognitionSettingsProvider with ChangeNotifier {
       json['activeAudioFieldExtractionProfileId'],
       AiProviderKind.audioFieldExtraction,
     );
-    _enabled = json['enabled'] == true &&
-        (_activeAsrProfileId != null ||
-            _activeAudioFieldExtractionProfileId != null);
+    _recognitionMode = switch (json['recognitionMode']) {
+      'speech' => AiRecognitionMode.speech,
+      'audio' => AiRecognitionMode.audio,
+      _ => null,
+    };
+    _enabled = json['enabled'] == true && activeRecognitionProfile != null;
     _useLocalReferenceContext = json['useLocalReferenceContext'] != false;
     final textAssistant = json['textAssistant'];
     if (textAssistant != null) {
@@ -150,13 +174,20 @@ final class AiRecognitionSettingsProvider with ChangeNotifier {
 
   Future<void> setEnabled(bool value) => _mutate(() async {
         await initialized;
-        if (value &&
-            activeAsrProfile == null &&
-            activeAudioFieldExtractionProfile == null) {
+        if (value && activeRecognitionProfile == null) {
           throw StateError('AI_ASR_PROFILE_REQUIRED');
         }
         if (_enabled == value) return;
         _enabled = value;
+        notifyListeners();
+        await _persist();
+      });
+
+  Future<void> setRecognitionMode(AiRecognitionMode mode) => _mutate(() async {
+        await initialized;
+        if (_recognitionMode == mode) return;
+        _recognitionMode = mode;
+        if (activeRecognitionProfile == null) _enabled = false;
         notifyListeners();
         await _persist();
       });
@@ -259,7 +290,7 @@ final class AiRecognitionSettingsProvider with ChangeNotifier {
         _requireKind(profileId, AiProviderKind.speechRecognition);
         if (_activeAsrProfileId == profileId) return;
         _activeAsrProfileId = profileId;
-        if (profileId == null) _enabled = false;
+        _disableIfModeHasNoProfile();
         notifyListeners();
         await _persist();
       });
@@ -280,6 +311,7 @@ final class AiRecognitionSettingsProvider with ChangeNotifier {
         _requireKind(profileId, AiProviderKind.audioFieldExtraction);
         if (_activeAudioFieldExtractionProfileId == profileId) return;
         _activeAudioFieldExtractionProfileId = profileId;
+        _disableIfModeHasNoProfile();
         notifyListeners();
         await _persist();
       });
@@ -307,7 +339,6 @@ final class AiRecognitionSettingsProvider with ChangeNotifier {
         if (_activeAsrProfileId == profile.id &&
             profile.kind != AiProviderKind.speechRecognition) {
           _activeAsrProfileId = null;
-          _enabled = false;
         }
         if (_activeFieldExtractionProfileId == profile.id &&
             profile.kind != AiProviderKind.fieldExtraction) {
@@ -317,6 +348,7 @@ final class AiRecognitionSettingsProvider with ChangeNotifier {
             profile.kind != AiProviderKind.audioFieldExtraction) {
           _activeAudioFieldExtractionProfileId = null;
         }
+        _disableIfModeHasNoProfile();
         notifyListeners();
         await _persist();
 
@@ -338,7 +370,6 @@ final class AiRecognitionSettingsProvider with ChangeNotifier {
         );
         if (_activeAsrProfileId == profileId) {
           _activeAsrProfileId = null;
-          _enabled = false;
         }
         if (_activeFieldExtractionProfileId == profileId) {
           _activeFieldExtractionProfileId = null;
@@ -346,6 +377,7 @@ final class AiRecognitionSettingsProvider with ChangeNotifier {
         if (_activeAudioFieldExtractionProfileId == profileId) {
           _activeAudioFieldExtractionProfileId = null;
         }
+        _disableIfModeHasNoProfile();
         notifyListeners();
         await _persist();
 
@@ -441,6 +473,7 @@ final class AiRecognitionSettingsProvider with ChangeNotifier {
         _activeAsrProfileId = null;
         _activeFieldExtractionProfileId = null;
         _activeAudioFieldExtractionProfileId = null;
+        _recognitionMode = null;
         _enabled = false;
         _useLocalReferenceContext = true;
         notifyListeners();
@@ -465,6 +498,7 @@ final class AiRecognitionSettingsProvider with ChangeNotifier {
         _activeAsrProfileId = null;
         _activeFieldExtractionProfileId = null;
         _activeAudioFieldExtractionProfileId = null;
+        _recognitionMode = null;
         _enabled = false;
         _textAssistantConfig = null;
         _textAssistantEnabled = false;
@@ -476,6 +510,10 @@ final class AiRecognitionSettingsProvider with ChangeNotifier {
           await _credentialStore.delete(credentialId);
         }
       });
+
+  void _disableIfModeHasNoProfile() {
+    if (activeRecognitionProfile == null) _enabled = false;
+  }
 
   Future<void> _persist() {
     final encoded = jsonEncode({
@@ -490,6 +528,7 @@ final class AiRecognitionSettingsProvider with ChangeNotifier {
       'activeFieldExtractionProfileId': _activeFieldExtractionProfileId,
       'activeAudioFieldExtractionProfileId':
           _activeAudioFieldExtractionProfileId,
+      if (_recognitionMode != null) 'recognitionMode': _recognitionMode!.name,
       'profiles': _profiles.map((profile) => profile.toJson()).toList(),
     });
     return _enqueuePreferenceOperation((preferences) async {

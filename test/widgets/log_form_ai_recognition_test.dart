@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:openlogtool/l10n/l10n.dart';
+import 'package:openlogtool/models/dictionary_item.dart';
 import 'package:openlogtool/models/live_draft.dart';
 import 'package:openlogtool/providers/ai_recognition_settings_provider.dart';
 import 'package:openlogtool/providers/collaboration_provider.dart';
@@ -12,6 +13,7 @@ import 'package:openlogtool/providers/log_provider.dart';
 import 'package:openlogtool/providers/session_provider.dart';
 import 'package:openlogtool/providers/settings_provider.dart';
 import 'package:openlogtool/services/ai_audio_recorder.dart';
+import 'package:openlogtool/services/app_logger.dart';
 import 'package:openlogtool/services/ai_credential_store.dart';
 import 'package:openlogtool/services/ai_recognition/ai_recognition.dart';
 import 'package:openlogtool/services/ai_recognition_runtime.dart';
@@ -48,6 +50,8 @@ void main() {
     await _enableAi(aiSettings);
     await tester.pump();
     expect(find.byKey(const Key('ai-recognition-control')), findsOneWidget);
+    expect(find.byKey(const Key('ai-experimental-notice')), findsOneWidget);
+    expect(find.textContaining('Not finished yet'), findsOneWidget);
     expect(tester.takeException(), isNull);
 
     await aiSettings.setEnabled(false);
@@ -57,7 +61,7 @@ void main() {
     expect(recorder.startCalls, 0);
   });
 
-  testWidgets('recognized fields require review and never apply time',
+  testWidgets('recognized fields stay out of the form until a chip is tapped',
       (tester) async {
     final aiSettings = AiRecognitionSettingsProvider();
     addTearDown(aiSettings.dispose);
@@ -87,20 +91,36 @@ void main() {
     );
     await tester.pump();
 
-    await _recordAndOpenReview(tester);
-    expect(find.text('BG5CRL，信号报告五七，八点。'), findsOneWidget);
-    expect(find.textContaining('Callsign: BG5CRL'), findsOneWidget);
-    expect(find.textContaining('Time: 20:00'), findsOneWidget);
-    expect(find.textContaining('Controller callsign: BA5AAA'), findsNothing);
-    expect(find.textContaining('Power:'), findsNothing);
+    await _recordAndStop(tester);
 
-    await tester.ensureVisible(find.byKey(const Key('ai-apply-candidates')));
-    await tester.tap(find.byKey(const Key('ai-apply-candidates')));
-    await tester.pumpAndSettle();
-
-    expect(_fieldController(tester, 'Callsign').text, 'BG5CRL');
+    expect(find.text('BG5CRL，信号报告五七，八点。'), findsNothing);
+    expect(find.byKey(const Key('ai-review-panel')), findsNothing);
+    expect(find.byKey(const Key('ai-live-transcript')), findsNothing);
+    expect(find.byKey(const Key('ai-live-field-time')), findsNothing);
+    expect(_fieldController(tester, 'Callsign').text, isEmpty);
     expect(_fieldController(tester, 'RST sent').text, '59');
     expect(_fieldController(tester, 'Time').text, isEmpty);
+    expect(_fieldController(tester, 'Controller callsign *').text, isEmpty);
+
+    await _tapLiveField(tester, 'callsign');
+    expect(_fieldController(tester, 'Callsign').text, 'BG5CRL');
+    expect(_fieldController(tester, 'RST sent').text, '59');
+    expect(
+      tester
+          .widget<EditableText>(
+            find.descendant(
+              of: _fieldFinder('Callsign'),
+              matching: find.byType(EditableText),
+            ),
+          )
+          .focusNode
+          .hasFocus,
+      isTrue,
+    );
+
+    await _tapLiveField(tester, 'rstSent');
+    expect(_fieldController(tester, 'RST sent').text, '57');
+    expect(_fieldController(tester, 'Callsign').text, 'BG5CRL');
   });
 
   testWidgets('field changes while recognition runs make suggestions stale',
@@ -142,17 +162,10 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(
-        find.text('The field changed after recording began'), findsOneWidget);
-    final apply = tester.widget<FilledButton>(
-      find.byKey(const Key('ai-apply-candidates')),
-    );
-    expect(apply.onPressed, isNull);
+    expect(find.byKey(const Key('ai-review-panel')), findsNothing);
+    expect(find.text('The field changed after recording began'), findsNothing);
+    expect(find.byKey(const Key('ai-live-field-callsign')), findsOneWidget);
     expect(_fieldController(tester, 'Callsign').text, 'BA1ABC');
-
-    await tester.ensureVisible(find.text('Cancel'));
-    await tester.tap(find.text('Cancel'));
-    await tester.pumpAndSettle();
   });
 
   testWidgets('collaboration applies reviewed suggestions through strict CAS',
@@ -178,10 +191,10 @@ void main() {
     );
     await tester.pump();
 
-    await _recordAndOpenReview(tester);
-    await tester.ensureVisible(find.byKey(const Key('ai-apply-candidates')));
-    await tester.tap(find.byKey(const Key('ai-apply-candidates')));
-    await tester.pumpAndSettle();
+    await _recordAndStop(tester);
+    expect(collaboration.strictUpdates, isEmpty);
+
+    await _tapLiveField(tester, 'callsign');
 
     expect(collaboration.strictUpdates, [
       const {'callsign': 'BG5CRL'}
@@ -243,12 +256,16 @@ void main() {
     await tester.pump(const Duration(seconds: 15));
     await tester.pump();
 
-    expect(find.byKey(const Key('ai-live-structured')), findsOneWidget);
+    expect(_fieldController(tester, 'Callsign').text, isEmpty);
     expect(find.byKey(const Key('ai-live-field-callsign')), findsOneWidget);
-    expect(find.text('BG5EUU'), findsOneWidget);
+    expect(find.text('BG5EUU，申请上台。'), findsNothing);
+    expect(find.byKey(const Key('ai-live-transcript')), findsNothing);
 
     await tester.pump(const Duration(seconds: 15));
     await tester.pump();
+    expect(_fieldController(tester, 'Callsign').text, isEmpty);
+    expect(_fieldController(tester, 'Radio').text, isEmpty);
+    expect(_fieldController(tester, 'QTH').text, isEmpty);
     expect(find.byKey(const Key('ai-live-field-callsign')), findsOneWidget);
     expect(find.byKey(const Key('ai-live-field-device')), findsOneWidget);
     expect(find.byKey(const Key('ai-live-field-qth')), findsOneWidget);
@@ -260,8 +277,15 @@ void main() {
     await tester.tap(find.byKey(const Key('ai-stop-recording')));
     await tester.pumpAndSettle();
 
-    expect(find.byKey(const Key('ai-review-panel')), findsOneWidget);
+    expect(find.byKey(const Key('ai-review-panel')), findsNothing);
     expect(find.byType(AlertDialog), findsNothing);
+    expect(_fieldController(tester, 'Callsign').text, isEmpty);
+    expect(find.byKey(const Key('ai-live-field-callsign')), findsOneWidget);
+
+    await _tapLiveField(tester, 'callsign');
+    expect(_fieldController(tester, 'Callsign').text, 'BG5EUU');
+    expect(_fieldController(tester, 'Radio').text, isEmpty);
+    expect(_fieldController(tester, 'QTH').text, isEmpty);
   });
 
   testWidgets(
@@ -359,8 +383,65 @@ void main() {
 
     expect(singleCalls, 1);
     expect(twoHopCalls, 0);
-    expect(find.byKey(const Key('ai-review-panel')), findsOneWidget);
-    expect(find.textContaining('Callsign: BG5DBL'), findsOneWidget);
+    expect(find.byKey(const Key('ai-review-panel')), findsNothing);
+    expect(_fieldController(tester, 'Callsign').text, isEmpty);
+    expect(find.byKey(const Key('ai-live-field-callsign')), findsOneWidget);
+  });
+
+  testWidgets('speech mode ignores a saved multimodal profile', (tester) async {
+    final aiSettings = AiRecognitionSettingsProvider();
+    addTearDown(aiSettings.dispose);
+    await aiSettings.initialized;
+    await _enableAi(aiSettings);
+    await _enableMultimodal(aiSettings);
+    await aiSettings.setRecognitionMode(AiRecognitionMode.speech);
+    var singleCalls = 0;
+    var twoHopCalls = 0;
+
+    await tester.pumpWidget(
+      _TestApp(
+        aiSettings: aiSettings,
+        recorder: _FakeAiAudioRecorder(),
+        recognizer: (audio, settings, cancellationToken) async {
+          singleCalls++;
+          return AiRecognitionResult(
+            transcription: Transcription(text: 'should not run'),
+            candidates: [
+              RecognitionCandidate(fields: const {'callsign': 'BG5XXX'}),
+            ],
+          );
+        },
+        transcriptionExecutor: (audio, settings, token) async {
+          twoHopCalls++;
+          return Transcription(text: 'BG5DBL');
+        },
+        fieldExtractionExecutor: (
+          transcription,
+          settings,
+          cancellationToken, {
+          referenceContext,
+        }) async =>
+            AiRecognitionResult(
+          transcription: transcription,
+          candidates: [
+            RecognitionCandidate(fields: const {'callsign': 'BG5DBL'}),
+          ],
+        ),
+      ),
+    );
+    await tester.pump();
+
+    await tester.ensureVisible(find.byKey(const Key('ai-start-recording')));
+    await tester.tap(find.byKey(const Key('ai-start-recording')));
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('ai-stop-recording')));
+    await tester.pumpAndSettle();
+
+    expect(singleCalls, 0);
+    expect(twoHopCalls, 1);
+    expect(_fieldController(tester, 'Callsign').text, isEmpty);
+    expect(find.byKey(const Key('ai-live-field-callsign')), findsOneWidget);
+    expect(find.text('should not run'), findsNothing);
   });
 
   testWidgets('shows a readable message instead of the raw error',
@@ -392,6 +473,279 @@ void main() {
     expect(find.textContaining('还没填 API Key'), findsOneWidget);
     expect(find.textContaining('missing credentials'), findsNothing);
     expect(find.textContaining('AiRecognitionException'), findsNothing);
+  });
+
+  testWidgets('logs the provider response without putting it on screen',
+      (tester) async {
+    AppLogger.instance.resetForTest();
+    addTearDown(AppLogger.instance.resetForTest);
+    final aiSettings = AiRecognitionSettingsProvider();
+    addTearDown(aiSettings.dispose);
+    await aiSettings.initialized;
+    await _enableMultimodal(aiSettings);
+
+    await tester.pumpWidget(
+      _TestApp(
+        aiSettings: aiSettings,
+        recorder: _FakeAiAudioRecorder(),
+        recognizer: (audio, settings, cancellationToken) async =>
+            throw const AiRecognitionException(
+          kind: AiRecognitionErrorKind.invalidResponse,
+          message: 'The audio field extraction response is not JSON',
+          responseBody: '抱歉，我没听清',
+        ),
+      ),
+    );
+    await tester.pump();
+
+    await tester.ensureVisible(find.byKey(const Key('ai-start-recording')));
+    await tester.tap(find.byKey(const Key('ai-start-recording')));
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('ai-stop-recording')));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('无法解析'), findsOneWidget);
+    expect(find.textContaining('抱歉，我没听清'), findsNothing);
+    expect(
+      AppLogger.instance
+          .snapshotEntries()
+          .map((entry) => entry.message)
+          .join('\n'),
+      contains('抱歉，我没听清'),
+    );
+  });
+
+  testWidgets('moves a callsign out of QTH and drops 73 from RST',
+      (tester) async {
+    final aiSettings = AiRecognitionSettingsProvider();
+    addTearDown(aiSettings.dispose);
+    await aiSettings.initialized;
+    await _enableMultimodal(aiSettings);
+
+    await tester.pumpWidget(
+      _TestApp(
+        aiSettings: aiSettings,
+        recorder: _FakeAiAudioRecorder(),
+        recognizer: (audio, settings, cancellationToken) async =>
+            AiRecognitionResult(
+          transcription: Transcription(text: 'BG5CRL 73'),
+          candidates: [
+            RecognitionCandidate(
+              fields: const {
+                'qth': 'BG5CRL',
+                'rstSent': '73',
+                'rstRcvd': '59',
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+    await tester.pump();
+
+    await tester.ensureVisible(find.byKey(const Key('ai-start-recording')));
+    await tester.tap(find.byKey(const Key('ai-start-recording')));
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('ai-stop-recording')));
+    await tester.pumpAndSettle();
+
+    expect(_fieldController(tester, 'Callsign').text, isEmpty);
+    expect(_fieldController(tester, 'QTH').text, isEmpty);
+    expect(_fieldController(tester, 'RST sent').text, '59');
+    expect(_fieldController(tester, 'RST received').text, '59');
+    expect(find.byKey(const Key('ai-live-field-callsign')), findsOneWidget);
+    expect(find.byKey(const Key('ai-live-field-qth')), findsNothing);
+    expect(find.byKey(const Key('ai-live-field-rstSent')), findsNothing);
+  });
+
+  testWidgets('does not let a later chunk replace a dictionary device',
+      (tester) async {
+    tester.view.physicalSize = const Size(900, 1200);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final aiSettings = AiRecognitionSettingsProvider();
+    addTearDown(aiSettings.dispose);
+    await aiSettings.initialized;
+    await _enableMultimodal(aiSettings);
+    var calls = 0;
+
+    await tester.pumpWidget(
+      _TestApp(
+        aiSettings: aiSettings,
+        dictionary: _FixedDictionaryProvider(
+          devices: const ['泉盛UVK6'],
+          callsigns: const ['BG5CRL'],
+        ),
+        recorder: _FakeAiAudioRecorder(
+          live: true,
+          liveChunks: [_audio(), _audio()],
+          includeStopSegment: false,
+        ),
+        recognizer: (audio, settings, cancellationToken) async {
+          calls += 1;
+          if (calls == 1) {
+            return AiRecognitionResult(
+              transcription: Transcription(text: 'BG5CRL 泉盛UVK6'),
+              candidates: [
+                RecognitionCandidate(
+                  fields: const {
+                    'callsign': 'BG5CRL',
+                    'device': '泉盛UVK6',
+                  },
+                ),
+              ],
+            );
+          }
+          return AiRecognitionResult(
+            transcription: Transcription(text: '全盛U V K 六'),
+            candidates: [
+              RecognitionCandidate(
+                fields: const {'device': '全盛U V K 六'},
+              ),
+            ],
+          );
+        },
+      ),
+    );
+    await tester.pump();
+
+    await tester.ensureVisible(find.byKey(const Key('ai-start-recording')));
+    await tester.tap(find.byKey(const Key('ai-start-recording')));
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 15));
+    await tester.pump();
+    expect(_fieldController(tester, 'Radio').text, isEmpty);
+    expect(find.byKey(const Key('ai-live-field-device')), findsOneWidget);
+    expect(find.textContaining('全盛'), findsNothing);
+
+    await tester.pump(const Duration(seconds: 15));
+    await tester.pump();
+    expect(_fieldController(tester, 'Radio').text, isEmpty);
+    expect(find.textContaining('全盛'), findsNothing);
+    expect(find.textContaining('泉盛UVK6'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('ai-stop-recording')));
+    await tester.pumpAndSettle();
+    expect(_fieldController(tester, 'Radio').text, isEmpty);
+    expect(find.textContaining('全盛'), findsNothing);
+    expect(find.textContaining('泉盛UVK6'), findsOneWidget);
+  });
+
+  testWidgets('keeps earlier fields when the final slice is empty',
+      (tester) async {
+    tester.view.physicalSize = const Size(900, 1200);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final aiSettings = AiRecognitionSettingsProvider();
+    addTearDown(aiSettings.dispose);
+    await aiSettings.initialized;
+    await _enableMultimodal(aiSettings);
+    var calls = 0;
+
+    await tester.pumpWidget(
+      _TestApp(
+        aiSettings: aiSettings,
+        recorder: _FakeAiAudioRecorder(
+          live: true,
+          liveChunks: [_audio()],
+        ),
+        recognizer: (audio, settings, cancellationToken) async {
+          calls += 1;
+          if (calls == 1) {
+            return AiRecognitionResult(
+              transcription: Transcription(text: 'BG5CRL'),
+              candidates: [
+                RecognitionCandidate(fields: const {'callsign': 'BG5CRL'}),
+              ],
+            );
+          }
+          throw const AiRecognitionException(
+            kind: AiRecognitionErrorKind.nothingRecognized,
+            message: 'The provider returned an empty transcript',
+            responseBody: '{"transcript":"","fields":{}}',
+          );
+        },
+      ),
+    );
+    await tester.pump();
+
+    await tester.ensureVisible(find.byKey(const Key('ai-start-recording')));
+    await tester.tap(find.byKey(const Key('ai-start-recording')));
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 15));
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('ai-stop-recording')));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('ai-review-panel')), findsNothing);
+    expect(_fieldController(tester, 'Callsign').text, isEmpty);
+    expect(find.byKey(const Key('ai-live-field-callsign')), findsOneWidget);
+    expect(find.textContaining('没有听清'), findsNothing);
+  });
+
+  testWidgets('the next record keeps recording and drops the previous callsign',
+      (tester) async {
+    tester.view.physicalSize = const Size(900, 1400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final aiSettings = AiRecognitionSettingsProvider();
+    addTearDown(aiSettings.dispose);
+    await aiSettings.initialized;
+    await _enableMultimodal(aiSettings);
+    final recorder = _FakeAiAudioRecorder(
+      live: true,
+      liveChunks: [_audio(), _audio()],
+      includeStopSegment: false,
+    );
+    var calls = 0;
+
+    await tester.pumpWidget(
+      _TestApp(
+        aiSettings: aiSettings,
+        recorder: recorder,
+        recognizer: (audio, settings, cancellationToken) async {
+          calls += 1;
+          final callsign = calls == 1 ? 'BG5AAA' : 'BG5BBB';
+          return AiRecognitionResult(
+            transcription: Transcription(text: callsign),
+            candidates: [
+              RecognitionCandidate(fields: {'callsign': callsign}),
+            ],
+          );
+        },
+      ),
+    );
+    await tester.pump();
+
+    await tester.ensureVisible(find.byKey(const Key('ai-start-recording')));
+    await tester.tap(find.byKey(const Key('ai-start-recording')));
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 15));
+    await tester.pump();
+    expect(_fieldController(tester, 'Callsign').text, isEmpty);
+    expect(find.byKey(const Key('ai-live-field-callsign')), findsOneWidget);
+    expect(find.textContaining('BG5AAA'), findsOneWidget);
+
+    await tester.ensureVisible(find.byKey(const Key('clear-log-fields')));
+    await tester.tap(find.byKey(const Key('clear-log-fields')));
+    await tester.pump();
+
+    expect(_fieldController(tester, 'Callsign').text, isEmpty);
+    expect(find.byKey(const Key('ai-live-field-callsign')), findsNothing);
+    expect(find.byKey(const Key('ai-stop-recording')), findsOneWidget);
+    expect(recorder.stopCalls, 0);
+    expect(recorder.cancelCalls, 0);
+
+    await tester.pump(const Duration(seconds: 15));
+    await tester.pump();
+    expect(_fieldController(tester, 'Callsign').text, isEmpty);
+    expect(find.textContaining('BG5BBB'), findsOneWidget);
+    expect(find.textContaining('BG5AAA'), findsNothing);
+    expect(recorder.stopCalls, 0);
+    expect(recorder.cancelCalls, 0);
   });
 }
 
@@ -428,7 +782,14 @@ Future<void> _enableMultimodal(AiRecognitionSettingsProvider settings) async {
   await settings.setEnabled(true);
 }
 
-Future<void> _recordAndOpenReview(WidgetTester tester) async {
+Future<void> _tapLiveField(WidgetTester tester, String field) async {
+  final chip = find.byKey(Key('ai-live-field-$field'));
+  await tester.ensureVisible(chip);
+  await tester.tap(chip);
+  await tester.pumpAndSettle();
+}
+
+Future<void> _recordAndStop(WidgetTester tester) async {
   await tester.ensureVisible(find.byKey(const Key('ai-start-recording')));
   tester
       .widget<FilledButton>(find.byKey(const Key('ai-start-recording')))
@@ -437,7 +798,6 @@ Future<void> _recordAndOpenReview(WidgetTester tester) async {
   expect(find.byKey(const Key('ai-stop-recording')), findsOneWidget);
   await tester.tap(find.byKey(const Key('ai-stop-recording')));
   await tester.pumpAndSettle();
-  expect(find.text('Review AI suggestions'), findsOneWidget);
 }
 
 Finder _fieldFinder(String label) => find
@@ -460,6 +820,7 @@ class _TestApp extends StatelessWidget {
     this.fieldExtractionExecutor,
     this.inlineTextSuggestionExecutor,
     this.collaboration,
+    this.dictionary,
   });
 
   final AiRecognitionSettingsProvider aiSettings;
@@ -470,6 +831,7 @@ class _TestApp extends StatelessWidget {
   final AiFieldExtractionExecutor? fieldExtractionExecutor;
   final InlineTextSuggestionExecutor? inlineTextSuggestionExecutor;
   final CollaborationProvider? collaboration;
+  final DictionaryProvider? dictionary;
 
   @override
   Widget build(BuildContext context) => MultiProvider(
@@ -480,8 +842,8 @@ class _TestApp extends StatelessWidget {
           ChangeNotifierProvider<CollaborationProvider>(
             create: (_) => collaboration ?? CollaborationProvider(),
           ),
-          ChangeNotifierProvider(
-            create: (_) => DictionaryProvider(autoload: false),
+          ChangeNotifierProvider<DictionaryProvider>(
+            create: (_) => dictionary ?? DictionaryProvider(autoload: false),
           ),
           ChangeNotifierProvider(
             create: (_) => LogProvider(
@@ -529,6 +891,31 @@ final class _MemorySecureValues implements SecureValueStore {
   Future<void> write(String key, String value) async {
     _values[key] = value;
   }
+}
+
+class _FixedDictionaryProvider extends DictionaryProvider {
+  _FixedDictionaryProvider({
+    this.devices = const [],
+    this.callsigns = const [],
+  }) : super(autoload: false);
+
+  final List<String> devices;
+  final List<String> callsigns;
+
+  DictionaryItem _item(String raw, String type) => DictionaryItem(
+        raw: raw,
+        pinyin: '',
+        abbreviation: '',
+        type: type,
+      );
+
+  @override
+  List<DictionaryItem> get deviceDict =>
+      [for (final raw in devices) _item(raw, 'device')];
+
+  @override
+  List<DictionaryItem> get callsignDict =>
+      [for (final raw in callsigns) _item(raw, 'callsign')];
 }
 
 class _TestSessionProvider extends SessionProvider {
